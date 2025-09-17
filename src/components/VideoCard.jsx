@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import shortThumbnail from "../assets/shorts_thumbnail.png";
+import QuestionPaperCard from "./QuestionPaperCard";
 
 const VideoCard = () => {
   const [showShort, setShowShort] = useState(false);
@@ -158,6 +159,8 @@ const VideoCard = () => {
               </div>
             </div>
           </div>
+
+           <QuestionPaperCard />
 
           {/* Stats Section */}
        

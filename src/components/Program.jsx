@@ -21,21 +21,26 @@ const Program = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/50 to-transparent" />
             <div className="absolute bottom-4 left-6 text-white text-2xl font-bold drop-shadow-lg">
               PRIME ONE
+              <p className="font-normal text-xl">
+                Personalized Learning, Maximum Focus
+              </p>
             </div>
           </div>
           <div className="p-6">
             <h3 className="text-cyan-700 text-lg font-semibold mb-2">
               Individual Tuition Program
             </h3>
-            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+            <p className="text-gray-600 text-sm mb-4 leading-relaxed font-medium">
               Comprehensive academic support for students in classes 4-10
               CBSE/STATE boards
             </p>
             <ul className="text-cyan-700 text-base font-medium space-y-2 list-disc list-inside">
-              <li>One-on-one personalized attention</li>
-              <li>Customized learning plans</li>
-              <li>Regular progress assessments</li>
-              <li>Foundation building focus</li>
+              <li> Personalized Attention</li>
+              <li>Customized learning </li>
+              <li>Direct Doubt Clearing</li>
+              <li>Flexible Scheduling</li>
+              <li>Focused Exam Preparation</li>
+              <li>Progress Tracking</li>
             </ul>
           </div>
         </div>
@@ -51,6 +56,9 @@ const Program = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/50 to-transparent" />
             <div className="absolute bottom-4 left-6 text-white text-2xl font-bold drop-shadow-lg">
               PLAN B
+              <p className="font-normal text-xl">
+                WE plan smartly for YOUR stress-free revison
+              </p>
             </div>
           </div>
           <div className="p-6">
@@ -62,10 +70,12 @@ const Program = () => {
               students
             </p>
             <ul className="text-cyan-700 text-base font-medium space-y-2 list-disc list-inside">
-              <li>Focused exam preparation</li>
-              <li>Quick revision techniques</li>
-              <li>Mock tests and practice</li>
-              <li>Last-minute preparation</li>
+              <li>Structured Revision</li>
+              <li>Exam-Oriented Approach</li>
+              <li> Concept Reinforcement</li>
+              <li>Time Management Strategies</li>
+              <li>Doubt Clearance Sessions</li>
+              <li>Frequent Evaluation</li>
             </ul>
           </div>
         </div>
@@ -81,22 +91,24 @@ const Program = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/50 to-transparent" />
             <div className="absolute bottom-4 left-6 text-white text-2xl font-bold drop-shadow-lg">
               CLUSTER
+              <p className="font-normal text-xl">
+                  Together Towards Success
+              </p>
             </div>
-            <p>Together Towards Success</p>
           </div>
           <div className="p-6">
-            <h3 className="text-cyan-700 text-lg font-semibold mb-2">
-              Exclusive Revision Program
-            </h3>
+          
             <p className="text-gray-600 text-sm mb-4 leading-relaxed">
               Intensive revision and exam preparation for Class 10+ CBSE
               students
             </p>
             <ul className="text-cyan-700 text-base font-medium space-y-2 list-disc list-inside">
-              <li>Focused exam preparation</li>
-              <li>Quick revision techniques</li>
-              <li>Mock tests and practice</li>
-              <li>Last-minute preparation</li>
+              <li>Compact Batches</li>
+              <li>Peer Learning</li>
+              <li>Balanced Attention</li>
+              <li> Interactive Sessions</li>
+              <li> Focused Curriculum</li>
+              <li> Frequent Evaluation</li>
             </ul>
           </div>
         </div>

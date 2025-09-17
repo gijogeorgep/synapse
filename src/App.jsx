@@ -6,6 +6,7 @@ import Hero from "./components/Hero";
 import Navbar from "./components/Navbar";
 
 import Program from "./components/Program";
+import QuestionPaperCard from "./components/QuestionPaperCard";
 import VideoCard from "./components/VideoCard";
 
 function App() {
@@ -21,10 +22,12 @@ function App() {
       <section id="about" className="scroll-mt-24">
         <About />
       </section>
+      <VideoCard />
+     
       <section id="contact" className="scroll-mt-24">
         <Contact />
       </section>
-      <VideoCard/>
+
       <Footer />
     </>
   );
