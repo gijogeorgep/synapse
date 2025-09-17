@@ -1,6 +1,6 @@
 import React from "react";
 import synapse_y_logo from "../assets/synapse y logo.png"; // background logo
-import amith from "../assets/amith.png"; // founder photo
+import amith from "../assets/amith.jpg"; // founder photo
 
 const About = () => {
   return (
@@ -35,11 +35,6 @@ const About = () => {
                 alt="Amith Girish - Founder & CEO"
                 className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700"
               />
-
-              {/* New: Achievement badges */}
-              {/* <div className="absolute bottom-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full shadow-lg z-20">
-                <span className="text-xs font-semibold text-cyan-700">10+ Years Experience</span>
-              </div> */}
             </div>
 
             {/* Enhanced Content Section */}
@@ -117,36 +112,8 @@ const About = () => {
             </div>
 
             <h2 className="text-4xl lg:text-5xl font-bold bg-gradient-to-r from-slate-800 via-cyan-700 to-blue-700 bg-clip-text text-transparent leading-tight">
-              Transforming Education
+              SYNAPSE Speaks You
               <br />
-              <span className="relative">
-                One Student at a Time
-                <svg
-                  className="absolute -bottom-3 left-0 w-full h-4"
-                  viewBox="0 0 200 16"
-                  fill="none"
-                >
-                  <path
-                    d="M2 12c40-8 80-8 120 0s80 8 120 0"
-                    stroke="url(#gradient)"
-                    strokeWidth="4"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                  <defs>
-                    <linearGradient
-                      id="gradient"
-                      x1="0%"
-                      y1="0%"
-                      x2="100%"
-                      y2="0%"
-                    >
-                      <stop offset="0%" stopColor="#0891b2" />
-                      <stop offset="100%" stopColor="#2563eb" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </span>
             </h2>
           </div>
 
@@ -157,13 +124,12 @@ const About = () => {
               <span className="font-bold text-transparent bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text">
                 Synapse Edu Hub
               </span>
-              , we are committed to empowering students with high-quality
-              education and personalized learning experiences. Our mission is to
-              make learning{" "}
-              <span className="font-semibold text-slate-800">
-                accessible, engaging, and impactful
-              </span>{" "}
-              for every student.
+              , we believe learning is most effective when it speaks your way.
+              That’s why we connect students with expert faculty who teach in
+              their own regional language — Malayalam, Hindi, Tamil, Telugu, or
+              English. Because education isn’t just about subjects, it’s about
+              understanding you{" "}
+             
             </p>
 
             <p className="text-gray-600">
