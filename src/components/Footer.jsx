@@ -64,7 +64,7 @@ const Footer = () => {
           {/* Social Icons */}
           <div className="flex space-x-4 mt-4">
             <a
-              href="#"
+              href="https://www.facebook.com/share/1KBy2iguoK/?mibextid=wwXIfr"
               className="w-9 h-9 flex items-center justify-center rounded-full bg-cyan-700 hover:bg-cyan-600 transition"
             >
               <Facebook className="w-5 h-5" />
@@ -76,7 +76,7 @@ const Footer = () => {
               <Instagram className="w-5 h-5" />
             </a>
             <a
-              href="#"
+              href="https://www.linkedin.com/in/synapse-edu-hub-9b788b371?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
               className="w-9 h-9 flex items-center justify-center rounded-full bg-cyan-700 hover:bg-cyan-600 transition"
             >
               <Linkedin className="w-5 h-5" />
@@ -89,7 +89,7 @@ const Footer = () => {
             </a>
 
             <a
-              href="https://wa.me/81579 30567" // replace with your WhatsApp number
+              href="https://wa.me/81579 30567" 
               target="_blank"
               rel="noopener noreferrer"
               className="w-9 h-9 flex items-center justify-center rounded-full bg-cyan-700 hover:bg-cyan-600 transition"

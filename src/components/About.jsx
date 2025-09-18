@@ -77,48 +77,47 @@ const About = () => {
               {/* Enhanced social links */}
               <div className="flex justify-center gap-3">
                 {/* Facebook */}
-                <a
-                  href="https://www.facebook.com/profile.php?id=61577985981011#"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-12 h-12 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-cyan-500 hover:to-blue-600 rounded-xl flex items-center justify-center transition-all duration-300 group/icon shadow-md hover:shadow-lg transform hover:scale-110"
+                <button
+                  onClick={() =>
+                    window.open(
+                      "https://www.facebook.com/share/18RBjNLHAa/ ",
+                      "_blank"
+                    )
+                  }
+                  className="w-10 h-10 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-cyan-500 hover:to-blue-600 rounded-xl flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg transform hover:scale-110"
                 >
-                  <Facebook className="w-6 h-6 text-gray-700 group-hover/icon:text-white transition-colors duration-300" />
-                </a>
+                  <Facebook className="w-6 h-6 text-gray-700 group-hover:text-white transition-colors duration-300" />
+                </button>
 
                 {/* Call */}
                 <a
-                  href="tel:+911234567890"
-                  className="w-12 h-12 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-green-500 hover:to-emerald-600 rounded-xl flex items-center justify-center transition-all duration-300 group/icon shadow-md hover:shadow-lg transform hover:scale-110"
+                  href="tel:+9162357 23263"
+                  className="w-10 h-10 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-green-500 hover:to-emerald-600 rounded-xl flex items-center justify-center transition-all duration-300 group/icon shadow-md hover:shadow-lg transform hover:scale-110"
                 >
-                  <Phone className="w-6 h-6 text-gray-700 group-hover/icon:text-white transition-colors duration-300" />
+                  <Phone className="w-4 h-6 text-gray-700 group-hover/icon:text-white transition-colors duration-300" />
                 </a>
 
                 {/* Instagram */}
                 <a
-                  href="https://www.instagram.com/synapse_edu.hub?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+                  href="https://www.instagram.com/amithgirish_?igsh=eW90NTJxeGJ6Mmto"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-12 h-12 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-pink-500 hover:to-purple-600 rounded-xl flex items-center justify-center transition-all duration-300 group/icon shadow-md hover:shadow-lg transform hover:scale-110"
+                  className="w-10 h-10 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-pink-500 hover:to-purple-600 rounded-xl flex items-center justify-center transition-all duration-300 group/icon shadow-md hover:shadow-lg transform hover:scale-110"
                 >
                   <Instagram className="w-6 h-6 text-gray-700 group-hover/icon:text-white transition-colors duration-300" />
                 </a>
 
                 {/* WhatsApp */}
                 <a
-                  href="https://wa.me/81579 30567" // Replace with your WhatsApp number
+                  href="https://wa.me/62357 23263" // Replace with your WhatsApp number
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-12 h-12 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-green-400 hover:to-green-600 rounded-xl flex items-center justify-center transition-all duration-300 group/icon shadow-md hover:shadow-lg transform hover:scale-110"
+                  className="w-10 h-10 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-green-400 hover:to-green-600 rounded-xl flex items-center justify-center transition-all duration-300 group/icon shadow-md hover:shadow-lg transform hover:scale-110"
                 >
-                  {/* <img
-                    src={whatsappIcon}
-                    alt="WhatsApp"
-                    className="w-6 h-6 group-hover/icon:brightness-200 transition"
-                  /> */}
+                  
                   <img
-                    width="48"
-                    height="48"
+                    width="28"
+                    height="28"
                     src="https://img.icons8.com/color/48/whatsapp--v1.png"
                     alt="whatsapp--v1"
                   />

@@ -56,7 +56,6 @@ const Contact = () => {
 
       {/* Content */}
       <div className="relative z-10 w-full max-w-6xl bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col md:flex-row gap-10">
-        
         {/* Contact Form */}
         <div className="flex-1 max-h-[90vh] overflow-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 text-center">
@@ -74,7 +73,9 @@ const Contact = () => {
           >
             {/* Name */}
             <div className="flex flex-col">
-              <label className="text-gray-100 font-medium mb-1">Your Name</label>
+              <label className="text-gray-100 font-medium mb-1">
+                Your Name
+              </label>
               <input
                 type="text"
                 name="name"
@@ -87,7 +88,9 @@ const Contact = () => {
 
             {/* Email */}
             <div className="flex flex-col">
-              <label className="text-gray-100 font-medium mb-1">Your Email</label>
+              <label className="text-gray-100 font-medium mb-1">
+                Your Email
+              </label>
               <input
                 type="email"
                 name="email"
@@ -129,7 +132,9 @@ const Contact = () => {
                 type="submit"
                 disabled={loading}
                 className={`${
-                  loading ? "bg-gray-500 cursor-not-allowed" : "bg-cyan-700 hover:bg-cyan-800"
+                  loading
+                    ? "bg-gray-500 cursor-not-allowed"
+                    : "bg-cyan-700 hover:bg-cyan-800"
                 } text-white font-semibold px-8 py-3 rounded-full shadow-lg hover:scale-105 transition transform duration-300`}
               >
                 {loading ? "Sending..." : "Send Message"}
@@ -159,19 +164,53 @@ const Contact = () => {
 
         {/* Social Media Section */}
         <div className="flex flex-col items-center justify-center space-y-6 w-full md:w-1/3">
-          <h3 className="text-2xl font-semibold text-white mb-4">Connect with us</h3>
+          <h3 className="text-2xl font-semibold text-white mb-4">
+            Connect with us
+          </h3>
           <div className="flex flex-wrap justify-center gap-6">
-            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer">
-              <img src="https://img.icons8.com/color/48/instagram-new--v1.png" alt="Instagram" className="hover:scale-110 transition-transform" />
+            <a
+              href="https://www.instagram.com/synapse_edu.hub?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://img.icons8.com/color/48/instagram-new--v1.png"
+                alt="Instagram"
+                className="hover:scale-110 transition-transform"
+              />
             </a>
-            <a href="https://www.facebook.com" target="_blank" rel="noopener noreferrer">
-              <img src="https://img.icons8.com/color/48/facebook-new.png" alt="Facebook" className="hover:scale-110 transition-transform" />
+            <a
+              href="https://www.facebook.com/share/1KBy2iguoK/?mibextid=wwXIfr"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://img.icons8.com/color/48/facebook-new.png"
+                alt="Facebook"
+                className="hover:scale-110 transition-transform"
+              />
             </a>
-            <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer">
-              <img src="https://img.icons8.com/color/48/linkedin.png" alt="LinkedIn" className="hover:scale-110 transition-transform" />
+            <a
+              href="https://www.linkedin.com/in/synapse-edu-hub-9b788b371?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://img.icons8.com/color/48/linkedin.png"
+                alt="LinkedIn"
+                className="hover:scale-110 transition-transform"
+              />
             </a>
-            <a href="https://wa.me/1234567890" target="_blank" rel="noopener noreferrer">
-              <img src="https://img.icons8.com/color/48/whatsapp.png" alt="WhatsApp" className="hover:scale-110 transition-transform" />
+            <a
+              href="https://wa.me/81579 30567"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <img
+                src="https://img.icons8.com/color/48/whatsapp.png"
+                alt="WhatsApp"
+                className="hover:scale-110 transition-transform"
+              />
             </a>
           </div>
         </div>
