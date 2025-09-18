@@ -109,7 +109,7 @@ const About = () => {
 
                 {/* WhatsApp */}
                 <a
-                  href="https://wa.me/62357 23263" // Replace with your WhatsApp number
+                  href="https://wa.me/916235723263" // Replace with your WhatsApp number
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-10 h-10 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-green-400 hover:to-green-600 rounded-xl flex items-center justify-center transition-all duration-300 group/icon shadow-md hover:shadow-lg transform hover:scale-110"

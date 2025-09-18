@@ -202,7 +202,7 @@ const Contact = () => {
               />
             </a>
             <a
-              href="https://wa.me/81579 30567"
+              href="https://wa.me/8157930567"
               target="_blank"
               rel="noopener noreferrer"
             >
