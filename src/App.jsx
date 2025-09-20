@@ -1,6 +1,7 @@
 import "./App.css";
 import About from "./components/About";
 import Contact from "./components/Contact";
+import Crescent from "./components/Crescent";
 import Footer from "./components/Footer";
 import Hero from "./components/Hero";
 import Navbar from "./components/Navbar";
@@ -27,8 +28,9 @@ function App() {
       <section id="contact" className="scroll-mt-24">
         <Contact />
       </section>
-
+     <Crescent />
       <Footer />
+
     </>
   );
 }
