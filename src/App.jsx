@@ -24,11 +24,11 @@ function App() {
         <About />
       </section>
       <VideoCard />
-     
+     <Crescent />
       <section id="contact" className="scroll-mt-24">
         <Contact />
       </section>
-     <Crescent />
+     
       <Footer />
 
     </>

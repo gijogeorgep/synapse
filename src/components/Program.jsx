@@ -80,7 +80,7 @@ const Program = () => {
           </div>
         </div>
 
-        {/* Card 3 */}
+        {/* Card 4 */}
         <div className="relative bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition duration-300">
           <div className="relative group">
             <img
@@ -91,13 +91,10 @@ const Program = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/50 to-transparent" />
             <div className="absolute bottom-4 left-6 text-white text-2xl font-bold drop-shadow-lg">
               CLUSTER
-              <p className="font-normal text-xl">
-                  Together Towards Success
-              </p>
+              <p className="font-normal text-xl">Together Towards Success</p>
             </div>
           </div>
           <div className="p-6">
-          
             <p className="text-gray-600 text-sm mb-4 leading-relaxed">
               Intensive revision and exam preparation for Class 10+ CBSE
               students
@@ -109,6 +106,34 @@ const Program = () => {
               <li> Interactive Sessions</li>
               <li> Focused Curriculum</li>
               <li> Frequent Evaluation</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="relative bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition duration-300">
+          <div className="relative group">
+            <img
+              className="w-full h-56 object-cover transform group-hover:scale-105 transition duration-500"
+              src="https://media.istockphoto.com/id/1899836013/photo/rear-view-of-a-girl-student-raising-her-hand-to-ask-on-classroom-at-school.jpg?s=612x612&w=0&k=20&c=cFzBJCWeXWxrHUC47Ju7Z5-4jsfqegTrbgXqI9hSfVs="
+              alt="Revision Program"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/50 to-transparent" />
+            <div className="absolute bottom-4 left-6 text-white text-2xl font-bold drop-shadow-lg">
+              DEEP ROOTS
+              <p className="font-normal text-xl">Together Towards Success</p>
+            </div>
+          </div>
+          <div className="p-6">
+            <p className="text-gray-600 text-sm mb-4 leading-relaxed">
+              Intensive Bridge Course  forstudents
+            </p>
+            <ul className="text-cyan-700 text-base font-medium space-y-2 list-disc list-inside">
+              <li> Strengthens fundamentals in Maths, Science, and Social</li>
+              <li>Bridges learning gaps before entering the next class</li>
+              <li>Small, focused batches for personal attention</li>
+              <li> Regular revision sessions for long-term retention</li>
+              <li>Dedicated doubt clearance to build confidence</li>
+              <li>Smooth academic transition with stronger basics</li>
             </ul>
           </div>
         </div>

@@ -1,5 +1,8 @@
 import React from "react";
 import { MapPin, BookOpen, Star } from "lucide-react";
+import cresent12 from "../assets/cresent12.jpg";
+import cresent10 from "../assets/cresent10.jpg";
+import cresent9 from "../assets/cresent9.jpg";
 
 const Crescent = () => {
   return (
@@ -15,15 +18,42 @@ const Crescent = () => {
         {/* Enhanced Heading */}
         <div className="mb-12">
           <h2 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-700 via-blue-700 to-cyan-800 bg-clip-text text-transparent mb-6 leading-tight">
-            Crescent Study Centre – Powered by Synapse
+            Crescent Study Centre – Powered by SYNAPSE
           </h2>
           <div className="w-24 h-1 bg-gradient-to-r from-cyan-500 to-blue-500 mx-auto mb-6 rounded-full"></div>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
             We are proud to collaborate with{" "}
             <span className="font-semibold text-cyan-700">Crescent Study Centre, Mavoor</span>{" "}
-            (Kozhikode, Kerala) – an offline tuition centre powered by Synapse.
+            (Kozhikode, Kerala) – an offline tuition centre powered by SYNPASE Edu Hub.
           </p>
         </div>
+
+        {/* Photo Gallery */}
+        <div className="mb-16">
+  <div className="grid md:grid-cols-3 gap-6 mb-12">
+    <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
+      <img 
+        src={cresent12} 
+        alt="Crescent Study Centre - Learning Environment" 
+        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+      />
+    </div>
+    <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
+      <img 
+        src={cresent10} 
+        alt="Crescent Study Centre - Facilities" 
+        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+      />
+    </div>
+    <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
+      <img 
+        src={cresent9} 
+        alt="Crescent Study Centre - Campus" 
+        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+      />
+    </div>
+  </div>
+</div>
 
         {/* Enhanced Programs Grid */}
         <div className="grid md:grid-cols-2 gap-8 text-left mb-16">
@@ -51,7 +81,7 @@ const Crescent = () => {
               <Star className="w-7 h-7 text-white" />
             </div>
             <h3 className="text-2xl font-bold text-cyan-800 mb-4">
-              Why Crescent x Synapse?
+              Why Crescent x SYNAPSE?
             </h3>
             <ul className="space-y-3 text-gray-700">
               <li className="flex items-start space-x-3">
