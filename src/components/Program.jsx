@@ -1,6 +1,6 @@
 import React from "react";
 import primeone from "../assets/primeone.png";
-
+import planb from "../assets/planb.png";  
 const Program = () => {
   return (
     <section className="w-full min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-gradient-to-b from-cyan-100 to-cyan-50 overflow-hidden">
@@ -52,8 +52,9 @@ const Program = () => {
         <div className="relative bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition duration-300">
           <div className="relative group">
             <img
-              className="w-full h-56 object-cover transform group-hover:scale-105 transition duration-500"
-              src="https://cdn.firstcry.com/education/2022/06/21192051/Essay-On-My-Classroom-10-Lines-Short-and-Long-Essay-For-Class-1-2-and-3-Kids.jpg"
+              className="w-full h-72 object-cover transform group-hover:scale-105 transition duration-500"
+              // src="https://cdn.firstcry.com/education/2022/06/21192051/Essay-On-My-Classroom-10-Lines-Short-and-Long-Essay-For-Class-1-2-and-3-Kids.jpg"
+              img src={planb}
               alt="Revision Program"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/50 to-transparent" />
