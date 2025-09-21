@@ -1,6 +1,6 @@
 import React from "react";
-// import primeone from "../assets/primeone img.png";
-import primeone3d from "../assets/primeone 3d.png";
+import primeone from "../assets/primeone.png";
+
 const Program = () => {
   return (
     <section className="w-full min-h-screen flex flex-col items-center justify-center px-6 py-16 bg-gradient-to-b from-cyan-100 to-cyan-50 overflow-hidden">
@@ -14,13 +14,13 @@ const Program = () => {
         {/* Card 1 */}
         <div className="relative bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl overflow-hidden hover:shadow-3xl transition duration-300">
           <div className="relative group">
-            <img
-              className="w-full h-56 object-cover transform group-hover:scale-105 transition duration-500"
-              // src="https://www.the74million.org/wp-content/uploads/2024/01/tutor-one-on-one.jpg"
-             
-              img src={primeone3d}  
-              alt="Individual Tuition"
-            />
+         <img
+  className="w-full h-72 object-cover transform group-hover:scale-105 transition duration-500"
+  src={primeone}
+  alt="Individual Tuition"
+/>
+
+
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/50 to-transparent" />
             <div className="absolute bottom-4 left-6 text-white text-2xl font-bold drop-shadow-lg">
               PRIME ONE
