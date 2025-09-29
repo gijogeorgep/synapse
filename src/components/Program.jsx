@@ -103,8 +103,7 @@ const Program = () => {
           </div>
           <div className="p-6">
             <p className="text-gray-600 text-sm mb-4 leading-relaxed">
-              Intensive revision and exam preparation for Class 10+ CBSE
-              students
+              Collaborative learning with personalized attention
             </p>
             <ul className="text-cyan-700 text-base font-medium space-y-2 list-disc list-inside">
               <li>Compact Batches</li>
@@ -129,7 +128,7 @@ const Program = () => {
             <div className="absolute inset-0 bg-gradient-to-t from-cyan-900/50 to-transparent" />
             <div className="absolute bottom-4 left-6 text-white text-2xl font-bold drop-shadow-lg">
               DEEP ROOTS
-              <p className="font-normal text-xl">Together Towards Success</p>
+              <p className="font-normal text-xl">Build your base, grow with confidence</p>
             </div>
           </div>
           <div className="p-6">
