@@ -6,7 +6,7 @@ import cresent9 from "../assets/cresent9.jpg";
 
 const Crescent = () => {
   return (
-    <section className="w-full bg-gradient-to-br from-slate-50 via-cyan-50 to-blue-100 py-20 px-6 md:px-20 relative overflow-hidden">
+    <section className="w-full bg-gradient-to-br from-slate-50 via-cyan-50 to-blue-100 py-20 px-6 md:px-20 relative">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 opacity-10">
         <div className="absolute top-10 left-10 w-32 h-32 bg-cyan-200 rounded-full blur-xl"></div>
@@ -30,30 +30,30 @@ const Crescent = () => {
 
         {/* Photo Gallery */}
         <div className="mb-16">
-  <div className="grid md:grid-cols-3 gap-6 mb-12">
-    <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
-      <img 
-        src={cresent12} 
-        alt="Crescent Study Centre - Learning Environment" 
-        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-      />
-    </div>
-    <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
-      <img 
-        src={cresent10} 
-        alt="Crescent Study Centre - Facilities" 
-        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-      />
-    </div>
-    <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
-      <img 
-        src={cresent9} 
-        alt="Crescent Study Centre - Campus" 
-        className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
-      />
-    </div>
-  </div>
-</div>
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
+              <img
+                src={cresent12}
+                alt="Crescent Study Centre - Learning Environment"
+                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
+              <img
+                src={cresent10}
+                alt="Crescent Study Centre - Facilities"
+                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+            <div className="group rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 bg-white flex items-center justify-center">
+              <img
+                src={cresent9}
+                alt="Crescent Study Centre - Campus"
+                className="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300"
+              />
+            </div>
+          </div>
+        </div>
 
         {/* Enhanced Programs Grid */}
         <div className="grid md:grid-cols-2 gap-8 text-left mb-16">
