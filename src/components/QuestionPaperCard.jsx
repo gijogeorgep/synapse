@@ -5,6 +5,7 @@ import q_cloud_synapse2 from "../assets/q cloud synapse 2.png"; // Replace with 
 import brainmap1 from "../assets/brainmap1.png"; // Replace with actual image paths
 import brainmap2 from "../assets/brainmap2.png";
 import brainmap3 from "../assets/brainmap3.png";
+
 const QuestionPaperCard = () => {
   const [paperIndex, setPaperIndex] = useState(0);
   const [brainIndex, setBrainIndex] = useState(0);
@@ -82,9 +83,8 @@ const QuestionPaperCard = () => {
               {/* Image Container */}
               <div className="relative overflow-hidden rounded-2xl  shadow-inner">
                 <div
-                  className={`transition-all duration-300 ${
-                    isLoading.paper ? "opacity-50 blur-sm" : "opacity-100"
-                  }`}
+                  className={`transition-all duration-300 ${isLoading.paper ? "opacity-50 blur-sm" : "opacity-100"
+                    }`}
                 >
                   <img
                     src={questionPapers[paperIndex]}
@@ -124,11 +124,10 @@ const QuestionPaperCard = () => {
                     <button
                       key={index}
                       onClick={() => setPaperIndex(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        index === paperIndex
+                      className={`w-3 h-3 rounded-full transition-all duration-300 ${index === paperIndex
                           ? "bg-blue-600 w-8"
                           : "bg-gray-300 hover:bg-gray-400"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>
@@ -160,9 +159,8 @@ const QuestionPaperCard = () => {
               {/* Image Container */}
               <div className="relative overflow-hidden rounded-2xl bg-gray-100 shadow-inner">
                 <div
-                  className={`transition-all duration-300 ${
-                    isLoading.brain ? "opacity-50 blur-sm" : "opacity-100"
-                  }`}
+                  className={`transition-all duration-300 ${isLoading.brain ? "opacity-50 blur-sm" : "opacity-100"
+                    }`}
                 >
                   <img
                     src={brainmaps[brainIndex]}
@@ -202,11 +200,10 @@ const QuestionPaperCard = () => {
                     <button
                       key={index}
                       onClick={() => setBrainIndex(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                        index === brainIndex
+                      className={`w-3 h-3 rounded-full transition-all duration-300 ${index === brainIndex
                           ? "bg-purple-600 w-8"
                           : "bg-gray-300 hover:bg-gray-400"
-                      }`}
+                        }`}
                     />
                   ))}
                 </div>

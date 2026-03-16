@@ -1,198 +1,225 @@
 import React, { useState } from "react";
+import { Play, Sparkles, Youtube, Clock, Star, X, Zap } from "lucide-react";
 import shortThumbnail from "../assets/shorts_thumbnail.png";
 import QuestionPaperCard from "./QuestionPaperCard";
 
 const VideoCard = () => {
-  const [showShort, setShowShort] = useState(false);
+  const [activeShortId, setActiveShortId] = useState(null);
+  const [inlinePlayingId, setInlinePlayingId] = useState(null);
+
+  const shortsData = [
+    {
+      id: "JXyYq5SR4Gw",
+      title: "Hindi Edition",
+      desc: "Comprehensive insights in Hindi for our diverse student base.",
+      lang: "Hindi",
+      color: "from-orange-500 to-red-600",
+      thumbnail: shortThumbnail
+    },
+    {
+      id: "8aMqLAY3iIQ",
+      title: "Tamil Edition",
+      desc: "Master key concepts with our dedicated Tamil-medium guidance.",
+      lang: "Tamil",
+      color: "from-blue-600 to-indigo-700",
+      thumbnail: shortThumbnail
+    },
+    {
+      id: "-TaOmXBtYhk",
+      title: "General Intro",
+      desc: "A quick glimpse into the Synapse Hub ecosystem.",
+      lang: "Malayalam",
+      color: "from-emerald-500 to-teal-600",
+      thumbnail: shortThumbnail
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-blue-50 relative overflow-hidden">
-      {/* Animated Background Elements */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -right-1/2 w-96 h-96 bg-gradient-to-br from-cyan-200/20 to-blue-300/20 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute -bottom-1/2 -left-1/2 w-96 h-96 bg-gradient-to-tr from-slate-200/20 to-cyan-200/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
+    <div className="min-h-screen bg-slate-50 relative font-['Plus_Jakarta_Sans',sans-serif]">
+      {/* Premium Background Architecture */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-5%] right-[-5%] w-[40%] h-[40%] bg-cyan-200/30 blur-[100px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-5%] left-[-5%] w-[40%] h-[40%] bg-blue-200/30 blur-[100px] rounded-full animate-pulse [animation-delay:1.5s]" />
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(#000 1px, transparent 1px)', backgroundSize: '30px 30px' }} />
       </div>
 
-      <div className="relative z-10 py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          {/* Hero Header */}
-          <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-2 bg-white/40 backdrop-blur-sm px-4 py-2 rounded-full mb-6 border border-white/20">
-              <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse"></div>
-              <span className="text-sm font-medium text-gray-700">
-                Featured Content
-              </span>
+      <div className="relative z-10 py-16 px-6 md:px-12 lg:px-20">
+        <div className="max-w-6xl mx-auto">
+
+          {/* Section Intelligence Header */}
+          <div className="text-center mb-16 space-y-4">
+            <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
+              <Sparkles className="w-3.5 h-3.5 text-cyan-500 animate-pulse" />
+              <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest">Digital Learning Hub</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-gray-800 via-cyan-600 to-blue-600 bg-clip-text text-transparent mb-6 leading-tight">
-              Welcome to
-              <br />
-              <span className="text-cyan-600">Synapse Edu Hub</span>
+            <h1 className="text-4xl md:text-6xl font-black text-slate-900 tracking-tighter leading-[0.95] font-['Outfit']">
+              Immersive <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">Intelligence</span>
             </h1>
-            <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-              Discover cutting-edge education through immersive videos and
-              innovative learning experiences
+            <p className="text-slate-500 font-medium text-base max-w-xl mx-auto leading-relaxed">
+              Explore our mission and educational methodology through high-fidelity visual narratives across multiple languages.
             </p>
           </div>
 
-          {/* Video Section */}
-          <div className="grid lg:grid-cols-3 gap-8 items-start">
-            {/* Main Video - Takes 2 columns */}
-            <div className="lg:col-span-2">
-              <div className="group relative bg-white/60 backdrop-blur-sm rounded-3xl p-2 shadow-2xl hover:shadow-3xl transition-all duration-500 border border-white/30">
-                <div className="relative overflow-hidden rounded-2xl">
+          <div className="space-y-16">
+            {/* Main Cinema Module - Reduced for Standard Approach */}
+            <div className="group max-w-5xl mx-auto w-full">
+              <div className="relative bg-white rounded-[2rem] p-2.5 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.06)] border border-slate-100 transition-all duration-500 hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.1)]">
+                <div className="relative overflow-hidden rounded-[1.5rem] bg-slate-900 aspect-video group-hover:shadow-2xl transition-all duration-700">
                   <iframe
                     src="https://www.youtube.com/embed/VvJBr0Fuklg?si=r3-NtHZqthj4QOdb"
-                    title="YouTube video player"
+                    title="Synapse Mission"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                     referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
-                    className="w-full aspect-video rounded-2xl"
+                    className="w-full h-full"
                   />
-                </div>
-                <div className="p-8">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
-                      <svg
-                        className="w-6 h-6 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-bold text-gray-800">
-                        About Our Mission
-                      </h3>
-                      <div className="flex items-center gap-2 text-sm text-gray-500 mt-1">
-                        <span>Main Feature</span>
-                        <div className="w-1 h-1 bg-gray-400 rounded-full"></div>
-                        <span>5 min watch</span>
-                      </div>
+                  <div className="absolute top-5 left-5 flex gap-2">
+                    <div className="bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/20 text-white text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                      Premier Feature
                     </div>
                   </div>
-                  <p className="text-gray-600 leading-relaxed text-lg">
-                    Dive deep into our innovative approach to education and
-                    discover how we're transforming learning through technology,
-                    creativity, and student-centered experiences.
-                  </p>
-                  <div className="flex items-center gap-4 mt-6">
-                    <div className="flex items-center gap-2 text-cyan-600">
-                      <svg
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                      <span className="font-semibold">Featured</span>
+                </div>
+
+                <div className="p-6 lg:p-8 flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-4 text-cyan-600 mb-0.5">
+                      <div className="w-8 h-[2px] bg-cyan-500 rounded-full" />
+                      <span className="text-[9px] font-black uppercase tracking-[.3em]">Core Mission</span>
                     </div>
+                    <h3 className="text-2xl font-black text-slate-800 tracking-tight font-['Outfit']">
+                      Transformative Education
+                    </h3>
+                    <p className="text-slate-500 font-medium text-xs leading-relaxed max-w-sm">
+                      Discover how we're reshaping the future of learning through deep technical insight and student-centric design.
+                    </p>
+                  </div>
+
+                  <div className="hidden lg:flex items-center gap-5 pr-2">
+
+                    <div className="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center shadow-inner">
+                      <Youtube className="w-4 h-4 text-red-500" />
+                    </div>
+
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* YouTube Short - Takes 1 column */}
-            <div className="flex justify-center">
-              <div
-                className="group relative bg-white/60 backdrop-blur-sm rounded-3xl p-2 shadow-2xl hover:shadow-3xl transition-all duration-500 cursor-pointer border border-white/30 hover:scale-105 transform"
-                onClick={() => setShowShort(true)}
-              >
-                <div className="relative overflow-hidden rounded-2xl">
-                  <img
-                    src={shortThumbnail}
-                    alt="YouTube Shorts"
-                    className="w-full aspect-[9/16] object-cover group-hover:scale-110 transition-transform duration-700"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+            {/* Language Ecosystem - Shorts Grid */}
+            <div className="space-y-8">
+              <div className="flex items-center gap-4">
+                <h3 className="text-2xl font-black text-slate-800 tracking-tight font-['Outfit']">Language Ecosystem</h3>
+                <div className="h-px bg-slate-200 flex-1" />
+              </div>
 
-                  {/* Play Button */}
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="bg-white/90 backdrop-blur-sm rounded-full p-6 group-hover:bg-white group-hover:scale-110 transition-all duration-300 shadow-2xl">
-                      <svg
-                        className="w-8 h-8 text-gray-800 ml-1"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {shortsData.map((short, i) => (
+                  <div
+                    key={i}
+                    className="group relative bg-white rounded-[2.5rem] p-3 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.05)] border border-slate-100 flex flex-col cursor-pointer hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2"
+                  >
+                    <div className="relative h-[480px] overflow-hidden rounded-[1.8rem] bg-slate-900 shadow-inner">
+                      {inlinePlayingId === short.id ? (
+                        <div className="w-full h-full bg-black relative">
+                          <iframe
+                            src={`https://www.youtube.com/embed/${short.id}?autoplay=1`}
+                            title={short.title}
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                            allowFullScreen
+                            className="w-full h-full"
+                          />
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setInlinePlayingId(null);
+                            }}
+                            className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/60 backdrop-blur-md text-white flex items-center justify-center hover:bg-red-500 transition-colors"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <img
+                            src={short.thumbnail}
+                            alt={short.title}
+                            className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-black/10" />
+
+                          {/* Language Badge */}
+                          <div className="absolute top-6 left-6">
+                            <div className={`bg-gradient-to-r ${short.color} text-white px-3 py-1.5 rounded-xl text-[9px] font-black tracking-widest shadow-lg uppercase shadow-black/20`}>
+                              {short.lang}
+                            </div>
+                          </div>
+
+                          {/* Play Interface */}
+                          <div className="absolute inset-0 flex flex-col items-center justify-center gap-6">
+                            <button
+                              onClick={() => setInlinePlayingId(short.id)}
+                              className="w-16 h-16 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center scale-90 group-hover:scale-100 transition-all duration-500 shadow-2xl hover:bg-white/20"
+                            >
+                              <div className="w-11 h-11 rounded-full bg-white text-slate-900 flex items-center justify-center pl-1 shadow-xl">
+                                <Play className="w-5 h-5 fill-slate-900" />
+                              </div>
+                            </button>
+
+                            {/* Expand to Modal Option */}
+                            <button
+                              onClick={() => setActiveShortId(short.id)}
+                              className="opacity-0 group-hover:opacity-100 translate-y-4 group-hover:translate-y-0 transition-all duration-500 bg-black/40 backdrop-blur-md text-white px-4 py-2 rounded-full text-[10px] font-black uppercase tracking-widest border border-white/10 hover:bg-white hover:text-slate-900"
+                            >
+                              Launch Fullscreen
+                            </button>
+                          </div>
+                        </>
+                      )}
+                    </div>
+
+                    <div className="p-6 text-center">
+                      <h4 className="text-lg font-black text-slate-800 tracking-tight font-['Outfit'] mb-1">
+                        {short.title}
+                      </h4>
+                      <p className="text-slate-500 text-[12px] font-medium leading-relaxed">
+                        {short.desc}
+                      </p>
+                    </div>
+
+                    {/* Interaction Indicator */}
+                    <div className="absolute bottom-4 right-6 opacity-0 group-hover:opacity-100 transition-opacity font-black text-[10px] text-cyan-600 uppercase tracking-widest">
+                      Learn More →
                     </div>
                   </div>
-
-                  {/* Shorts Badge */}
-                  <div className="absolute top-4 right-4">
-                    <div className="bg-gradient-to-r from-red-500 to-pink-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                      SHORTS
-                    </div>
-                  </div>
-
-                  {/* Duration Badge */}
-                  <div className="absolute bottom-4 left-4">
-                    <div className="bg-black/70 backdrop-blur-sm text-white px-2 py-1 rounded text-xs font-medium">
-                      0:30
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6">
-                  <h4 className="font-bold text-gray-800 text-lg mb-2">
-                    Quick Introduction
-                  </h4>
-                  <p className="text-gray-600 text-sm leading-relaxed">
-                    Get a glimpse of what makes Synapse special in just 30
-                    seconds
-                  </p>
-                  <div className="flex items-center gap-2 mt-4 text-xs text-gray-500">
-                    <div className="w-6 h-6 bg-gradient-to-r from-cyan-400 to-blue-400 rounded-full flex items-center justify-center">
-                      <svg
-                        className="w-3 h-3 text-white"
-                        fill="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                    </div>
-                    <span>Tap to watch</span>
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
           </div>
 
-           <QuestionPaperCard />
+          <div className="mt-32">
+            <QuestionPaperCard />
+          </div>
 
-          {/* Stats Section */}
-       
         </div>
       </div>
 
-      {/* Enhanced Modal for Shorts */}
-      {showShort && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="relative w-full max-w-sm animate-in fade-in zoom-in duration-300">
+      {/* Modern Shorts Modal Overlay */}
+      {activeShortId && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-950/80 backdrop-blur-xl animate-in fade-in duration-500">
+          <div className="relative w-full max-w-[400px] animate-in slide-in-from-bottom-10 duration-500">
             <button
-              onClick={() => setShowShort(false)}
-              className="absolute -top-16 right-0 text-white hover:text-gray-300 transition-all duration-200 bg-white/10 backdrop-blur-sm rounded-full p-3 hover:bg-white/20"
+              onClick={() => setActiveShortId(null)}
+              className="absolute -top-14 right-0 w-10 h-10 rounded-full bg-white/10 text-white border border-white/20 flex items-center justify-center hover:bg-white hover:text-slate-900 transition-all duration-300"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
+              <X className="w-5 h-5" />
             </button>
-            <div className="bg-black rounded-2xl overflow-hidden shadow-2xl border border-gray-800">
+            <div className="bg-black rounded-[2rem] overflow-hidden shadow-2xl border border-white/10 ring-1 ring-white/10">
               <iframe
-                src="https://www.youtube.com/embed/-TaOmXBtYhk"
-                title="YouTube Shorts player"
+                src={`https://www.youtube.com/embed/${activeShortId}`}
+                title="Synapse Insight"
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
@@ -206,5 +233,6 @@ const VideoCard = () => {
     </div>
   );
 };
+
 
 export default VideoCard;

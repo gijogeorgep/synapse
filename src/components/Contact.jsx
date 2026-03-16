@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Mail, Phone, MapPin, Send, Instagram, Facebook, Linkedin, MessageCircle, Globe } from "lucide-react";
 
 const Contact = () => {
   const [status, setStatus] = useState("");
@@ -7,7 +8,6 @@ const Contact = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const form = e.target;
-
     setLoading(true);
     setStatus("");
 
@@ -21,197 +21,141 @@ const Contact = () => {
       if (response.ok) {
         setStatus("success");
         form.reset();
-        setTimeout(() => setStatus(""), 4000); // auto-hide after 4s
+        setTimeout(() => setStatus(""), 4000);
       } else {
         const data = await response.json();
-        if (data.errors) {
-          setStatus(data.errors.map((err) => err.message).join(", "));
-        } else {
-          setStatus("error");
-        }
+        setStatus(data.errors ? data.errors.map((err) => err.message).join(", ") : "error");
       }
     } catch (error) {
       console.error(error);
       setStatus("error");
     }
-
     setLoading(false);
   };
 
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center px-6 py-10 overflow-hidden bg-cyan-50">
-      {/* Background Image */}
-      <img
-        src="https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d?q=80&w=1172&auto=format&fit=crop"
-        alt="Background"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+    <section className="relative w-full min-h-screen flex items-center justify-center px-6 py-24 bg-[#0f172a] overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
+      {/* Dynamic Aurora Background */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/10 blur-[120px] rounded-full animate-pulse" />
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
+        {/* Subtle grid pattern */}
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(#fff 1px, transparent 1px)', backgroundSize: '40px 40px' }} />
+      </div>
 
-      {/* Overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/50 to-cyan-700/40"></div>
-
-      {/* Decorative Circles */}
-      <div className="absolute -bottom-20 -left-10 w-72 h-72 bg-cyan-200 rounded-full opacity-30 blur-3xl animate-pulse"></div>
-      <div className="absolute -top-20 -right-10 w-72 h-72 bg-cyan-300 rounded-full opacity-30 blur-3xl animate-ping"></div>
-
-      {/* Content */}
-      <div className="relative z-10 w-full max-w-6xl bg-white/20 backdrop-blur-xl border border-white/30 rounded-3xl shadow-2xl p-6 md:p-10 flex flex-col md:flex-row gap-10">
-        {/* Contact Form */}
-        <div className="flex-1 max-h-[90vh] overflow-auto">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 text-center">
-            Contact Us
-          </h2>
-          <p className="text-gray-100 text-center mb-6">
-            Have questions or want to know more? Get in touch with us today!
-          </p>
-
-          <form
-            onSubmit={handleSubmit}
-            action="https://formspree.io/f/xovnoadv"
-            method="POST"
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6"
-          >
-            {/* Name */}
-            <div className="flex flex-col">
-              <label className="text-gray-100 font-medium mb-1">
-                Your Name
-              </label>
-              <input
-                type="text"
-                name="name"
-                aria-label="Your Name"
-                className="p-3 rounded-xl border border-white/40 bg-white/10 text-white placeholder-white focus:ring-2 focus:ring-cyan-400"
-                placeholder="Enter your name"
-                required
-              />
+      <div className="relative z-10 w-full max-w-7xl">
+        <div className="flex flex-col lg:flex-row gap-16 items-start">
+          
+          {/* Details Column */}
+          <div className="w-full lg:w-[40%] space-y-12">
+            <div className="space-y-6">
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping" />
+                <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest">Connect With Us</span>
+              </div>
+              <h2 className="text-5xl lg:text-7xl font-black text-white tracking-tighter leading-[0.9] font-['Outfit']">
+                Let's Start a <br />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Conversation</span>
+              </h2>
+              <p className="text-slate-400 font-medium leading-relaxed max-w-sm">
+                Have questions about our programs or need personalized guidance? Our team is here to help you navigate your educational journey.
+              </p>
             </div>
 
-            {/* Email */}
-            <div className="flex flex-col">
-              <label className="text-gray-100 font-medium mb-1">
-                Your Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                aria-label="Your Email"
-                className="p-3 rounded-xl border border-white/40 bg-white/10 text-white placeholder-white focus:ring-2 focus:ring-cyan-400"
-                placeholder="Enter your email"
-                required
-              />
+            <div className="space-y-4">
+              {[
+                { icon: Phone, label: "Call Us", value: "+91 81579 30567", link: "tel:+918157930567", color: "text-emerald-400" },
+                { icon: Mail, label: "Email Us", value: "info@synapseedu.in", link: "mailto:info@synapseedu.in", color: "text-blue-400" },
+                { icon: MapPin, label: "Visit Us", value: "Synapse Edu Hub, Kerala, India", link: "#", color: "text-rose-400" }
+              ].map((item, i) => (
+                <a key={i} href={item.link} className="group flex items-center gap-5 p-4 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-all duration-300">
+                  <div className={`w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center group-hover:scale-110 transition-transform ${item.color}`}>
+                    <item.icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.label}</p>
+                    <p className="text-sm font-bold text-white tracking-tight">{item.value}</p>
+                  </div>
+                </a>
+              ))}
             </div>
 
-            {/* Subject */}
-            <div className="flex flex-col md:col-span-2">
-              <label className="text-gray-100 font-medium mb-1">Subject</label>
-              <input
-                type="text"
-                name="subject"
-                aria-label="Subject"
-                className="p-3 rounded-xl border border-white/40 bg-white/10 text-white placeholder-white focus:ring-2 focus:ring-cyan-400"
-                placeholder="Enter subject"
-              />
+            {/* Social Links Hub */}
+            <div className="pt-8">
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] mb-6">Digital Ecosystem</p>
+              <div className="flex gap-4">
+                {[
+                  { icon: Instagram, link: "https://www.instagram.com/synapse_edu.hub", color: "hover:text-pink-500" },
+                  { icon: Facebook, link: "https://www.facebook.com/share/1KBy2iguoK/", color: "hover:text-blue-500" },
+                  { icon: Linkedin, link: "https://www.linkedin.com/in/synapse-edu-hub-9b788b371", color: "hover:text-blue-400" },
+                  { icon: MessageCircle, link: "https://wa.me/8157930567", color: "hover:text-emerald-500" }
+                ].map((social, i) => (
+                  <a key={i} href={social.link} target="_blank" rel="noopener noreferrer" className={`w-12 h-12 flex items-center justify-center rounded-2xl bg-white/5 border border-white/10 text-slate-400 transition-all duration-300 hover:-translate-y-1 hover:bg-white/10 ${social.color}`}>
+                    <social.icon className="w-5 h-5" />
+                  </a>
+                ))}
+              </div>
             </div>
+          </div>
 
-            {/* Message */}
-            <div className="flex flex-col md:col-span-2">
-              <label className="text-gray-100 font-medium mb-1">Message</label>
-              <textarea
-                rows="4"
-                name="message"
-                aria-label="Message"
-                className="p-3 rounded-xl border border-white/40 bg-white/10 text-white placeholder-white focus:ring-2 focus:ring-cyan-400"
-                placeholder="Write your message..."
-                required
-              ></textarea>
+          {/* Form Column */}
+          <div className="w-full lg:w-[60%]">
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-[2.5rem] blur-xl opacity-50 group-hover:opacity-100 transition-opacity" />
+              <div className="relative bg-white/5 backdrop-blur-3xl border border-white/10 p-8 lg:p-12 rounded-[2.5rem] shadow-2xl">
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Your Identity</label>
+                      <input 
+                        type="text" name="name" required placeholder="Full Name"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email Address</label>
+                      <input 
+                        type="email" name="email" required placeholder="name@email.com"
+                        className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Subject of interest</label>
+                    <input 
+                      type="text" name="subject" placeholder="What's on your mind?"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Message Details</label>
+                    <textarea 
+                      name="message" required rows="5" placeholder="How can we help you reach your goals?"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all resize-none"
+                    />
+                  </div>
+
+                  <button 
+                    type="submit" disabled={loading}
+                    className="group relative w-full py-5 rounded-2xl bg-gradient-to-r from-cyan-600 to-blue-600 font-black text-white uppercase tracking-[0.2em] text-[11px] overflow-hidden transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    <span className="relative z-10 flex items-center justify-center gap-3">
+                      {loading ? "Transmitting..." : "Send Intelligence"}
+                      <Send className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  </button>
+
+                  {status && (
+                    <div className={`text-center pt-4 text-xs font-bold uppercase tracking-widest ${status === 'success' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {status === 'success' ? '— Transmission Successful —' : '— Error in Transmission —'}
+                    </div>
+                  )}
+                </form>
+              </div>
             </div>
-
-            {/* Submit */}
-            <div className="md:col-span-2 flex flex-col items-center mt-4">
-              <button
-                type="submit"
-                disabled={loading}
-                className={`${
-                  loading
-                    ? "bg-gray-500 cursor-not-allowed"
-                    : "bg-cyan-700 hover:bg-cyan-800"
-                } text-white font-semibold px-8 py-3 rounded-full shadow-lg hover:scale-105 transition transform duration-300`}
-              >
-                {loading ? "Sending..." : "Send Message"}
-              </button>
-
-              {/* Status Message */}
-              {status && (
-                <p
-                  className={`mt-3 font-medium ${
-                    status === "success"
-                      ? "text-green-300"
-                      : status === "error"
-                      ? "text-red-400"
-                      : "text-yellow-300"
-                  }`}
-                >
-                  {status === "success"
-                    ? "✅ Message sent successfully!"
-                    : status === "error"
-                    ? "❌ Oops! Something went wrong."
-                    : status}
-                </p>
-              )}
-            </div>
-          </form>
-        </div>
-
-        {/* Social Media Section */}
-        <div className="flex flex-col items-center justify-center space-y-6 w-full md:w-1/3">
-          <h3 className="text-2xl font-semibold text-white mb-4">
-            Connect with us
-          </h3>
-          <div className="flex flex-wrap justify-center gap-6">
-            <a
-              href="https://www.instagram.com/synapse_edu.hub?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw=="
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://img.icons8.com/color/48/instagram-new--v1.png"
-                alt="Instagram"
-                className="hover:scale-110 transition-transform"
-              />
-            </a>
-            <a
-              href="https://www.facebook.com/share/1KBy2iguoK/?mibextid=wwXIfr"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://img.icons8.com/color/48/facebook-new.png"
-                alt="Facebook"
-                className="hover:scale-110 transition-transform"
-              />
-            </a>
-            <a
-              href="https://www.linkedin.com/in/synapse-edu-hub-9b788b371?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://img.icons8.com/color/48/linkedin.png"
-                alt="LinkedIn"
-                className="hover:scale-110 transition-transform"
-              />
-            </a>
-            <a
-              href="https://wa.me/8157930567"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <img
-                src="https://img.icons8.com/color/48/whatsapp.png"
-                alt="WhatsApp"
-                className="hover:scale-110 transition-transform"
-              />
-            </a>
           </div>
         </div>
       </div>
@@ -220,3 +164,4 @@ const Contact = () => {
 };
 
 export default Contact;
+
