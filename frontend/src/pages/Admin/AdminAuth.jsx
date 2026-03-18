@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import apiClient from "../../api/apiClient";
 
 const AdminAuth = () => {
     const { login } = useAuth();
@@ -25,15 +25,18 @@ const AdminAuth = () => {
         setError("");
 
         try {
-            const { data } = await axios.post("/api/auth/admin/login", {
-                email: formData.email,
-                password: formData.password
+            const data = await apiClient("/auth/admin/login", {
+                method: "POST",
+                body: {
+                    email: formData.email,
+                    password: formData.password
+                }
             });
 
             localStorage.setItem("userInfo", JSON.stringify(data));
-            window.location.href = "/admin/dashboard";
+            navigate("/admin/dashboard");
         } catch (err) {
-            setError(err.response?.data?.message || "Authentication failed");
+            setError(err || "Authentication failed");
         } finally {
             setLoading(false);
         }
