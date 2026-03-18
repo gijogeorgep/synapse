@@ -45,11 +45,12 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
         try {
             data = text ? JSON.parse(text) : {};
         } catch (err) {
-            // If parsing fails but response was ok, it's a weird case
+            console.error("[API_CLIENT] JSON Parse Error:", err, "Raw Text:", text);
             if (response.ok) {
-                return text; // Return raw text if it's not JSON but was successful
+                // If it's 200 OK but not JSON, we return an empty object to avoid breaking state expectations
+                // unless it's a known string response (not the case here for auth)
+                return {}; 
             }
-            // If parsing fails and response was not ok, use the text or a default message
             return Promise.reject(text || `Error: ${response.status} ${response.statusText}`);
         }
 
@@ -59,7 +60,8 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
             return Promise.reject(data.message || `Error: ${response.status} ${response.statusText}`);
         }
     } catch (error) {
-        return Promise.reject(error.message || "Server connection error");
+        console.error("[API_CLIENT] Request Error:", error);
+        return Promise.reject(error.message || "Network error occurred");
     }
 };
 

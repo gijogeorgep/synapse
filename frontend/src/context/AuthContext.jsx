@@ -54,7 +54,12 @@ export const AuthProvider = ({ children }) => {
     };
 
     const updateUser = (updatedData) => {
+        console.log("[AUTH_CONTEXT] updateUser called with:", updatedData);
+        console.log("[AUTH_CONTEXT] Current user state:", user);
+        
         const mergedUser = user ? { ...user, ...updatedData } : updatedData;
+        console.log("[AUTH_CONTEXT] Merged user state:", mergedUser);
+        
         setUser(mergedUser);
         localStorage.setItem("userInfo", JSON.stringify(mergedUser));
     };

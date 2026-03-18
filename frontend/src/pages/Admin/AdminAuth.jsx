@@ -25,18 +25,28 @@ const AdminAuth = () => {
         setError("");
 
         try {
+            console.log("[ADMIN_AUTH] Attempting login for:", formData.email);
             const data = await apiClient("/auth/admin/login", {
                 method: "POST",
-                body: {
-                    email: formData.email,
-                    password: formData.password
-                }
+                body: formData,
             });
 
+            console.log("[ADMIN_AUTH] Login Response Data:", data);
+
+            if (!data || typeof data !== 'object') {
+                throw new Error("Invalid response structure from server");
+            }
+
+            if (!data.role) {
+                console.warn("[ADMIN_AUTH] Warning: Response data missing role property", data);
+            }
+
             updateUser(data);
+            console.log("[ADMIN_AUTH] User state updated, navigating to dashboard...");
             navigate("/admin/dashboard");
         } catch (err) {
-            setError(err || "Authentication failed");
+            console.error("[ADMIN_AUTH] Login Error:", err);
+            setError(err.message || "Failed to login. Please check your credentials.");
         } finally {
             setLoading(false);
         }
