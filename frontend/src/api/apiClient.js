@@ -36,10 +36,18 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
     }
 
     try {
+        console.log(`[API_CLIENT] Fetching: ${API_URL}${endpoint}`, {
+            method: config.method,
+            headers: config.headers
+        });
+        
         const response = await fetch(`${API_URL}${endpoint}`, config);
+        console.log(`[API_CLIENT] Response Status: ${response.status} ${response.statusText}`);
         
         // Read response text first to handle non-JSON or empty bodies
         const text = await response.text();
+        console.log(`[API_CLIENT] Raw Response Text:`, text.substring(0, 500) + (text.length > 500 ? "..." : ""));
+        
         let data;
         
         try {
@@ -48,7 +56,7 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
             console.error("[API_CLIENT] JSON Parse Error:", err, "Raw Text:", text);
             if (response.ok) {
                 // If it's 200 OK but not JSON, we return an empty object to avoid breaking state expectations
-                // unless it's a known string response (not the case here for auth)
+                console.warn("[API_CLIENT] Success status with non-JSON body. Returning {}.");
                 return {}; 
             }
             return Promise.reject(text || `Error: ${response.status} ${response.statusText}`);
@@ -57,6 +65,7 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
         if (response.ok) {
             return data;
         } else {
+            console.warn("[API_CLIENT] Error response data:", data);
             return Promise.reject(data.message || `Error: ${response.status} ${response.statusText}`);
         }
     } catch (error) {
