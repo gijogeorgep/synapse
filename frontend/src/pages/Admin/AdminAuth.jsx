@@ -37,12 +37,13 @@ const AdminAuth = () => {
                 throw new Error("Invalid response structure from server");
             }
 
-            if (!data.role) {
-                console.warn("[ADMIN_AUTH] Warning: Response data missing role property", data);
+            if (!data || typeof data.role !== 'string') {
+                console.error("[ADMIN_AUTH] Invalid role received:", data?.role);
+                throw new Error("Invalid login response: Role must be a string");
             }
-
+            
+            console.log("[ADMIN_AUTH] Successful login, role:", data.role);
             updateUser(data);
-            console.log("[ADMIN_AUTH] User state updated, navigating to dashboard...");
             navigate("/admin/dashboard");
         } catch (err) {
             console.error("[ADMIN_AUTH] Login Error:", err);
