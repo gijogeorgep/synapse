@@ -170,16 +170,16 @@ export const adminLogin = async (req, res) => {
 
         if (user) {
             const isMatch = await user.matchPassword(password);
-            console.log(`Password match: ${isMatch}`);
+            console.log(`[AUTH] Login attempt for ${email} - User found, Password match: ${isMatch}`);
             
             if (isMatch) {
                 if (user.role !== 'admin' && user.role !== 'superadmin') {
-                    console.log(`Unauthorized role: ${user.role}`);
-                    return res.status(403).json({ message: "Not authorized as admin" });
+                    console.warn(`[AUTH] Unauthorized role access attempt: ${email} has role ${user.role}`);
+                    return res.status(403).json({ message: "Not authorized as administrator. Access denied." });
                 }
 
                 const token = generateToken(user._id);
-                console.log(`Token generated successfully`);
+                console.log(`[AUTH] Admin login successful: ${email} (${user.role})`);
 
                 return res.json({
                     _id: user._id,
@@ -188,13 +188,19 @@ export const adminLogin = async (req, res) => {
                     role: user.role,
                     token: token,
                 });
+            } else {
+                console.warn(`[AUTH] Login failed: Incorrect password for ${email}`);
             }
+        } else {
+            console.warn(`[AUTH] Login failed: User not found for ${email}`);
         }
 
-        console.log("Invalid credentials or user not found");
-        res.status(401).json({ message: "Invalid email or password" });
+        return res.status(401).json({ message: "Invalid email or security key" });
     } catch (error) {
-        console.error("ADMIN LOGIN ERROR:", error);
-        res.status(500).json({ message: error.message });
+        console.error("CRITICAL ADMIN LOGIN ERROR:", error);
+        return res.status(500).json({ 
+            message: "Internal server error during authentication",
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };

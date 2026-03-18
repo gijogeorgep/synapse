@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import apiClient from "../../api/apiClient";
 
 const AdminAuth = () => {
-    const { login } = useAuth();
+    const { login, updateUser } = useAuth();
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -33,7 +33,7 @@ const AdminAuth = () => {
                 }
             });
 
-            localStorage.setItem("userInfo", JSON.stringify(data));
+            updateUser(data);
             navigate("/admin/dashboard");
         } catch (err) {
             setError(err || "Authentication failed");
