@@ -106,7 +106,7 @@ const Navbar = () => {
                         {user ? (
                             <div className="flex items-center gap-3">
                                 <Link
-                                    to={`/${user.role}/dashboard`}
+                                    to={user.role === "admin" || user.role === "superadmin" ? "/admin/dashboard" : `/${user.role}/dashboard`}
                                     className="flex items-center gap-2 pr-4 pl-1.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-100 text-slate-800 font-semibold text-sm hover:bg-cyan-100 hover:border-cyan-200 transition-colors"
                                 >
                                     <div className="w-8 h-8 rounded-full overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-[10px] font-bold border-2 border-white">
@@ -194,7 +194,7 @@ const Navbar = () => {
                         {user ? (
                             <>
                                 <Link
-                                    to={`/${user.role}/dashboard`}
+                                    to={user.role === "admin" || user.role === "superadmin" ? "/admin/dashboard" : `/${user.role}/dashboard`}
                                     onClick={() => setIsOpen(false)}
                                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-50 border border-cyan-100"
                                 >
