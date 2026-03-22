@@ -114,22 +114,20 @@ const StudentMaterials = () => {
                         <button
                             type="button"
                             onClick={() => setActiveTab("materials")}
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                                activeTab === "materials"
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${activeTab === "materials"
                                     ? "bg-white text-cyan-700 shadow-sm"
                                     : "text-slate-600 hover:text-slate-800"
-                            }`}
+                                }`}
                         >
                             Study materials
                         </button>
                         <button
                             type="button"
                             onClick={() => setActiveTab("papers")}
-                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
-                                activeTab === "papers"
+                            className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${activeTab === "papers"
                                     ? "bg-white text-cyan-700 shadow-sm"
                                     : "text-slate-600 hover:text-slate-800"
-                            }`}
+                                }`}
                         >
                             Question papers
                         </button>

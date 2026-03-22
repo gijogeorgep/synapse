@@ -20,6 +20,7 @@ import {
 } from "../controllers/adminController.js";
 import { 
     createExam, 
+    createExamWithQuestions,
     getExams,
     submitResults
 } from "../controllers/examController.js";
@@ -67,6 +68,7 @@ router.delete("/announcements/:id", deleteAnnouncement);
 router.route("/exams")
     .post(createExam)
     .get(getExams);
+router.post("/exams/bulk", createExamWithQuestions);
 router.post("/results", submitResults);
 
 // Bulk Promotions

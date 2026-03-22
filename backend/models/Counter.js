@@ -8,7 +8,7 @@ const counterSchema = new mongoose.Schema({
     },
     seq: {
         type: Number,
-        default: 10000, // Starting sequence
+        default: 1000, // Starting sequence for 1001, 1002...
     },
 });
 

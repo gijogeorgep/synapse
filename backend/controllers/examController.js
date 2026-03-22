@@ -39,15 +39,23 @@ export const getExams = async (req, res) => {
         if (classLevel) query.classLevel = classLevel;
         if (examType) query.examType = examType;
 
-        // Filtering for Institutional Students
-        if (req.user.role === 'student' && req.user.userType === 'institutional') {
+        // Independent students (NEET/JEE/PSC): see subject-wise or mock exams for their classrooms
+        if (req.user.role === 'student' && req.user.userType === 'independent') {
+            const enrolledClassroomIds = req.user.enrolledClassrooms || [];
+            query.classroom = { $in: enrolledClassroomIds };
+            
+            // If explicit examType is requested, use it; otherwise show all relevant types
+            if (examType) {
+                query.examType = examType;
+            } else {
+                query.examType = { $in: ['subject-wise', 'mock', 'official'] };
+            }
+        }
+        // Institutional students: filter by their class level
+        else if (req.user.role === 'student' && req.user.userType === 'institutional') {
             const studentClassrooms = await Classroom.find({ students: req.user._id });
             const classLevels = studentClassrooms.map(c => c.className);
-            const subjects = studentClassrooms.flatMap(c => c.subjects);
-
-            query.classLevel = { $in: classLevels };
-            // If they are institutional, they should only see exams for their assigned subjects/classes
-            // This is a basic filter, can be refined based on specific needs
+            if (!classLevel) query.classLevel = { $in: classLevels };
         }
 
         const exams = await Exam.find(query).populate("teacher", "name");
@@ -61,7 +69,7 @@ export const getExams = async (req, res) => {
 // @route   POST /api/exams/bulk
 // @access  Private (Teacher/Admin)
 export const createExamWithQuestions = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examType, classroom, questions, totalMarks } = req.body;
+    const { title, description, duration, subject, classLevel, date, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks } = req.body;
 
     if (!title || !duration || !subject || !date || !classroom) {
         return res.status(400).json({ message: "Please provide all required fields: title, duration, subject, date, and classroom." });
@@ -79,6 +87,8 @@ export const createExamWithQuestions = async (req, res) => {
             classroom,
             totalMarks: totalMarks || 100,
             examType: examType || "subject-wise",
+            marksPerQuestion: marksPerQuestion ?? 1,
+            negativeMarks: negativeMarks ?? 0,
             teacher: req.user._id,
         });
 
@@ -181,17 +191,29 @@ export const submitExam = async (req, res) => {
             return res.status(404).json({ message: "Exam or questions not found" });
         }
 
+        const marksPerQ = exam.marksPerQuestion ?? 1;
+        const negMarks  = exam.negativeMarks   ?? 0;
+
         let score = 0;
         const processedAnswers = answers.map((ans) => {
             const question = questions.find((q) => q._id.toString() === ans.questionId);
             const isCorrect = question && question.correctAnswer === ans.selectedOption;
-            if (isCorrect) score++;
+            const isAttempted = ans.selectedOption !== null && ans.selectedOption !== undefined;
+
+            if (isCorrect) {
+                score += marksPerQ;
+            } else if (isAttempted) {
+                score -= negMarks; // subtract negative marks only if answered wrongly
+            }
+
             return {
                 questionId: ans.questionId,
                 selectedOption: ans.selectedOption,
                 isCorrect,
             };
         });
+
+        score = Math.max(0, parseFloat(score.toFixed(2))); // floor at 0, round to 2 decimal places
 
         const result = await Result.create({
             student: req.user._id,

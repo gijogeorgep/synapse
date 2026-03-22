@@ -46,6 +46,15 @@ const classroomSchema = mongoose.Schema(
                 },
             },
         ],
+        price: {
+            type: Number,
+            default: 0,
+        },
+        type: {
+            type: String,
+            enum: ["NEET", "JEE", "PSC", "Other"],
+            default: "Other",
+        },
     },
     {
         timestamps: true,

@@ -11,7 +11,8 @@ const StudentExams = () => {
     const [completedExams, setCompletedExams] = useState([]);
     const [loading, setLoading] = useState(true);
     const [loadingResults, setLoadingResults] = useState(true);
-    const [activeTab, setActiveTab] = useState("subject-wise"); // 'subject-wise' | 'official'
+    const isIndependent = user?.userType === 'independent';
+    const [activeTab, setActiveTab] = useState(isIndependent ? "subject-wise" : "subject-wise");
 
     // Exam Player State
     const [activeExam, setActiveExam] = useState(null);
@@ -50,6 +51,12 @@ const StudentExams = () => {
     }, [user, location.state]);
 
     const filteredExams = upcomingExams.filter(e => {
+        if (isIndependent) {
+            if (activeTab === "subject-wise") {
+                return e.examType === "subject-wise" || e.examType === "official"; // Include official as fallback for old exams
+            }
+            return e.examType === "mock";
+        }
         if (activeTab === "official") {
             return e.examType === "official" && e.classLevel === user?.class;
         } else {
@@ -170,13 +177,13 @@ const StudentExams = () => {
                                 Subject-wise
                             </button>
                             <button
-                                onClick={() => setActiveTab("official")}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${activeTab === "official"
+                                onClick={() => setActiveTab(isIndependent ? "mock" : "official")}
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${activeTab === (isIndependent ? "mock" : "official")
                                     ? 'bg-white text-cyan-600 shadow-sm'
                                     : 'text-slate-500 hover:text-slate-700'
                                     }`}
                             >
-                                Official
+                                {isIndependent ? "Full Mock" : "Official"}
                             </button>
                         </div>
                     </div>
@@ -237,8 +244,8 @@ const StudentExams = () => {
                             <div className="text-center py-10 text-slate-400">No results found yet.</div>
                         ) : (
                             completedExams.map((result) => {
-                                const percentage = result.exam ? (result.score / result.exam.duration) * 100 : 0; // Duration used as placeholder for total qs if not available
-                                // Better: Check if we have total questions. For now, let's assume result.score is meaningful.
+                                const total = result.exam?.totalMarks || result.answers?.length || 1;
+                                const percentage = (result.score / total) * 100;
                                 let grade = 'F';
                                 if (percentage >= 90) grade = 'A+';
                                 else if (percentage >= 80) grade = 'A';
@@ -265,7 +272,7 @@ const StudentExams = () => {
                                                     Score
                                                 </p>
                                                 <p className="text-sm font-black text-slate-900">
-                                                    {result.score}/{result.answers?.length || 0}
+                                                    {result.score}/{result.exam?.totalMarks || result.answers?.length || 0}
                                                 </p>
                                             </div>
                                             <button 
@@ -323,7 +330,7 @@ const StudentExams = () => {
                                     <p className="text-slate-500 font-medium">Review your performance below. You can see correct answers and explanations.</p>
                                     <div className="p-8 rounded-[2rem] bg-slate-50 border-2 border-slate-100 flex flex-col items-center gap-2">
                                         <span className="text-xs font-black text-slate-400 underline decoration-cyan-500 underline-offset-4 decoration-2">YOUR SCORE</span>
-                                        <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-cyan-600 to-indigo-600">{examResult.score} / {examResult.answers?.length || questions.length}</span>
+                                        <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-cyan-600 to-indigo-600">{examResult.score} / {activeExam.totalMarks || examResult.answers?.length || questions.length}</span>
                                     </div>
 
                                     <div className="text-left space-y-6 pt-10 border-t border-slate-100">

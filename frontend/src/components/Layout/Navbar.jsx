@@ -156,7 +156,7 @@ const Navbar = () => {
 
                 {/* Mobile Navigation */}
                 <nav
-                    className={`md:hidden bg-white/98 border-t border-slate-200 shadow-md px-5 pt-3 pb-6 space-y-3 transition-all duration-200 origin-top ${isOpen ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0 pointer-events-none"
+                    className={`md:hidden absolute top-full left-0 w-full bg-white/98 border-t border-slate-200 shadow-md px-5 pt-3 pb-6 space-y-3 transition-all duration-200 origin-top ${isOpen ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0 pointer-events-none"
                         }`}
                 >
                     {!isDashboard && navItems.map((item) => (

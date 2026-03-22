@@ -1,32 +1,34 @@
 import Counter from "../models/Counter.js";
 
 /**
- * Generates a unique ID for students or teachers
+ * Generates a unique ID in the format SSEHX1001
  * @param {string} role - 'student' or 'teacher'
- * @param {string} className - Optional class name for student ID format
- * @param {string} board - Optional board name for student ID format
- * @returns {string} - Generated ID (e.g., SSEHC1001 or TSEH20001)
+ * @param {string} classroomType - 'NEET', 'JEE', 'PSC', or 'Other'
  */
-export const generateUniqueId = async (role, className, board) => {
-    let counterName, prefix, padLength;
+export const generateUniqueId = async (role, classroomType = "Other") => {
+    let prefix = "SSEH";
+    let middleChar = "";
 
-    if (role === 'student' && className) {
-        const boardCode = board === 'CBSE' ? 'C' : (board === 'State' ? 'S' : '');
-        counterName = `studentId_${boardCode}_${className}`;
-        prefix = `SSEH${boardCode}${className}`;
-        padLength = 2; // For 01, 02...
+    if (role === 'teacher') {
+        middleChar = "T";
     } else {
-        counterName = role === "teacher" ? "teacherId" : "studentId";
-        prefix = role === "teacher" ? "TSEH" : "SSEH";
-        padLength = 5;
+        // Default to 'Other' if not specified or empty
+        const type = (classroomType || "Other").toUpperCase();
+        if (type.includes("NEET")) middleChar = "N";
+        else if (type.includes("JEE")) middleChar = "J";
+        else if (type.includes("PSC")) middleChar = "P";
+        else middleChar = "O";
     }
 
+    const counterName = `id_${middleChar}`;
+    
     const counter = await Counter.findOneAndUpdate(
         { name: counterName },
         { $inc: { seq: 1 } },
-        { new: true, upsert: true }
+        { new: true, upsert: true, setDefaultsOnInsert: true }
     );
 
-    const paddedSeq = String(counter.seq).padStart(padLength, "0");
-    return `${prefix}${paddedSeq}`;
+    return `${prefix}${middleChar}${counter.seq}`;
 };
+
+export default generateUniqueId;

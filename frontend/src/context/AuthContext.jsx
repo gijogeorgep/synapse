@@ -31,8 +31,8 @@ export const AuthProvider = ({ children }) => {
         let userData;
         if (args.length === 1 && typeof args[0] === "object") {
             userData = args[0];
-        } else if (args.length >= 4) {
-            const [name, email, password, role] = args;
+        } else if (args.length >= 3) {
+            const [name, email, password, role = "student"] = args;
             userData = { name, email, password, role };
         } else {
             return { success: false, message: "Invalid registration data" };

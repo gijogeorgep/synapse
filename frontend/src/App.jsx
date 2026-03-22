@@ -10,6 +10,7 @@ import Hero from "./components/Hero";
 import Program from "./components/Program";
 import About from "./components/About";
 import VideoCard from "./components/VideoCard";
+import TutorsMultilanguage from "./components/TutorsMultilanguage";
 import Crescent from "./components/Crescent";
 import Contact from "./components/Contact";
 
@@ -37,6 +38,7 @@ import AdminSettings from "./pages/Admin/Settings";
 import AdminAuditLogs from "./pages/Admin/AuditLogs";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
+import ClassroomSelection from "./pages/Student/ClassroomSelection";
 
 function LandingPage() {
   return (
@@ -50,6 +52,7 @@ function LandingPage() {
       <section id="about" className="scroll-mt-24">
         <About />
       </section>
+      <TutorsMultilanguage />
       <VideoCard />
       <Crescent />
       <section id="contact" className="scroll-mt-24">
@@ -81,6 +84,7 @@ function AppContent() {
               <Route path="/student/history" element={<div className="p-8"><h1>Exam History</h1></div>} />
               <Route path="/student/settings" element={<StudentSettings />} />
               <Route path="/student/classroom" element={<StudentClassroom />} />
+              <Route path="/student/select-classroom" element={<ClassroomSelection />} />
             </Route>
           </Route>
 

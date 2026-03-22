@@ -52,7 +52,13 @@ const userSchema = new mongoose.Schema(
         blockReason: {
             type: String,
             default: "",
-        }
+        },
+        enrolledClassrooms: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "Classroom",
+            },
+        ],
     },
     {
         timestamps: true,

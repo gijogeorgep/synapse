@@ -66,7 +66,7 @@ const StudentClassrooms = () => {
                         Your subjects
                     </h1>
                     <p className="text-slate-500 mt-2 text-lg">
-                        You are enrolled in <span className="font-semibold text-slate-700">Class {userClass}</span>. Open a subject to join live class, view lectures and assignments.
+                        You are enrolled in <span className="font-semibold text-slate-700">Class {userClass}</span>. Open a subject to view study materials and take MCQ tests.
                     </p>
                 </div>
             </header>
@@ -151,7 +151,7 @@ const StudentClassrooms = () => {
                                     >
                                         <div className="flex items-center space-x-3">
                                             <BookOpen className="w-5 h-5 text-slate-400 group-hover/item:text-indigo-500" />
-                                            <span className="text-sm font-medium">Course Materials</span>
+                                            <span className="text-sm font-medium">Study Materials</span>
                                         </div>
                                         <ArrowRight className="w-4 h-4 opacity-0 group-hover/item:opacity-100 transition-all" />
                                     </button>

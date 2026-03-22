@@ -5,16 +5,11 @@ import generateToken from "../utils/generateToken.js";
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res) => {
-    const { name, email, password, role, phoneNumber, class: userClass, subjects } = req.body;
+    const { name, email, password } = req.body;
 
     // Basic validation
     if (!name || !email || !password) {
         return res.status(400).json({ message: "Name, email and password are required" });
-    }
-
-    // Prevent admin registration through public route
-    if (role === 'admin' || role === 'superadmin') {
-        return res.status(403).json({ message: "Admin registration not allowed here" });
     }
 
     try {
@@ -28,10 +23,7 @@ export const registerUser = async (req, res) => {
             name,
             email,
             password,
-            role: role || "student",
-            phoneNumber: phoneNumber || "",
-            class: userClass || "",
-            subjects: subjects || [],
+            role: "student",
             userType: "independent",
         });
         if (user) {
@@ -40,9 +32,6 @@ export const registerUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                avatarUrl: user.avatarUrl,
-                class: user.class,
-                subjects: user.subjects,
                 token: generateToken(user._id),
             });
         } else {
@@ -171,7 +160,7 @@ export const adminLogin = async (req, res) => {
         if (user) {
             const isMatch = await user.matchPassword(password);
             console.log(`[AUTH] Login attempt for ${email} - User found, Password match: ${isMatch}`);
-            
+
             if (isMatch) {
                 if (user.role !== 'admin' && user.role !== 'superadmin') {
                     console.warn(`[AUTH] Unauthorized role access attempt: ${email} has role ${user.role}`);
@@ -198,7 +187,7 @@ export const adminLogin = async (req, res) => {
         return res.status(401).json({ message: "Invalid email or security key" });
     } catch (error) {
         console.error("CRITICAL ADMIN LOGIN ERROR:", error);
-        return res.status(500).json({ 
+        return res.status(500).json({
             message: "Internal server error during authentication",
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });

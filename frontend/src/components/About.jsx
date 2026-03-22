@@ -5,7 +5,7 @@ import { Facebook, Phone, Instagram, Send, Star, Users, GraduationCap, Quote, Za
 
 const About = () => {
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center px-6 py-24 bg-[#f8fafc] font-['Plus_Jakarta_Sans',sans-serif]">
+    <section className="relative w-full min-h-screen flex items-center justify-center px-6 py-24 bg-[#f8fafc] font-['Plus_Jakarta_Sans',sans-serif] overflow-hidden">
       {/* Premium Background Architecture */}
       <div className="absolute inset-0 z-0">
         {/* The requested background logo */}

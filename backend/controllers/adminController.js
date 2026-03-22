@@ -53,7 +53,7 @@ export const createAdminUser = async (req, res) => {
         let finalUniqueId = uniqueId;
         if (!finalUniqueId) {
             if (role === 'student') {
-                finalUniqueId = await generateUniqueId(role, className, board);
+                finalUniqueId = await generateUniqueId(role, className);
             } else if (role === 'teacher') {
                 finalUniqueId = await generateUniqueId(role);
             }

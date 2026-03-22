@@ -36,8 +36,13 @@ const StudentDashboard = () => {
                 ]);
 
                 setResults(Array.isArray(resultsData) ? resultsData : []);
-                setClassrooms(classroomsRes.data || []);
+                const fetchedClassrooms = classroomsRes.data || [];
+                setClassrooms(fetchedClassrooms);
 
+                // Redirect independent students to selection if no classrooms
+                if (user?.userType === 'independent' && fetchedClassrooms.length === 0) {
+                    navigate("/student/select-classroom");
+                }
             } catch (error) {
                 console.error("Error fetching dashboard data:", error);
             } finally {

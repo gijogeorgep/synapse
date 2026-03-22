@@ -33,8 +33,16 @@ const examSchema = new mongoose.Schema(
         },
         examType: {
             type: String,
-            enum: ["official", "subject-wise"],
+            enum: ["official", "subject-wise", "mock"],
             default: "subject-wise",
+        },
+        marksPerQuestion: {
+            type: Number,
+            default: 1,
+        },
+        negativeMarks: {
+            type: Number,
+            default: 0, // e.g. 0.25 or 0.33 for 1/4 or 1/3 negative marking
         },
         classroom: {
             type: mongoose.Schema.Types.ObjectId,

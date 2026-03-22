@@ -125,8 +125,8 @@ const QuestionPaperCard = () => {
                       key={index}
                       onClick={() => setPaperIndex(index)}
                       className={`w-3 h-3 rounded-full transition-all duration-300 ${index === paperIndex
-                          ? "bg-blue-600 w-8"
-                          : "bg-gray-300 hover:bg-gray-400"
+                        ? "bg-blue-600 w-8"
+                        : "bg-gray-300 hover:bg-gray-400"
                         }`}
                     />
                   ))}
@@ -201,8 +201,8 @@ const QuestionPaperCard = () => {
                       key={index}
                       onClick={() => setBrainIndex(index)}
                       className={`w-3 h-3 rounded-full transition-all duration-300 ${index === brainIndex
-                          ? "bg-purple-600 w-8"
-                          : "bg-gray-300 hover:bg-gray-400"
+                        ? "bg-purple-600 w-8"
+                        : "bg-gray-300 hover:bg-gray-400"
                         }`}
                     />
                   ))}

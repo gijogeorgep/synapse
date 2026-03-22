@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { X, Mail, Lock, User, ShieldCheck, Loader2 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
     const { login, register } = useAuth();
+    const navigate = useNavigate();
     const [mode, setMode] = useState(initialMode); // 'login' or 'register'
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
@@ -11,7 +13,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         name: "",
         email: "",
         password: "",
-        role: "student",
+        confirmPassword: "",
     });
 
     if (!isOpen) return null;
@@ -30,15 +32,22 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         if (mode === "login") {
             result = await login(formData.email, formData.password);
         } else {
+            if (formData.password !== formData.confirmPassword) {
+                setError("Passwords do not match");
+                setLoading(false);
+                return;
+            }
             result = await register(
                 formData.name,
                 formData.email,
-                formData.password,
-                formData.role
+                formData.password
             );
         }
 
         if (result.success) {
+            if (mode === "register") {
+                navigate("/student/select-classroom");
+            }
             onClose();
         } else {
             setError(result.message || "Something went wrong");
@@ -147,17 +156,17 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
 
                         {mode === "register" && (
                             <div className="relative">
-                                <ShieldCheck className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                                <select
-                                    name="role"
-                                    value={formData.role}
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="password"
+                                    name="confirmPassword"
+                                    placeholder="Confirm Password"
+                                    required
                                     disabled={loading}
+                                    value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none transition-all disabled:opacity-50"
-                                >
-                                    <option value="student">Student</option>
-                                    <option value="teacher">Teacher</option>
-                                </select>
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
+                                />
                             </div>
                         )}
 
