@@ -44,7 +44,7 @@ const Contact = () => {
       </div>
 
       <div className="relative z-10 w-full max-w-7xl">
-        <div className="flex flex-col lg:flex-row gap-16 items-start">
+        <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
           
           {/* Details Column */}
           <div className="w-full lg:w-[40%] space-y-12">

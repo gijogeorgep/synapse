@@ -51,7 +51,7 @@ const TutorsMultilanguage = () => {
                         <img
                             src={tchr1}
                             alt="Tutor 1"
-                            className="w-16 sm:w-28 md:w-56 lg:w-64 object-cover 
+                            className="w-20 sm:w-28 md:w-56 lg:w-64 object-cover 
                transition-all duration-700 ease-in-out
                hover:scale-105 cursor-pointer outline-none"
                         />
@@ -65,7 +65,7 @@ const TutorsMultilanguage = () => {
                         <img
                             src={tchr2}
                             alt="Tutor 2"
-                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover ml-18
+                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover ml-0 md:ml-18
                transition-all duration-700 ease-in-out
                hover:scale-105 cursor-pointer outline-none"
                         />
@@ -76,9 +76,9 @@ const TutorsMultilanguage = () => {
                         <img
                             src={heroImg}
                             alt="Main Mentor"
-                            className="w-36 sm:w-48 md:w-[32rem] lg:w-[42rem] object-cover
+                            className="w-48 sm:w-48 md:w-[32rem] lg:w-[42rem] object-cover
                transition-all duration-700 ease-in-out
-               hover:scale-110 cursor-pointer outline-none"
+               hover:scale-110 scale-125 sm:scale-110 cursor-pointer outline-none"
                         />
                     </div>
 
@@ -90,7 +90,7 @@ const TutorsMultilanguage = () => {
                         <img
                             src={tchr3}
                             alt="Tutor 3"
-                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover mr-14
+                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover mr-0 md:mr-14
                transition-all duration-700 ease-in-out
                hover:scale-105 cursor-pointer outline-none"
                         />
@@ -101,7 +101,7 @@ const TutorsMultilanguage = () => {
                         <img
                             src={tchr4}
                             alt="Tutor 4"
-                            className="w-16 sm:w-28 md:w-56 lg:w-64 object-cover
+                            className="w-20 sm:w-28 md:w-56 lg:w-64 object-cover
                transition-all duration-700 ease-in-out
                hover:scale-105 cursor-pointer outline-none"
                         />

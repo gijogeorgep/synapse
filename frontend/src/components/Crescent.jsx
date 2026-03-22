@@ -102,8 +102,8 @@ const Crescent = () => {
 
         {/* Enhanced Location */}
         <div className="bg-white/60 backdrop-blur-sm rounded-3xl p-8 mb-8 border border-cyan-100 shadow-lg">
-          <div className="flex items-center justify-center space-x-4 mb-6">
-            <div className="bg-gradient-to-br from-cyan-500 to-blue-500 w-12 h-12 rounded-2xl flex items-center justify-center">
+          <div className="flex flex-col md:flex-row items-center justify-center text-center md:text-left space-y-4 md:space-y-0 md:space-x-4 mb-6">
+            <div className="bg-gradient-to-br from-cyan-500 to-blue-500 w-12 h-12 shrink-0 rounded-2xl flex items-center justify-center">
               <MapPin className="w-6 h-6 text-white" />
             </div>
             <p className="text-xl font-semibold text-gray-800">

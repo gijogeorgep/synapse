@@ -15,7 +15,7 @@ const Hero = () => {
                 <div className="flex flex-col lg:flex-row items-center lg:items-end justify-between gap-10 lg:gap-16 relative z-10">
 
                     {/* Left Content Area */}
-                    <div className="w-full lg:w-[55%] flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 sm:space-y-8 z-10 pb-10 sm:pb-16 lg:pb-24">
+                    <div className="w-full lg:w-[55%] flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 sm:space-y-8 z-10 pb-6 sm:pb-16 lg:pb-24">
 
 
                         <div className="space-y-4 sm:space-y-5 w-full">
@@ -63,8 +63,8 @@ const Hero = () => {
                     </div>
 
                     {/* Right Image Area */}
-                    <div className="w-full lg:w-[45%] relative flex justify-center lg:justify-end mt-4 sm:mt-8 lg:mt-0">
-                        <div className="relative w-full max-w-sm sm:max-w-md lg:max-w-2xl xl:max-w-7xl">
+                    <div className="w-full lg:w-[45%] relative flex justify-center lg:justify-end mt-6 sm:mt-8 lg:mt-0">
+                        <div className="relative w-[115%] sm:w-full max-w-[22rem] sm:max-w-md lg:max-w-2xl xl:max-w-7xl">
 
                             {/* Image specific background blob */}
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-gradient-to-tr from-cyan-400 to-sky-300 rounded-full blur-[80px] opacity-30 animate-pulse duration-[5000ms] pointer-events-none"></div>
@@ -73,7 +73,7 @@ const Hero = () => {
                                 <img
                                     src={heroimg}
                                     alt="Students Learning"
-                                    className="w-full h-auto relative z-10 drop-shadow-2xl animate-float scale-100 md:scale-110 lg:scale-140 xl:scale-160 origin-bottom"
+                                    className="w-full h-auto relative z-10 drop-shadow-2xl animate-float scale-125 sm:scale-100 md:scale-110 lg:scale-140 xl:scale-160 origin-bottom"
                                 />
 
                                 {/* Floating Stats Cards */}

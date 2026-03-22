@@ -20,7 +20,7 @@ const About = () => {
         <div className="absolute bottom-[-10%] right-[-5%] w-[40%] h-[40%] bg-blue-500/10 blur-[120px] rounded-full animate-pulse [animation-delay:2s]" />
       </div>
 
-      <div className="w-full max-w-7xl flex flex-col lg:flex-row items-center gap-20 relative z-10">
+      <div className="w-full max-w-7xl flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative z-10">
 
         {/* Founder Portrait Section - Optimized Standard Approach */}
         <div className="flex-1 w-full max-w-[340px] lg:max-w-[360px]">
