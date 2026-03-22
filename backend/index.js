@@ -8,6 +8,7 @@ import examRoutes from "./routes/examRoutes.js";
 import uploadRoutes from "./routes/uploadRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import classroomRoutes from "./routes/classroomRoutes.js";
+import reportRoutes from "./routes/reportRoutes.js";
 
 dotenv.config();
 
@@ -30,6 +31,7 @@ app.use("/api/exams", examRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/classrooms", classroomRoutes);
+app.use("/api/reports", reportRoutes);
 
 app.get("/", (req, res) => {
     res.send("API is running...");

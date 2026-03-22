@@ -5,32 +5,7 @@ import Counter from './models/Counter.js';
 
 dotenv.config();
 
-const classrooms = [
-  {
-    name: 'NEET 2026 Batch',
-    className: '12',
-    board: 'CBSE',
-    type: 'NEET',
-    price: 4999,
-    description: 'Comprehensive NEET preparation with MCQ tests and study materials.'
-  },
-  {
-    name: 'JEE Main & Advanced 2026',
-    className: '12',
-    board: 'CBSE',
-    type: 'JEE',
-    price: 5499,
-    description: 'Intensive JEE coaching with focus on advanced problem solving.'
-  },
-  {
-    name: 'PSC Kerala State 2026',
-    className: 'Degree',
-    board: 'State',
-    type: 'PSC',
-    price: 3999,
-    description: 'Dedicated PSC exam training for state level government jobs.'
-  }
-];
+const classrooms = [];
 
 const seedClassrooms = async () => {
   try {

@@ -12,7 +12,7 @@ const StudentExams = () => {
     const [loading, setLoading] = useState(true);
     const [loadingResults, setLoadingResults] = useState(true);
     const isIndependent = user?.userType === 'independent';
-    const [activeTab, setActiveTab] = useState(isIndependent ? "subject-wise" : "subject-wise");
+    const [activeTab, setActiveTab] = useState("all");
 
     // Exam Player State
     const [activeExam, setActiveExam] = useState(null);
@@ -51,18 +51,19 @@ const StudentExams = () => {
     }, [user, location.state]);
 
     const filteredExams = upcomingExams.filter(e => {
+        if (activeTab === "all") return true;
         if (isIndependent) {
+            // Independent (NEET/JEE/PSC) students: toggle between subject-wise and full mock
             if (activeTab === "subject-wise") {
-                return e.examType === "subject-wise" || e.examType === "official"; // Include official as fallback for old exams
+                return e.examType === "subject-wise" || e.examType === "official";
             }
             return e.examType === "mock";
         }
+        // Institutional students: toggle between subject-wise and official
         if (activeTab === "official") {
-            return e.examType === "official" && e.classLevel === user?.class;
-        } else {
-            return (e.examType === "subject-wise" || !e.examType) &&
-                (e.classLevel === user?.class || user?.subjects?.includes(e.subject));
+            return e.examType === "official";
         }
+        return e.examType === "subject-wise" || !e.examType;
     });
 
     const handleStartExam = async (exam) => {
@@ -127,6 +128,14 @@ const StudentExams = () => {
                 timeTaken: activeExam.duration * 60 - timeLeft,
             });
             setExamResult(res);
+
+            // Re-fetch questions with correct answers & explanations now that result exists
+            try {
+                const fullQuestions = await getQuestions(activeExam._id);
+                setQuestions(fullQuestions);
+            } catch (e) {
+                console.warn("Could not re-fetch questions for review:", e);
+            }
         } catch (error) {
             alert("Error submitting exam: " + error);
         } finally {
@@ -168,6 +177,15 @@ const StudentExams = () => {
                         {/* Tab Switcher */}
                         <div className="flex items-center p-1 bg-slate-100 rounded-2xl w-fit">
                             <button
+                                onClick={() => setActiveTab("all")}
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${activeTab === "all"
+                                    ? 'bg-white text-cyan-600 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
+                                    }`}
+                            >
+                                All
+                            </button>
+                            <button
                                 onClick={() => setActiveTab("subject-wise")}
                                 className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${activeTab === "subject-wise"
                                     ? 'bg-white text-cyan-600 shadow-sm'
@@ -208,7 +226,7 @@ const StudentExams = () => {
                                         </p>
                                     </div>
                                     <div className="flex flex-col items-end gap-2">
-                                        {new Date(exam.date) > new Date() ? (
+                                        {exam.examCategory !== 'practice' && new Date(exam.date) > new Date() ? (
                                             <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest bg-rose-50 px-3 py-1 rounded-full border border-rose-100 italic">
                                                 Starts at {new Date(exam.date).toLocaleTimeString()}
                                             </span>

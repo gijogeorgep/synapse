@@ -4,15 +4,31 @@ import apiClient from "./apiClient";
 export const getExams = () => apiClient("/exams");
 export const getExamsByClassroom = (subject, classLevel, examType = "") =>
     apiClient(`/exams?subject=${subject}&classLevel=${classLevel}${examType ? `&examType=${examType}` : ""}`);
+export const getExamsBySpecificClassroom = (classroomId) =>
+    apiClient(`/exams?classroomId=${classroomId}`);
 export const getQuestions = (examId) => apiClient(`/exams/${examId}/questions`);
 export const submitExamResult = (examId, resultData) =>
     apiClient(`/exams/${examId}/submit`, { body: resultData });
 export const createBulkExam = (examData) =>
     apiClient("/exams/bulk", { body: examData });
+export const updateBulkExam = (examId, examData) =>
+    apiClient(`/exams/${examId}`, { method: "PUT", body: examData });
 export const getExamDetails = (examId) => apiClient(`/exams/${examId}`);
 export const getMyResults = () => apiClient("/exams/my-results");
 export const deleteExam = (examId) =>
     apiClient(`/exams/${examId}`, { method: "DELETE" });
+
+// Report Services
+export const getOverallStats = () => apiClient("/reports/overall");
+export const getClassroomReports = () => apiClient("/reports/classrooms");
+export const getSubjectStats = () => apiClient("/reports/subjects");
+export const getStudentsListForReports = () => apiClient("/reports/students-list");
+export const getTeachersListForReports = () => apiClient("/reports/teachers-list");
+export const getAdminsListForReports = () => apiClient("/reports/admins-list");
+
+export const getStudentReport = (studentId) => apiClient(`/reports/student/${studentId}`);
+export const getTeacherReport = (teacherId) => apiClient(`/reports/teacher/${teacherId}`);
+export const getAdminReport = (adminId) => apiClient(`/reports/admin/${adminId}`);
 
 // Material Services
 export const getMaterials = () => apiClient("/materials");

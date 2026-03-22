@@ -15,12 +15,14 @@ const ClassroomManagement = () => {
     const [selectedClassroom, setSelectedClassroom] = useState(null);
     const [activeMenu, setActiveMenu] = useState(null);
 
-    // Form for creating/editing a classroom
     const [formData, setFormData] = useState({
         name: '',
         className: '10',
         board: 'CBSE',
         subjects: '',
+        type: 'Other',
+        price: 0,
+        isPublished: false,
     });
 
     const [editFormData, setEditFormData] = useState({
@@ -28,6 +30,9 @@ const ClassroomManagement = () => {
         className: '10',
         board: 'CBSE',
         subjects: '',
+        type: 'Other',
+        price: 0,
+        isPublished: false,
     });
 
     // Form for assigning users
@@ -107,7 +112,7 @@ const ClassroomManagement = () => {
             await axios.post('/api/admin/classrooms', payload, config);
             setStatus({ type: 'success', message: 'Classroom created successfully!' });
 
-            setFormData({ name: '', className: '10', board: 'CBSE', subjects: '' });
+            setFormData({ name: '', className: '10', board: 'CBSE', subjects: '', type: 'Other', price: 0, isPublished: false });
             fetchData();
             setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
@@ -124,6 +129,9 @@ const ClassroomManagement = () => {
             name: classroom.name,
             className: classroom.className,
             board: classroom.board,
+            type: classroom.type || 'Other',
+            price: classroom.price || 0,
+            isPublished: classroom.isPublished || false,
             subjects: classroom.subjects?.join(', ') || ''
         });
         setIsEditModalOpen(true);
@@ -230,29 +238,54 @@ const ClassroomManagement = () => {
                         </div>
                         <form onSubmit={handleUpdateSubmit} className="space-y-4">
                             <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                                <select name="type" value={editFormData.type} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
+                                    <option value="Other">Standard (Class-wise)</option>
+                                    <option value="NEET">NEET</option>
+                                    <option value="JEE">JEE</option>
+                                    <option value="PSC">PSC</option>
+                                </select>
+                            </div>
+                            <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Classroom Name</label>
                                 <input type="text" name="name" value={editFormData.name} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" required />
                             </div>
-                            <div className="grid grid-cols-2 gap-4">
+                            {editFormData.type === 'Other' ? (
+                                <>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Standard / Class</label>
+                                            <select name="className" value={editFormData.className} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
+                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(c => <option key={c} value={c.toString()}>Class {c}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-slate-700 mb-1">Board</label>
+                                            <select name="board" value={editFormData.board} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
+                                                <option value="State">State</option>
+                                                <option value="CBSE">CBSE</option>
+                                                <option value="ICSE">ICSE</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Subjects (comma-separated)</label>
+                                        <input type="text" name="subjects" value={editFormData.subjects} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" />
+                                    </div>
+                                </>
+                            ) : (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Standard / Class</label>
-                                    <select name="className" value={editFormData.className} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
-                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(c => <option key={c} value={c.toString()}>Class {c}</option>)}
-                                    </select>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹)</label>
+                                    <input type="number" name="price" value={editFormData.price} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" min="0" />
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Board</label>
-                                    <select name="board" value={editFormData.board} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
-                                        <option value="State">State</option>
-                                        <option value="CBSE">CBSE</option>
-                                        <option value="ICSE">ICSE</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
+                            )}
+
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Subjects (comma-separated)</label>
-                                <input type="text" name="subjects" value={editFormData.subjects} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" />
+                                <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
+                                    <input type="checkbox" name="isPublished" checked={editFormData.isPublished} onChange={(e) => setEditFormData({...editFormData, isPublished: e.target.checked})} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
+                                    <span className="text-sm font-medium text-slate-700">Publish (Visible to students)</span>
+                                </label>
                             </div>
                             <div className="flex gap-3 pt-4">
                                 <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors">Cancel</button>
@@ -305,6 +338,16 @@ const ClassroomManagement = () => {
 
                     <form onSubmit={handleCreateSubmit} className="space-y-4">
                         <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                            <select name="type" value={formData.type} onChange={handleCreateChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
+                                <option value="Other">Standard (Class-wise)</option>
+                                <option value="NEET">NEET</option>
+                                <option value="JEE">JEE</option>
+                                <option value="PSC">PSC</option>
+                            </select>
+                        </div>
+
+                        <div>
                             <label className="block text-sm font-medium text-slate-700 mb-1">Classroom Name (e.g. Section A)</label>
                             <input
                                 type="text"
@@ -317,46 +360,63 @@ const ClassroomManagement = () => {
                             />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        {formData.type === 'Other' ? (
+                            <>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Standard / Class</label>
+                                        <select
+                                            name="className"
+                                            value={formData.className}
+                                            onChange={handleCreateChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700"
+                                        >
+                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(c => (
+                                                <option key={c} value={c.toString()}>Class {c}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-700 mb-1">Board</label>
+                                        <select
+                                            name="board"
+                                            value={formData.board}
+                                            onChange={handleCreateChange}
+                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700"
+                                        >
+                                            <option value="State">State</option>
+                                            <option value="CBSE">CBSE</option>
+                                            <option value="ICSE">ICSE</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-slate-700 mb-1">Subjects (comma-separated)</label>
+                                    <input
+                                        type="text"
+                                        name="subjects"
+                                        value={formData.subjects}
+                                        onChange={handleCreateChange}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 placeholder-slate-400"
+                                        placeholder="Math, Science, English"
+                                    />
+                                </div>
+                            </>
+                        ) : (
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Standard / Class</label>
-                                <select
-                                    name="className"
-                                    value={formData.className}
-                                    onChange={handleCreateChange}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700"
-                                >
-                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(c => (
-                                        <option key={c} value={c.toString()}>Class {c}</option>
-                                    ))}
-                                </select>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹)</label>
+                                <input type="number" name="price" value={formData.price} onChange={handleCreateChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" min="0" />
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Board</label>
-                                <select
-                                    name="board"
-                                    value={formData.board}
-                                    onChange={handleCreateChange}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700"
-                                >
-                                    <option value="State">State</option>
-                                    <option value="CBSE">CBSE</option>
-                                    <option value="ICSE">ICSE</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                        </div>
+                        )}
+
+
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Subjects (comma-separated)</label>
-                            <input
-                                type="text"
-                                name="subjects"
-                                value={formData.subjects}
-                                onChange={handleCreateChange}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 placeholder-slate-400"
-                                placeholder="Math, Science, English"
-                            />
+                            <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
+                                <input type="checkbox" name="isPublished" checked={formData.isPublished} onChange={(e) => setFormData({...formData, isPublished: e.target.checked})} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
+                                <span className="text-sm font-medium text-slate-700">Publish (Visible to students)</span>
+                            </label>
                         </div>
 
                         <button
@@ -462,7 +522,17 @@ const ClassroomManagement = () => {
                                 <div className="relative z-10">
                                     <div className="flex justify-between items-start mb-3">
                                         <div>
-                                            <h3 className="font-bold text-lg text-slate-800 ">{c.name}</h3>
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <h3 className="font-bold text-lg text-slate-800 ">{c.name}</h3>
+                                                {c.type !== 'Other' && (
+                                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded bg-cyan-100 text-cyan-700 uppercase`}>
+                                                        {c.type}
+                                                    </span>
+                                                )}
+                                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded uppercase ${c.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
+                                                        {c.isPublished ? 'Published' : 'Draft'}
+                                                </span>
+                                            </div>
                                             <p className="text-sm font-medium text-cyan-600">Class {c.className} • {c.board}</p>
                                         </div>
                                         <div className="relative">

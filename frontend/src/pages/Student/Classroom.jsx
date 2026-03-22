@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, Award } from "lucide-react";
-import { getExamsByClassroom, getMyResults } from "../../api/services";
+import { getExamsBySpecificClassroom, getMyResults } from "../../api/services";
 
 const StudentClassroom = () => {
     const { user } = useAuth();
@@ -32,8 +32,12 @@ const StudentClassroom = () => {
 
     useEffect(() => {
         const fetchExams = async () => {
+            if (!classroom?._id) {
+                setLoadingExams(false);
+                return;
+            }
             try {
-                const data = await getExamsByClassroom(fallbackSubject, fallbackClass, "subject-wise");
+                const data = await getExamsBySpecificClassroom(classroom._id);
                 setExams(data);
             } catch (error) {
                 console.error("Error fetching exams:", error);
@@ -55,7 +59,7 @@ const StudentClassroom = () => {
         };
         fetchExams();
         fetchResults();
-    }, [fallbackSubject, fallbackClass]);
+    }, [fallbackSubject, fallbackClass, classroom?._id]);
 
     const link =
         classroom?.onlineClassLink ||

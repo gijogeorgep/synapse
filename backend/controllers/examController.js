@@ -7,7 +7,7 @@ import Classroom from "../models/Classroom.js";
 // @route   POST /api/exams
 // @access  Private (Teacher/Admin)
 export const createExam = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examType, classroom } = req.body;
+    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom } = req.body;
 
     try {
         const exam = await Exam.create({
@@ -16,8 +16,9 @@ export const createExam = async (req, res) => {
             duration,
             subject,
             classLevel,
-            date,
+            date: examCategory === "practice" ? Date.now() : date,
             classroom,
+            examCategory: examCategory || "scheduled",
             examType: examType || "subject-wise",
             teacher: req.user._id,
         });
@@ -32,30 +33,40 @@ export const createExam = async (req, res) => {
 // @route   GET /api/exams
 // @access  Private (All)
 export const getExams = async (req, res) => {
-    const { subject, classLevel, examType } = req.query;
+    const { subject, classLevel, examType, classroomId } = req.query;
     try {
         let query = { isActive: true };
         if (subject) query.subject = subject;
         if (classLevel) query.classLevel = classLevel;
         if (examType) query.examType = examType;
+        if (classroomId) query.classroom = classroomId;
 
-        // Independent students (NEET/JEE/PSC): see subject-wise or mock exams for their classrooms
-        if (req.user.role === 'student' && req.user.userType === 'independent') {
-            const enrolledClassroomIds = req.user.enrolledClassrooms || [];
-            query.classroom = { $in: enrolledClassroomIds };
-            
-            // If explicit examType is requested, use it; otherwise show all relevant types
-            if (examType) {
-                query.examType = examType;
-            } else {
-                query.examType = { $in: ['subject-wise', 'mock', 'official'] };
+        // Apply global filters only if not querying a specific classroom
+        if (!classroomId) {
+            // Independent students (NEET/JEE/PSC): see subject-wise or mock exams for their classrooms
+            if (req.user.role === 'student' && req.user.userType === 'independent') {
+                // Merge both enrolledClassrooms and classrooms where student is in the students array
+                const enrolledIds = (req.user.enrolledClassrooms || []).map(id => id.toString());
+                const assignedClassrooms = await Classroom.find({ students: req.user._id });
+                const assignedIds = assignedClassrooms.map(c => c._id.toString());
+                const allClassroomIds = [...new Set([...enrolledIds, ...assignedIds])];
+                
+                query.classroom = { $in: allClassroomIds };
+                
+                // If explicit examType is requested, use it; otherwise show all relevant types
+                if (examType) {
+                    query.examType = examType;
+                } else {
+                    query.examType = { $in: ['subject-wise', 'mock', 'official'] };
+                }
             }
-        }
-        // Institutional students: filter by their class level
-        else if (req.user.role === 'student' && req.user.userType === 'institutional') {
-            const studentClassrooms = await Classroom.find({ students: req.user._id });
-            const classLevels = studentClassrooms.map(c => c.className);
-            if (!classLevel) query.classLevel = { $in: classLevels };
+            // Institutional students: filter by their class level AND their enrolled classrooms
+            else if (req.user.role === 'student' && req.user.userType === 'institutional') {
+                const studentClassrooms = await Classroom.find({ students: req.user._id });
+                const classroomIds = studentClassrooms.map(c => c._id);
+                const classLevels = studentClassrooms.map(c => c.className);
+                if (!classLevel) query.classLevel = { $in: classLevels };
+            }
         }
 
         const exams = await Exam.find(query).populate("teacher", "name");
@@ -69,10 +80,14 @@ export const getExams = async (req, res) => {
 // @route   POST /api/exams/bulk
 // @access  Private (Teacher/Admin)
 export const createExamWithQuestions = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks } = req.body;
+    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks } = req.body;
 
-    if (!title || !duration || !subject || !date || !classroom) {
-        return res.status(400).json({ message: "Please provide all required fields: title, duration, subject, date, and classroom." });
+    if (!title || !duration || !subject || !classroom) {
+        return res.status(400).json({ message: "Please provide all required fields: title, duration, subject, and classroom." });
+    }
+    
+    if (examCategory !== "practice" && !date) {
+        return res.status(400).json({ message: "Date is required for scheduled exams." });
     }
 
     try {
@@ -83,9 +98,10 @@ export const createExamWithQuestions = async (req, res) => {
             duration,
             subject,
             classLevel: classLevel || "10",
-            date,
+            date: examCategory === "practice" ? Date.now() : date,
             classroom,
             totalMarks: totalMarks || 100,
+            examCategory: examCategory || "scheduled",
             examType: examType || "subject-wise",
             marksPerQuestion: marksPerQuestion ?? 1,
             negativeMarks: negativeMarks ?? 0,
@@ -255,19 +271,84 @@ export const deleteExam = async (req, res) => {
     }
 };
 
+// @desc    Update exam
+// @route   PUT /api/exams/:id
+// @access  Private (Teacher/Admin)
+export const updateExam = async (req, res) => {
+    try {
+        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType } = req.body;
+        const exam = await Exam.findById(req.params.id);
+
+        if (!exam) {
+            return res.status(404).json({ message: "Exam not found" });
+        }
+
+        // Check ownership
+        if (exam.teacher.toString() !== req.user._id.toString() && req.user.role !== 'admin') {
+            return res.status(401).json({ message: "Not authorized to update this exam" });
+        }
+
+        exam.title = title || exam.title;
+        exam.subject = subject || exam.subject;
+        exam.duration = duration || exam.duration;
+        exam.totalMarks = totalMarks || exam.totalMarks;
+        exam.date = date || exam.date;
+        exam.classroom = classroom || exam.classroom;
+        exam.examCategory = examCategory || exam.examCategory;
+        exam.examType = examType || exam.examType;
+
+        const updatedExam = await exam.save();
+
+        // If questions are provided, replace existing questions
+        if (questions && questions.length > 0) {
+            await Question.deleteMany({ exam: req.params.id });
+            const questionsWithExam = questions.map((q) => ({
+                ...q,
+                exam: updatedExam._id,
+            }));
+            await Question.insertMany(questionsWithExam);
+        }
+
+        res.json(updatedExam);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Get single exam details with questions
 // @route   GET /api/exams/:id
 // @access  Private (All)
 export const getExamDetails = async (req, res) => {
     try {
-        const exam = await Exam.findById(req.params.id).populate("teacher", "name");
+        const exam = await Exam.findById(req.params.id)
+            .populate("teacher", "name")
+            .populate("classroom", "name students");
+            
         if (!exam) {
             return res.status(404).json({ message: "Exam not found" });
         }
+        
         const questions = await Question.find({ exam: req.params.id });
-        const results = await Result.find({ exam: req.params.id }).populate("student", "name");
+        
+        // Find results and sort by marksObtained descending to help with ranking
+        const results = await Result.find({ exam: req.params.id })
+            .populate("student", "name email")
+            .sort({ marksObtained: -1, score: -1 });
 
-        res.json({ ...exam._doc, questions, results });
+        // Calculate metadata
+        const totalStudents = exam.classroom?.students?.length || 0;
+        const attendedCount = results.length;
+
+        res.json({ 
+            ...exam._doc, 
+            questions, 
+            results,
+            stats: {
+                totalStudents,
+                attendedCount,
+                attendanceRate: totalStudents > 0 ? (attendedCount / totalStudents) * 100 : 0
+            }
+        });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

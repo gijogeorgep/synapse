@@ -32,6 +32,7 @@ export const registerUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                userType: user.userType,
                 token: generateToken(user._id),
             });
         } else {
@@ -65,6 +66,7 @@ export const authUser = async (req, res) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                userType: user.userType,
                 avatarUrl: user.avatarUrl,
                 class: user.class,
                 subjects: user.subjects,
@@ -90,6 +92,7 @@ export const getUserProfile = async (req, res) => {
             name: user.name,
             email: user.email,
             role: user.role,
+            userType: user.userType,
             phoneNumber: user.phoneNumber,
             avatarUrl: user.avatarUrl,
             class: user.class,
@@ -119,6 +122,7 @@ export const updateUserProfile = async (req, res) => {
             name: updatedUser.name,
             email: updatedUser.email,
             role: updatedUser.role,
+            userType: updatedUser.userType,
             phoneNumber: updatedUser.phoneNumber,
             avatarUrl: updatedUser.avatarUrl,
             class: updatedUser.class,

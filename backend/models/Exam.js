@@ -31,6 +31,11 @@ const examSchema = new mongoose.Schema(
             type: String,
             required: true,
         },
+        examCategory: {
+            type: String,
+            enum: ["scheduled", "practice"],
+            default: "scheduled",
+        },
         examType: {
             type: String,
             enum: ["official", "subject-wise", "mock"],

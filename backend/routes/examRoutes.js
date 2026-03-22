@@ -9,6 +9,7 @@ import {
     deleteExam,
     getExamDetails,
     getMyResults,
+    updateExam,
 } from "../controllers/examController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
@@ -23,6 +24,7 @@ router.route("/my-results").get(protect, authorize("student"), getMyResults);
 router
     .route("/:id")
     .get(protect, getExamDetails)
+    .put(protect, authorize("teacher", "admin"), updateExam)
     .delete(protect, authorize("teacher", "admin"), deleteExam);
 
 router

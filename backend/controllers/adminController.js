@@ -75,6 +75,7 @@ export const createAdminUser = async (req, res) => {
             subjects: subjects || [],
             userType: 'institutional',
             uniqueId: finalUniqueId,
+            createdBy: req.user._id,
         });
 
         if (user) {
@@ -139,19 +140,27 @@ export const getAdminUsers = async (req, res) => {
 // @access  Private/Admin
 export const createClassroom = async (req, res) => {
     try {
-        const { name, className, board, subjects } = req.body;
+        const { name, className, board, subjects, type, price, isPublished } = req.body;
 
-        if (!name || !className || !board) {
-            return res.status(400).json({ message: "Please provide all required fields (name, className, board)" });
+        if (!name) {
+            return res.status(400).json({ message: "Please provide classroom name." });
+        }
+        
+        if (type === 'Other' && (!className || !board)) {
+            return res.status(400).json({ message: "Please provide className and board for standard classrooms." });
         }
 
         const classroom = await Classroom.create({
             name,
-            className,
-            board,
-            subjects: subjects || [],
+            className: type === 'Other' ? className : 'N/A',
+            board: type === 'Other' ? board : 'Other',
+            type: type || "Other",
+            price: price || 0,
+            isPublished: isPublished || false,
+            subjects: type === 'Other' ? (subjects || []) : [],
             students: [],
             teachers: [],
+            createdBy: req.user._id,
         });
 
         res.status(201).json(classroom);
@@ -181,7 +190,7 @@ export const getAdminClassrooms = async (req, res) => {
 export const updateClassroom = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, className, board, subjects } = req.body;
+        const { name, className, board, subjects, type, price, isPublished } = req.body;
 
         const classroom = await Classroom.findById(id);
 
@@ -190,11 +199,21 @@ export const updateClassroom = async (req, res) => {
         }
 
         classroom.name = name || classroom.name;
-        classroom.className = className || classroom.className;
-        classroom.board = board || classroom.board;
-        if (subjects) {
-            classroom.subjects = Array.isArray(subjects) ? subjects : subjects.split(',').map(s => s.trim()).filter(s => s);
+        classroom.type = type || classroom.type;
+        if (classroom.type === 'Other') {
+            classroom.className = className || classroom.className;
+            classroom.board = board || classroom.board;
+            if (subjects) {
+                classroom.subjects = Array.isArray(subjects) ? subjects : subjects.split(',').map(s => s.trim()).filter(s => s);
+            }
+        } else {
+            classroom.className = 'N/A';
+            classroom.board = 'Other';
+            classroom.subjects = [];
         }
+        
+        if (price !== undefined) classroom.price = price;
+        if (isPublished !== undefined) classroom.isPublished = isPublished;
 
         const updatedClassroom = await classroom.save();
         res.status(200).json(updatedClassroom);

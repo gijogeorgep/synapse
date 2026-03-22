@@ -55,6 +55,14 @@ const classroomSchema = mongoose.Schema(
             enum: ["NEET", "JEE", "PSC", "Other"],
             default: "Other",
         },
+        isPublished: {
+            type: Boolean,
+            default: false,
+        },
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
     },
     {
         timestamps: true,

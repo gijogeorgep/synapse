@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect, useState } from "react";
 import heroImg from "../assets/heroimg.png";
 import tchr1 from "../assets/tchr1.png";
 import tchr2 from "../assets/tchr2.png";
@@ -7,8 +7,26 @@ import tchr4 from "../assets/tchr4.png";
 import { Languages, Globe, BookOpen } from "lucide-react";
 
 const TutorsMultilanguage = () => {
+    const sectionRef = useRef(null);
+    const [isVisible, setIsVisible] = useState(false);
+
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                    observer.unobserve(entry.target);
+                }
+            },
+            { threshold: 0.2 }
+        );
+        if (sectionRef.current) observer.observe(sectionRef.current);
+        return () => observer.disconnect();
+    }, []);
+
     return (
         <section
+            ref={sectionRef}
             className="relative pt-24 md:pt-32 overflow-hidden min-h-[800px] flex flex-col items-center justify-end bg-slate-50"
         >
             {/* Scattered Bluish Gradient Blobs */}
@@ -44,14 +62,14 @@ const TutorsMultilanguage = () => {
                 </div>
 
                 {/* IMAGE SHOWCASE */}
-                <div className="relative flex items-end justify-center w-full -space-x-8 sm:-space-x-16 md:-space-x-28 lg:-space-x-40 ">
+                <div className="relative flex items-end justify-center w-full -space-x-8 sm:-space-x-12 md:-space-x-28 lg:-space-x-40 ">
 
                     {/* LEFT FAR */}
-                    <div className="mt-8 z-10 animate-slide-in-left">
+                    <div className={`mt-8 z-10 ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}>
                         <img
                             src={tchr1}
                             alt="Tutor 1"
-                            className="w-20 sm:w-28 md:w-56 lg:w-64 object-cover 
+                            className="w-16 sm:w-24 md:w-56 lg:w-64 object-cover
                transition-all duration-700 ease-in-out
                hover:scale-105 cursor-pointer outline-none"
                         />
@@ -59,49 +77,49 @@ const TutorsMultilanguage = () => {
 
                     {/* LEFT */}
                     <div
-                        className="mt-8 z-20 animate-slide-in-left"
+                        className={`mt-8 z-20 ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}
                         style={{ animationDelay: "0.2s" }}
                     >
                         <img
                             src={tchr2}
                             alt="Tutor 2"
-                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover ml-0 md:ml-18
+                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover ml-2 md:ml-18 
                transition-all duration-700 ease-in-out
                hover:scale-105 cursor-pointer outline-none"
                         />
                     </div>
 
                     {/* CENTER HERO */}
-                    <div className="z-40 animate-zoom-in">
+                    <div className={`z-40 ${isVisible ? 'animate-zoom-in' : 'opacity-0'}`}>
                         <img
                             src={heroImg}
                             alt="Main Mentor"
-                            className="w-48 sm:w-48 md:w-[32rem] lg:w-[42rem] object-cover
+                            className="w-56 sm:w-48 md:w-[32rem] lg:w-[42rem] object-cover
                transition-all duration-700 ease-in-out
-               hover:scale-110 scale-125 sm:scale-110 cursor-pointer outline-none"
+               scale-110 sm:scale-100 hover:scale-110 cursor-pointer outline-none"
                         />
                     </div>
 
                     {/* RIGHT */}
                     <div
-                        className="mt-8 z-20 animate-slide-in-right"
+                        className={`mt-8 z-20 ${isVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
                         style={{ animationDelay: "0.2s" }}
                     >
                         <img
                             src={tchr3}
                             alt="Tutor 3"
-                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover mr-0 md:mr-14
+                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover mr-8 md:mr-14
                transition-all duration-700 ease-in-out
                hover:scale-105 cursor-pointer outline-none"
                         />
                     </div>
 
                     {/* RIGHT FAR */}
-                    <div className="mt-8 z-10 animate-slide-in-right">
+                    <div className={`mt-8 z-10 ${isVisible ? 'animate-slide-in-right' : 'opacity-0'}`}>
                         <img
                             src={tchr4}
                             alt="Tutor 4"
-                            className="w-20 sm:w-28 md:w-56 lg:w-64 object-cover
+                            className="w-16 sm:w-24 md:w-56 lg:w-64 object-cover
                transition-all duration-700 ease-in-out
                hover:scale-105 cursor-pointer outline-none"
                         />
