@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import axios from 'axios';
 import { UserPlus, GraduationCap, Edit, Trash2, Ban, Search, Filter, X } from 'lucide-react';
+import { getAdminUsers, updateAdminUser, deleteAdminUser, blockAdminUser } from '../../api/services';
 import { useNavigate } from 'react-router-dom';
 
 const UserManagement = () => {
@@ -23,13 +23,8 @@ const UserManagement = () => {
     const fetchUsers = async () => {
         try {
             setLoading(true);
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-            const { data } = await axios.get('/api/admin/users', config);
-            setUsers(data);
+            const data = await getAdminUsers();
+            setUsers(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching users:", error);
             setStatus({ type: 'error', message: 'Failed to load users' });
@@ -59,17 +54,12 @@ const UserManagement = () => {
     const handleUpdateUser = async (e) => {
         e.preventDefault();
         try {
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-            await axios.patch(`/api/admin/users/${selectedUser._id}`, editFormData, config);
+            await updateAdminUser(selectedUser._id, editFormData);
             setStatus({ type: 'success', message: 'User updated successfully' });
             setIsEditModalOpen(false);
             fetchUsers();
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Update failed' });
+            setStatus({ type: 'error', message: error || 'Update failed' });
         }
     };
 
@@ -80,17 +70,12 @@ const UserManagement = () => {
 
     const confirmDelete = async () => {
         try {
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-            await axios.delete(`/api/admin/users/${selectedUser._id}`, config);
+            await deleteAdminUser(selectedUser._id);
             setStatus({ type: 'success', message: 'User deleted successfully' });
             setIsDeleteModalOpen(false);
             fetchUsers();
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Delete failed' });
+            setStatus({ type: 'error', message: error || 'Delete failed' });
         }
     };
 
@@ -102,20 +87,15 @@ const UserManagement = () => {
 
     const confirmBlockAction = async (isBlocked) => {
         try {
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-            await axios.patch(`/api/admin/users/${selectedUser._id}/block`, {
+            await blockAdminUser(selectedUser._id, {
                 isBlocked,
                 reason: blockReason
-            }, config);
+            });
             setStatus({ type: 'success', message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully` });
             setIsBlockModalOpen(false);
             fetchUsers();
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Action failed' });
+            setStatus({ type: 'error', message: error || 'Action failed' });
         }
     };
 

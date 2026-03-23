@@ -70,3 +70,14 @@ export const deleteAdminClassroom = (id) =>
     apiClient(`/admin/classrooms/${id}`, { method: "DELETE" });
 export const assignUserToClassroom = (id, assignData) => 
     apiClient(`/admin/classrooms/${id}/assign`, { method: "POST", body: assignData });
+
+export const getAdminExams = () => apiClient("/admin/exams");
+export const submitAdminResult = (resultData) => 
+    apiClient("/admin/results", { method: "POST", body: resultData });
+
+export const updateAdminUser = (id, userData) => 
+    apiClient(`/admin/users/${id}`, { method: "PATCH", body: userData });
+export const deleteAdminUser = (id) => 
+    apiClient(`/admin/users/${id}`, { method: "DELETE" });
+export const blockAdminUser = (id, blockData) => 
+    apiClient(`/admin/users/${id}/block`, { method: "PATCH", body: blockData });

@@ -1,7 +1,6 @@
- import React, { useState, useEffect } from 'react';
- import axios from 'axios';
- import { Award, PlusCircle, User, BookOpen, Clock, CheckCircle2, AlertCircle, X, Search, Filter, Plus, Trash2, ChevronRight, ChevronLeft, Image as ImageIcon, Loader2, Users, BarChart2, TrendingUp, MoreVertical, Edit2 } from 'lucide-react';
- import { createBulkExam, deleteExam, updateBulkExam, getQuestions } from '../../api/services';
+import React, { useState, useEffect } from 'react';
+import { Award, PlusCircle, User, BookOpen, Clock, CheckCircle2, AlertCircle, X, Search, Filter, Plus, Trash2, ChevronRight, ChevronLeft, Image as ImageIcon, Loader2, Users, BarChart2, TrendingUp, MoreVertical, Edit2 } from 'lucide-react';
+import { createBulkExam, deleteExam, updateBulkExam, getQuestions, getAdminExams, getAdminClassrooms, getExamDetails, submitAdminResult, uploadImage } from '../../api/services';
 
 const ExamsManagement = () => {
     const [exams, setExams] = useState([]);
@@ -51,15 +50,14 @@ const ExamsManagement = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const [examRes, classRes] = await Promise.all([
-                axios.get('/api/admin/exams', config),
-                axios.get('/api/admin/classrooms', config)
+            const [examData, classData] = await Promise.all([
+                getAdminExams().catch(() => []),
+                getAdminClassrooms().catch(() => [])
             ]);
-            setExams(examRes.data);
-            setClassrooms(classRes.data);
-            if (classRes.data.length > 0) {
-                setFormData(prev => ({ ...prev, classroom: classRes.data[0]._id }));
+            setExams(Array.isArray(examData) ? examData : []);
+            setClassrooms(Array.isArray(classData) ? classData : []);
+            if (Array.isArray(classData) && classData.length > 0) {
+                setFormData(prev => ({ ...prev, classroom: classData[0]._id }));
             }
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -169,14 +167,8 @@ const ExamsManagement = () => {
         const formDataUpload = new FormData();
         formDataUpload.append('image', file);
         try {
-            const config = { 
-                headers: { 
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${userInfo.token}` 
-                } 
-            };
-            const response = await axios.post('/api/upload/image', formDataUpload, config);
-            handleQuestionChange(index, 'imageUrl', response.data.url);
+            const data = await uploadImage(formDataUpload);
+            handleQuestionChange(index, 'imageUrl', data.url);
         } catch (error) {
             console.error("Image upload failed:", error);
             alert("Failed to upload image. Please try again.");
@@ -189,9 +181,8 @@ const ExamsManagement = () => {
         try {
             setLoadingDetails(true);
             setIsDetailModalOpen(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const response = await axios.get(`/api/exams/${examId}`, config);
-            setExamDetails(response.data);
+            const data = await getExamDetails(examId);
+            setExamDetails(data);
         } catch (error) {
             console.error("Error fetching exam details:", error);
             setStatus({ type: 'error', message: 'Failed to load exam details.' });
@@ -209,15 +200,14 @@ const ExamsManagement = () => {
     const handleResultSubmit = async (e) => {
         e.preventDefault();
         try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.post('/api/admin/results', {
+            await submitAdminResult({
                 examId: selectedExam._id,
                 ...resultData
-            }, config);
+            });
             setStatus({ type: 'success', message: 'Marks submitted successfully!' });
             setResultData({ studentId: '', marksObtained: '', remarks: '' });
         } catch (error) {
-            setStatus({ type: 'error', message: 'Failed to submit marks.' });
+            setStatus({ type: 'error', message: error || 'Failed to submit marks.' });
         }
     };
 

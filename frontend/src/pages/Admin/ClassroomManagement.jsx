@@ -1,14 +1,14 @@
-import { 
-    getAdminClassrooms, 
-    getAdminUsers, 
-    createAdminClassroom, 
-    updateAdminClassroom, 
-    deleteAdminClassroom, 
-    assignUserToClassroom 
+import {
+    getAdminClassrooms,
+    getAdminUsers,
+    createAdminClassroom,
+    updateAdminClassroom,
+    deleteAdminClassroom,
+    assignUserToClassroom
 } from '../../api/services';
 import { X, GraduationCap, Users, PlusCircle, CheckCircle2, AlertCircle, BookOpen, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-
+import { useState, useEffect } from 'react';
 const ClassroomManagement = () => {
     const navigate = useNavigate();
     const [classrooms, setClassrooms] = useState([])
@@ -262,7 +262,7 @@ const ClassroomManagement = () => {
 
                             <div>
                                 <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
-                                    <input type="checkbox" name="isPublished" checked={editFormData.isPublished} onChange={(e) => setEditFormData({...editFormData, isPublished: e.target.checked})} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
+                                    <input type="checkbox" name="isPublished" checked={editFormData.isPublished} onChange={(e) => setEditFormData({ ...editFormData, isPublished: e.target.checked })} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
                                     <span className="text-sm font-medium text-slate-700">Publish (Visible to students)</span>
                                 </label>
                             </div>
@@ -393,7 +393,7 @@ const ClassroomManagement = () => {
 
                         <div>
                             <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
-                                <input type="checkbox" name="isPublished" checked={formData.isPublished} onChange={(e) => setFormData({...formData, isPublished: e.target.checked})} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
+                                <input type="checkbox" name="isPublished" checked={formData.isPublished} onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
                                 <span className="text-sm font-medium text-slate-700">Publish (Visible to students)</span>
                             </label>
                         </div>
@@ -509,7 +509,7 @@ const ClassroomManagement = () => {
                                                     </span>
                                                 )}
                                                 <span className={`px-2 py-0.5 text-[9px] font-bold rounded uppercase ${c.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
-                                                        {c.isPublished ? 'Published' : 'Draft'}
+                                                    {c.isPublished ? 'Published' : 'Draft'}
                                                 </span>
                                             </div>
                                             <p className="text-sm font-medium text-cyan-600">Class {c.className} • {c.board}</p>
