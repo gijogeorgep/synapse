@@ -54,12 +54,8 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
             data = text ? JSON.parse(text) : {};
         } catch (err) {
             console.error("[API_CLIENT] JSON Parse Error:", err, "Raw Text:", text);
-            if (response.ok) {
-                // If it's 200 OK but not JSON, we return an empty object to avoid breaking state expectations
-                console.warn("[API_CLIENT] Success status with non-JSON body. Returning {}.");
-                return {}; 
-            }
-            return Promise.reject(text || `Error: ${response.status} ${response.statusText}`);
+            // If it's 200 OK but not JSON, and we expect JSON, this is an error
+            return Promise.reject(`Invalid response format from server: ${text.substring(0, 100)}...`);
         }
 
         if (response.ok) {

@@ -18,6 +18,14 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         try {
             const data = await loginUser(email, password);
+            
+            // Validate that we have a valid user object with a role
+            if (!data || !data.role || !data.token) {
+                console.error("[AUTH_CONTEXT] Invalid user data received during login:", data);
+                return { success: false, message: "Invalid login response from server" };
+            }
+
+            console.log("[AUTH_CONTEXT] Login successful for:", data.email, "Role:", data.role);
             setUser(data);
             localStorage.setItem("userInfo", JSON.stringify(data));
             return { success: true };
@@ -40,6 +48,14 @@ export const AuthProvider = ({ children }) => {
 
         try {
             const data = await registerUser(userData);
+
+            // Validate that we have a valid user object with a role
+            if (!data || !data.role || !data.token) {
+                console.error("[AUTH_CONTEXT] Invalid user data received during registration:", data);
+                return { success: false, message: "Invalid registration response from server" };
+            }
+
+            console.log("[AUTH_CONTEXT] Registration successful for:", data.email, "Role:", data.role);
             setUser(data);
             localStorage.setItem("userInfo", JSON.stringify(data));
             return { success: true };
