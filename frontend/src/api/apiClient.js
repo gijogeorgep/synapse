@@ -20,9 +20,10 @@ const getApiUrl = () => {
     return `${base.replace(/\/$/, "")}/api`;
 };
 
-const API_URL = getApiUrl();
-
 const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
+    // Resolve API URL at runtime to ensure window and hostname are available
+    const API_URL = getApiUrl();
+    
     const userInfo = localStorage.getItem("userInfo")
         ? JSON.parse(localStorage.getItem("userInfo"))
         : null;
