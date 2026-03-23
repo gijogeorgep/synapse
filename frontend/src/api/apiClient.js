@@ -36,16 +36,28 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
     }
 
     try {
-        console.log(`[API_CLIENT] Fetching: ${API_URL}${endpoint}`, {
+        const fullUrl = `${API_URL}${endpoint}`;
+        console.log(`[API_CLIENT] Fetching: ${fullUrl}`, {
             method: config.method,
             headers: config.headers
         });
         
-        const response = await fetch(`${API_URL}${endpoint}`, config);
+        const response = await fetch(fullUrl, config);
         console.log(`[API_CLIENT] Response Status: ${response.status} ${response.statusText}`);
         
-        // Read response text first to handle non-JSON or empty bodies
+        const contentType = response.headers.get("content-type");
         const text = await response.text();
+        
+        // Defensive check: if we got HTML but expected JSON (common with redirects or misconfigured hosting)
+        if (contentType && contentType.includes("text/html")) {
+            console.error("[API_CLIENT] Received HTML instead of JSON. Potential redirect issue or misconfiguration.", {
+                url: fullUrl,
+                status: response.status,
+                preview: text.substring(0, 200)
+            });
+            return Promise.reject("Invalid server response (received HTML). Check if the API URL is correct.");
+        }
+
         console.log(`[API_CLIENT] Raw Response Text:`, text.substring(0, 500) + (text.length > 500 ? "..." : ""));
         
         let data;
@@ -54,7 +66,6 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
             data = text ? JSON.parse(text) : {};
         } catch (err) {
             console.error("[API_CLIENT] JSON Parse Error:", err, "Raw Text:", text);
-            // If it's 200 OK but not JSON, and we expect JSON, this is an error
             return Promise.reject(`Invalid response format from server: ${text.substring(0, 100)}...`);
         }
         

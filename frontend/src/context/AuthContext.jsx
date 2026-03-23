@@ -27,10 +27,13 @@ export const AuthProvider = ({ children }) => {
                     if (!data.role) missing.push("role");
                     if (!data.token) missing.push("token");
                 }
+                
+                const errorDetail = data ? JSON.stringify(data) : "empty";
                 console.error("[AUTH_CONTEXT] Invalid user data received during login:", data);
+                
                 return { 
                     success: false, 
-                    message: `Invalid response from server. Missing: ${missing.join(", ")}` 
+                    message: `Invalid response from server. Missing: ${missing.join(", ")}. Data: ${errorDetail.substring(0, 100)}` 
                 };
             }
 
@@ -60,8 +63,12 @@ export const AuthProvider = ({ children }) => {
 
             // Validate that we have a valid user object with a role
             if (!data || !data.role || !data.token) {
+                const errorDetail = data ? JSON.stringify(data) : "empty";
                 console.error("[AUTH_CONTEXT] Invalid user data received during registration:", data);
-                return { success: false, message: "Invalid registration response from server" };
+                return { 
+                    success: false, 
+                    message: `Invalid registration response from server. Data: ${errorDetail.substring(0, 100)}` 
+                };
             }
 
             console.log("[AUTH_CONTEXT] Registration successful for:", data.email, "Role:", data.role);
