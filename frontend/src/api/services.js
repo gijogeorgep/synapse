@@ -53,3 +53,20 @@ export const uploadImage = (formData) => {
         headers: null,
     });
 };
+
+// Classroom Services
+export const getMyClassrooms = () => apiClient("/classrooms/my-classrooms");
+export const getTeacherClassrooms = () => apiClient("/classrooms/teacher-classrooms");
+export const getClassroomById = (id) => apiClient(`/classrooms/${id}`);
+
+// Admin Services
+export const getAdminClassrooms = () => apiClient("/admin/classrooms");
+export const getAdminUsers = () => apiClient("/admin/users");
+export const createAdminClassroom = (classroomData) => 
+    apiClient("/admin/classrooms", { method: "POST", body: classroomData });
+export const updateAdminClassroom = (id, classroomData) => 
+    apiClient(`/admin/classrooms/${id}`, { method: "PATCH", body: classroomData });
+export const deleteAdminClassroom = (id) => 
+    apiClient(`/admin/classrooms/${id}`, { method: "DELETE" });
+export const assignUserToClassroom = (id, assignData) => 
+    apiClient(`/admin/classrooms/${id}/assign`, { method: "POST", body: assignData });

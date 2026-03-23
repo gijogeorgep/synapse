@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { GraduationCap, Award, ClipboardCheck, BookOpen, TrendingUp, ArrowRight, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getMyResults } from "../../api/services";
-import axios from "axios";
+import { getMyResults, getMyClassrooms } from "../../api/services";
 
 const StudentDashboard = () => {
     const { user } = useAuth();
@@ -22,21 +21,14 @@ const StudentDashboard = () => {
                 setLoadingResults(true);
                 setLoadingClassrooms(true);
 
-                const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${userInfo?.token}`,
-                    },
-                };
-
-                // Fetch results and classrooms in parallel
-                const [resultsData, classroomsRes] = await Promise.all([
+                // Fetch results and classrooms in parallel using standardized services
+                const [resultsData, classroomsData] = await Promise.all([
                     getMyResults().catch(() => []),
-                    axios.get('/api/classrooms/my-classrooms', config).catch(() => ({ data: [] }))
+                    getMyClassrooms().catch(() => [])
                 ]);
 
                 setResults(Array.isArray(resultsData) ? resultsData : []);
-                const fetchedClassrooms = classroomsRes.data || [];
+                const fetchedClassrooms = Array.isArray(classroomsData) ? classroomsData : [];
                 setClassrooms(fetchedClassrooms);
 
                 // Redirect independent students to selection if no classrooms

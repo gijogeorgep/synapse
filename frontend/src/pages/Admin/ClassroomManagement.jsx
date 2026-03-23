@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { GraduationCap, Users, PlusCircle, CheckCircle2, AlertCircle, BookOpen, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { 
+    getAdminClassrooms, 
+    getAdminUsers, 
+    createAdminClassroom, 
+    updateAdminClassroom, 
+    deleteAdminClassroom, 
+    assignUserToClassroom 
+} from '../../api/services';
+import { X, GraduationCap, Users, PlusCircle, CheckCircle2, AlertCircle, BookOpen, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const ClassroomManagement = () => {
@@ -58,18 +64,16 @@ const ClassroomManagement = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-
-            const [classRes, usersRes] = await Promise.all([
-                axios.get('/api/admin/classrooms', config),
-                axios.get('/api/admin/users', config)
+            const [classData, usersData] = await Promise.all([
+                getAdminClassrooms(),
+                getAdminUsers()
             ]);
 
-            setClassrooms(classRes.data);
-            setUsers(usersRes.data);
+            setClassrooms(Array.isArray(classData) ? classData : []);
+            setUsers(Array.isArray(usersData) ? usersData : []);
 
-            if (classRes.data.length > 0) {
-                setAssignData(prev => ({ ...prev, classroomId: classRes.data[0]._id }));
+            if (Array.isArray(classData) && classData.length > 0) {
+                setAssignData(prev => ({ ...prev, classroomId: classData[0]._id }));
             }
         } catch (error) {
             console.error("Error fetching data:", error);
@@ -97,26 +101,19 @@ const ClassroomManagement = () => {
         setStatus({ type: '', message: '' });
 
         try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-
             const payload = {
                 ...formData,
                 subjects: formData.subjects.split(',').map(s => s.trim()).filter(s => s)
             };
 
-            await axios.post('/api/admin/classrooms', payload, config);
+            await createAdminClassroom(payload);
             setStatus({ type: 'success', message: 'Classroom created successfully!' });
 
             setFormData({ name: '', className: '10', board: 'CBSE', subjects: '', type: 'Other', price: 0, isPublished: false });
             fetchData();
             setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Error creating classroom' });
+            setStatus({ type: 'error', message: error || 'Error creating classroom' });
         } finally {
             setIsSubmitting(false);
         }
@@ -142,22 +139,16 @@ const ClassroomManagement = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
             const payload = {
                 ...editFormData,
                 subjects: editFormData.subjects.split(',').map(s => s.trim()).filter(s => s)
             };
-            await axios.patch(`/api/admin/classrooms/${selectedClassroom._id}`, payload, config);
+            await updateAdminClassroom(selectedClassroom._id, payload);
             setStatus({ type: 'success', message: 'Classroom updated successfully!' });
             setIsEditModalOpen(false);
             fetchData();
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Error updating classroom' });
+            setStatus({ type: 'error', message: error || 'Error updating classroom' });
         } finally {
             setIsSubmitting(false);
         }
@@ -173,17 +164,12 @@ const ClassroomManagement = () => {
     const confirmDelete = async () => {
         setIsSubmitting(true);
         try {
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-            await axios.delete(`/api/admin/classrooms/${selectedClassroom._id}`, config);
+            await deleteAdminClassroom(selectedClassroom._id);
             setStatus({ type: 'success', message: 'Classroom deleted successfully!' });
             setIsDeleteModalOpen(false);
             fetchData();
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Error deleting classroom' });
+            setStatus({ type: 'error', message: error || 'Error deleting classroom' });
         } finally {
             setIsSubmitting(false);
         }
@@ -201,23 +187,16 @@ const ClassroomManagement = () => {
         setStatus({ type: '', message: '' });
 
         try {
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${userInfo.token}`,
-                },
-            };
-
-            await axios.post(`/api/admin/classrooms/${assignData.classroomId}/assign`, {
+            await assignUserToClassroom(assignData.classroomId, {
                 userIds: [assignData.userId],
                 role: assignData.role
-            }, config);
+            });
 
             setStatus({ type: 'success', message: 'User assigned to classroom successfully!' });
             fetchData(); // Refresh classrooms with new data
             setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Error assigning user' });
+            setStatus({ type: 'error', message: error || 'Error assigning user' });
         } finally {
             setIsSubmitting(false);
         }

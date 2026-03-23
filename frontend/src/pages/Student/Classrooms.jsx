@@ -2,7 +2,7 @@ import { BookOpen, FileText, ArrowRight, MoreVertical, GraduationCap } from "luc
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { getMyClassrooms } from "../../api/services";
 
 const StudentClassrooms = () => {
     const { user } = useAuth();
@@ -17,13 +17,7 @@ const StudentClassrooms = () => {
         const fetchClassrooms = async () => {
             try {
                 setLoading(true);
-                const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${userInfo?.token}`,
-                    },
-                };
-                const { data } = await axios.get('/api/classrooms/my-classrooms', config);
+                const data = await getMyClassrooms();
                 setClassrooms(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error("Error fetching classrooms:", error);

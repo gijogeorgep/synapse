@@ -48,8 +48,10 @@ const StudentClassroom = () => {
         const fetchResults = async () => {
             try {
                 const data = await getMyResults();
-                // Filter results for this specific subject
-                const subjectResults = data.filter(r => r.exam?.subject === fallbackSubject);
+                // Filter results for this specific subject - with defensive check
+                const subjectResults = Array.isArray(data) 
+                    ? data.filter(r => r.exam?.subject === fallbackSubject)
+                    : [];
                 setResults(subjectResults);
             } catch (error) {
                 console.error("Error fetching results:", error);

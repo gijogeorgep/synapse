@@ -10,7 +10,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import { getTeacherClassrooms } from "../../api/services";
 
 const TeacherDashboard = () => {
     const { user } = useAuth();
@@ -22,18 +22,12 @@ const TeacherDashboard = () => {
     const teacherSubjects =
         user?.teacherSubjects || user?.subjects || ["Physics", "Chemistry", "Mathematics"];
 
-    // We'll use actual fetched classrooms instead of the fallback
+    // Use standardized service for consistent domain fallback
     useEffect(() => {
         const fetchClassrooms = async () => {
             try {
                 setLoadingClassrooms(true);
-                const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${userInfo?.token}`,
-                    },
-                };
-                const { data } = await axios.get('/api/classrooms/my-classrooms', config);
+                const data = await getTeacherClassrooms();
                 setClassrooms(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error("Error fetching classrooms:", error);

@@ -61,37 +61,35 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
         const contentType = response.headers.get("content-type");
         const text = await response.text();
         
-        console.log(`[API_CLIENT] Raw Response Text (first 100):`, text.substring(0, 100));
-        console.log(`[API_CLIENT] Final URL after potential redirects:`, response.url);
+        // Detailed logging for debugging domain issues
+        console.log(`[API_CLIENT] Finished: ${fullUrl} | Status: ${response.status} | Content-Type: ${contentType}`);
+        console.log(`[API_CLIENT] Actual Response Domain: ${new URL(response.url).origin}`);
         
-        // Defensive check: if we got HTML but expected JSON (common with redirects or misconfigured hosting)
+        // Defensive check: if we got HTML but expected JSON (usually means domain mismatch or redirect to login/index)
         if (contentType && contentType.includes("text/html")) {
-            console.error("[API_CLIENT] Received HTML instead of JSON.", {
-                url: response.url,
-                preview: text.substring(0, 200)
+            console.error("[API_CLIENT] HTML received instead of JSON. Check the backend domain.", {
+                requestedUrl: fullUrl,
+                actualUrl: response.url
             });
-            return Promise.reject(`Invalid server response (received HTML). Final URL: ${response.url}`);
+            return Promise.reject(`Server error (HTML received). The request likely hit the wrong domain: ${response.url}`);
         }
 
         let data;
         try {
-            data = text ? JSON.parse(text) : { __empty: true };
+            data = text ? JSON.parse(text) : null;
         } catch (err) {
-            console.error("[API_CLIENT] JSON Parse Error:", err, "Raw Text:", text);
-            return Promise.reject(`Invalid response format from server: ${text.substring(0, 50)}. URL: ${response.url}`);
+            console.error("[API_CLIENT] JSON Parse Error at:", fullUrl, "| Raw:", text.substring(0, 100));
+            return Promise.reject(`Response parse error from ${fullUrl}`);
         }
         
-        console.log(`[API_CLIENT] Parsed Data:`, data);
-
         if (response.ok) {
             return data;
         } else {
-            console.warn("[API_CLIENT] Error response data:", data);
-            return Promise.reject(data.message || `Error: ${response.status} ${response.statusText}. URL: ${response.url}`);
+            return Promise.reject(data?.message || `Error ${response.status}: ${response.statusText}`);
         }
     } catch (error) {
-        console.error("[API_CLIENT] Request Error:", error);
-        return Promise.reject(error.message || "Network error occurred");
+        console.error("[API_CLIENT] Network/Request Error:", error.message || error);
+        return Promise.reject(error.message || "Network connection failed");
     }
 };
 
