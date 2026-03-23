@@ -1,5 +1,11 @@
 const getApiUrl = () => {
-    const base = import.meta.env.VITE_API_URL || "";
+    let base = import.meta.env.VITE_API_URL || "";
+    
+    // Clean up base URL if it contains '||' (frequent copy-paste error)
+    if (base.includes("||")) {
+        base = base.split("||")[0].trim();
+    }
+    
     // If it's empty, use the default relative /api
     if (!base) return "/api";
     // If it already ends with /api, use it as is
