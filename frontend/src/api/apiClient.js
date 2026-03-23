@@ -57,6 +57,8 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
             // If it's 200 OK but not JSON, and we expect JSON, this is an error
             return Promise.reject(`Invalid response format from server: ${text.substring(0, 100)}...`);
         }
+        
+        console.log(`[API_CLIENT] Parsed Data:`, data);
 
         if (response.ok) {
             return data;

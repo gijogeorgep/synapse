@@ -21,8 +21,17 @@ export const AuthProvider = ({ children }) => {
             
             // Validate that we have a valid user object with a role
             if (!data || !data.role || !data.token) {
+                const missing = [];
+                if (!data) missing.push("response body");
+                else {
+                    if (!data.role) missing.push("role");
+                    if (!data.token) missing.push("token");
+                }
                 console.error("[AUTH_CONTEXT] Invalid user data received during login:", data);
-                return { success: false, message: "Invalid login response from server" };
+                return { 
+                    success: false, 
+                    message: `Invalid response from server. Missing: ${missing.join(", ")}` 
+                };
             }
 
             console.log("[AUTH_CONTEXT] Login successful for:", data.email, "Role:", data.role);
