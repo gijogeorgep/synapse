@@ -37,6 +37,7 @@ import AdminResources from "./pages/Admin/LibraryManagement";
 import AdminSettings from "./pages/Admin/Settings";
 import AdminAuditLogs from "./pages/Admin/AuditLogs";
 import AdminReports from "./pages/Admin/Reports";
+import AdminBlogManagement from "./pages/Admin/BlogManagement";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
 import ClassroomSelection from "./pages/Student/ClassroomSelection";
@@ -114,6 +115,7 @@ function AppContent() {
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/promotions" element={<AdminPromotions />} />
               <Route path="/admin/resources" element={<AdminResources />} />
+              <Route path="/admin/blogs" element={<AdminBlogManagement />} />
               <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
                 <Route index element={<AdminAuditLogs />} />
               </Route>

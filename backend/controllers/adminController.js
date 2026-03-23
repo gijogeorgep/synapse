@@ -37,7 +37,7 @@ export const createAdminUser = async (req, res) => {
         if (role === 'admin' && req.user.role !== 'superadmin') {
             return res.status(403).json({ message: "Only Super Admins can create admin accounts" });
         }
-        
+
         // No one can create a superadmin through this route
         if (role === 'superadmin') {
             return res.status(403).json({ message: "Super Admin accounts cannot be created this way" });
@@ -122,7 +122,7 @@ export const createAdminUser = async (req, res) => {
 export const getAdminUsers = async (req, res) => {
     try {
         let query = { role: { $nin: ['admin', 'superadmin'] } };
-        
+
         // If user is superadmin, they can see regular admins too (but maybe not themselves/other superadmins depending on preference)
         if (req.user.role === 'superadmin') {
             query = { role: { $ne: 'superadmin' } };
@@ -145,7 +145,7 @@ export const createClassroom = async (req, res) => {
         if (!name) {
             return res.status(400).json({ message: "Please provide classroom name." });
         }
-        
+
         if (type === 'Other' && (!className || !board)) {
             return res.status(400).json({ message: "Please provide className and board for standard classrooms." });
         }
@@ -211,7 +211,7 @@ export const updateClassroom = async (req, res) => {
             classroom.board = 'Other';
             classroom.subjects = [];
         }
-        
+
         if (price !== undefined) classroom.price = price;
         if (isPublished !== undefined) classroom.isPublished = isPublished;
 
@@ -400,7 +400,7 @@ export const blockAdminUser = async (req, res) => {
 
         await user.save();
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully`,
             isBlocked: user.isBlocked,
             blockReason: user.blockReason
