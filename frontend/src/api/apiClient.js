@@ -6,7 +6,13 @@ const getApiUrl = () => {
         base = base.split("||")[0].trim();
     }
     
-    // If it's empty, use the default relative /api
+    // Fallback logic for production if env variable is missing
+    if (!base && typeof window !== "undefined" && !window.location.hostname.includes("localhost")) {
+        console.warn("[API_CLIENT] VITE_API_URL is missing. Falling back to production Render backend.");
+        base = "https://synapsebackend.onrender.com/api";
+    }
+
+    // If it's still empty, use the default relative /api
     if (!base) return "/api";
     // If it already ends with /api, use it as is
     if (base.endsWith("/api") || base.endsWith("/api/")) return base.replace(/\/$/, "");
