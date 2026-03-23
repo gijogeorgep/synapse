@@ -52,6 +52,7 @@ export const registerUser = async (req, res) => {
 // @access  Public
 export const authUser = async (req, res) => {
     const { email, password } = req.body;
+    console.log(`[AUTH] Login attempt received for email: ${email}`);
 
     if (!email || !password) {
         return res.status(400).json({ message: "Email and password are required" });

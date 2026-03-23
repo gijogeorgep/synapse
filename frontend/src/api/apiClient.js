@@ -54,25 +54,24 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
         const contentType = response.headers.get("content-type");
         const text = await response.text();
         
+        console.log(`[API_CLIENT] Raw Response Text (first 100):`, text.substring(0, 100));
+        console.log(`[API_CLIENT] Final URL after potential redirects:`, response.url);
+        
         // Defensive check: if we got HTML but expected JSON (common with redirects or misconfigured hosting)
         if (contentType && contentType.includes("text/html")) {
-            console.error("[API_CLIENT] Received HTML instead of JSON. Potential redirect issue or misconfiguration.", {
-                url: fullUrl,
-                status: response.status,
+            console.error("[API_CLIENT] Received HTML instead of JSON.", {
+                url: response.url,
                 preview: text.substring(0, 200)
             });
-            return Promise.reject("Invalid server response (received HTML). Check if the API URL is correct.");
+            return Promise.reject(`Invalid server response (received HTML). Final URL: ${response.url}`);
         }
 
-        console.log(`[API_CLIENT] Raw Response Text:`, text.substring(0, 500) + (text.length > 500 ? "..." : ""));
-        
         let data;
-        
         try {
-            data = text ? JSON.parse(text) : {};
+            data = text ? JSON.parse(text) : { __empty: true };
         } catch (err) {
             console.error("[API_CLIENT] JSON Parse Error:", err, "Raw Text:", text);
-            return Promise.reject(`Invalid response format from server: ${text.substring(0, 100)}...`);
+            return Promise.reject(`Invalid response format from server: ${text.substring(0, 50)}. URL: ${response.url}`);
         }
         
         console.log(`[API_CLIENT] Parsed Data:`, data);
@@ -81,7 +80,7 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
             return data;
         } else {
             console.warn("[API_CLIENT] Error response data:", data);
-            return Promise.reject(data.message || `Error: ${response.status} ${response.statusText}`);
+            return Promise.reject(data.message || `Error: ${response.status} ${response.statusText}. URL: ${response.url}`);
         }
     } catch (error) {
         console.error("[API_CLIENT] Request Error:", error);
