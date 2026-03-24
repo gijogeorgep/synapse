@@ -69,11 +69,11 @@ const Hero = () => {
                             {/* Image specific background blob */}
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-gradient-to-tr from-cyan-400 to-sky-300 rounded-full blur-[80px] opacity-30 animate-pulse duration-[5000ms] pointer-events-none"></div>
 
-                            <div className="relative z-10 p-0">
+                            <div className="relative z-10 p-0 flex items-end justify-center">
                                 <img
                                     src={heroimg}
                                     alt="Students Learning"
-                                    className="w-100 h-90 relative z-10 drop-shadow-2xl animate-float scale-125 sm:scale-100 md:scale-110 lg:scale-140 xl:scale-160 origin-bottom"
+                                    className="w-full h-auto max-w-[90%] sm:max-w-full relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-105 md:scale-110 lg:scale-[1.15] xl:scale-[1.25] origin-bottom transition-transform duration-700"
                                 />
 
                                 {/* Floating Stats Cards */}

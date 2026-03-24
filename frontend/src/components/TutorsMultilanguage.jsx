@@ -62,7 +62,7 @@ const TutorsMultilanguage = () => {
                 </div>
 
                 {/* IMAGE SHOWCASE */}
-                <div className="relative flex items-end justify-center w-full -space-x-8 sm:-space-x-12 md:-space-x-28 lg:-space-x-40 ">
+                <div className="relative flex items-end justify-center w-full -space-x-8 sm:-space-x-10 md:-space-x-20 lg:-space-x-32 xl:-space-x-40">
 
                     {/* LEFT FAR */}
                     <div className={`mt-8 z-10 ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}>
@@ -90,13 +90,15 @@ const TutorsMultilanguage = () => {
                     </div>
 
                     {/* CENTER HERO */}
-                    <div className={`z-40 ${isVisible ? 'animate-zoom-in' : 'opacity-0'}`}>
+                    <div className={`z-40 ${isVisible ? 'animate-zoom-in' : 'opacity-0'} relative`}>
+                        {/* Glow effect for main mentor */}
+                        <div className="absolute inset-0 bg-cyan-400/20 blur-[60px] rounded-full scale-75 animate-pulse pointer-events-none"></div>
                         <img
                             src={heroImg}
                             alt="Main Mentor"
-                            className="w-56 sm:w-48 md:w-[32rem] lg:w-[42rem] object-cover
+                            className="w-48 sm:w-40 md:w-[20rem] lg:w-[26rem] xl:w-[30rem] h-auto object-contain relative z-10
                transition-all duration-700 ease-in-out
-               scale-110 sm:scale-100 hover:scale-110 cursor-pointer outline-none"
+               scale-110 sm:scale-100 hover:scale-105 cursor-pointer outline-none drop-shadow-[0_20px_50px_rgba(6,182,212,0.3)]"
                         />
                     </div>
 
