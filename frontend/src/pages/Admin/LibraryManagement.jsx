@@ -33,10 +33,12 @@ const LibraryManagement = () => {
                 axios.get('/api/admin/resources', config),
                 axios.get('/api/admin/classrooms', config)
             ]);
-            setResources(resData.data);
-            setClassrooms(classData.data);
-            if (classData.data.length > 0) {
-                setFormData(prev => ({ ...prev, classroom: classData.data[0]._id }));
+            const resourcesData = Array.isArray(resData.data) ? resData.data : [];
+            const classroomsData = Array.isArray(classData.data) ? classData.data : [];
+            setResources(resourcesData);
+            setClassrooms(classroomsData);
+            if (classroomsData.length > 0) {
+                setFormData(prev => ({ ...prev, classroom: classroomsData[0]._id }));
             }
         } catch (error) {
             console.error("Error fetching data:", error);
