@@ -21,7 +21,7 @@ const Promotions = () => {
             setLoading(true);
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
             const { data } = await axios.get('/api/admin/classrooms', config);
-            setClassrooms(data);
+            setClassrooms(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching classrooms:", error);
         } finally {

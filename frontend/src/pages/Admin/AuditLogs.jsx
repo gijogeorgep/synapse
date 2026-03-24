@@ -21,7 +21,7 @@ const AuditLogs = () => {
                 },
             };
             const { data } = await axios.get('/api/admin/audit-logs', config);
-            setLogs(data);
+            setLogs(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching logs:", error);
         } finally {

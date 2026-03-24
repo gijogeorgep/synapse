@@ -25,7 +25,7 @@ const Announcements = () => {
             setLoading(true);
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
             const { data } = await axios.get('/api/admin/announcements', config);
-            setAnnouncements(data);
+            setAnnouncements(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching announcements:", error);
         } finally {
