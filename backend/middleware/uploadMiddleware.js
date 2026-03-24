@@ -16,8 +16,7 @@ const fileStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
         folder: 'synapse/documents',
-        resource_type: 'raw', // Important for non-image files like PDF
-        format: 'pdf',
+        resource_type: 'raw', // Safe storage, proxy handles the MIME type for viewing
     },
 });
 

@@ -31,6 +31,7 @@ const Navbar = () => {
             ]
         },
         { name: "Contact", href: "/#contact" },
+        { name: "Blog", href: "/#blog" }
     ];
 
     const isDashboard = location.pathname.includes("/dashboard") ||

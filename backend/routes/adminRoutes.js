@@ -16,6 +16,7 @@ import {
     promoteClass,
     createResource,
     getResources,
+    deleteResource,
     getAuditLogs,
 } from "../controllers/adminController.js";
 import { 
@@ -78,6 +79,7 @@ router.post("/promote", promoteClass);
 router.route("/resources")
     .post(createResource)
     .get(getResources);
+router.delete("/resources/:id", deleteResource);
 
 // Audit Logs - Restricted to Super Admin
 router.get("/audit-logs", authorize("superadmin"), getAuditLogs);

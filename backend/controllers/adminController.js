@@ -485,16 +485,19 @@ export const promoteClass = async (req, res) => {
 // @desc    Add Study Material
 // @route   POST /api/admin/resources
 export const createResource = async (req, res) => {
+    const { title, description, fileType, fileUrl, public_id, subject, board, classroom, category, year } = req.body;
     try {
-        const { title, description, fileType, fileUrl, subject, board, classroom } = req.body;
         const resource = await StudyMaterial.create({
             title,
             description,
             fileType,
             fileUrl,
+            public_id,
             subject,
             board,
             classroom,
+            category: category || "study_material",
+            year,
             uploadedBy: req.user._id
         });
         res.status(201).json(resource);
@@ -509,6 +512,21 @@ export const getResources = async (req, res) => {
     try {
         const resources = await StudyMaterial.find({}).populate('classroom', 'name className').sort({ createdAt: -1 });
         res.json(resources);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete Resource
+// @route   DELETE /api/admin/resources/:id
+export const deleteResource = async (req, res) => {
+    try {
+        const resource = await StudyMaterial.findById(req.params.id);
+        if (!resource) {
+            return res.status(404).json({ message: "Resource not found" });
+        }
+        await resource.deleteOne();
+        res.json({ message: "Resource removed" });
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

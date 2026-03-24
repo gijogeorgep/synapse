@@ -11,12 +11,23 @@ const studyMaterialSchema = new mongoose.Schema(
         },
         fileType: {
             type: String,
-            enum: ["pdf", "video", "note"],
+            enum: ["pdf", "video", "note", "jpeg", "image"],
             required: true,
+        },
+        category: {
+            type: String,
+            enum: ["study_material", "question_paper"],
+            default: "study_material",
+        },
+        year: {
+            type: String,
         },
         fileUrl: {
             type: String,
             required: true,
+        },
+        public_id: {
+            type: String,
         },
         subject: {
             type: String,

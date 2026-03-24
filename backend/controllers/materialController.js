@@ -1,6 +1,8 @@
-import { Subscription } from "../models/Financial.js";
 import Classroom from "../models/Classroom.js";
 import User from "../models/User.js";
+import StudyMaterial from "../models/StudyMaterial.js";
+import { Subscription } from "../models/Financial.js";
+import cloudinary from "../config/cloudinary.js";
 
 // @desc    Upload study material
 // @route   POST /api/materials
@@ -33,15 +35,18 @@ export const getMaterials = async (req, res) => {
     try {
         let query = {};
         
-        // Filtering for Institutional Students
+        // Filtering for Students
         if (req.user && req.user.role === 'student' && req.user.userType === 'institutional') {
             const studentClassrooms = await Classroom.find({ students: req.user._id });
-            const subjects = studentClassrooms.flatMap(c => c.subjects);
+            const classroomIds = studentClassrooms.map(c => c._id);
             
-            // Only show materials for subjects they are enrolled in
-            if (subjects.length > 0) {
-                query.subject = { $in: subjects };
-            }
+            // Show materials assigned to their specific classrooms, or global materials
+            query.$or = [
+                { classroom: { $in: classroomIds } },
+                { classroom: null },
+                { classroom: "" },
+                { classroom: { $exists: false } }
+            ];
         }
 
         const materials = await StudyMaterial.find(query);
@@ -81,5 +86,71 @@ export const getMaterialById = async (req, res) => {
         res.json(material);
     } catch (error) {
         res.status(500).json({ message: error.message });
+    }
+};
+// @desc    View material via proxy (fixes Cloudinary MIME issues)
+// @route   GET /api/materials/view/:id
+export const viewMaterialProxy = async (req, res) => {
+    try {
+        const material = await StudyMaterial.findById(req.params.id);
+        if (!material) return res.status(404).json({ message: "Material not found" });
+
+        let publicId = material.public_id;
+        
+        // Fallback: Extract public_id from fileUrl if missing (for old uploads)
+        if (!publicId && material.fileUrl) {
+            const parts = material.fileUrl.split('/');
+            const uploadIndex = parts.indexOf('upload');
+            if (uploadIndex !== -1) {
+                // public_id is everything after the version (v12345...)
+                publicId = parts.slice(uploadIndex + 2).join('/').split('.')[0];
+            }
+        }
+
+        // Guess resource_type from URL if possible (fallback for older uploads)
+        let resourceType = material.fileType === 'pdf' ? 'image' : 'raw';
+        if (material.fileUrl && material.fileUrl.includes('/raw/')) {
+            resourceType = 'raw';
+        } else if (material.fileUrl && material.fileUrl.includes('/image/')) {
+            resourceType = 'image';
+        }
+
+        // Generate a signed URL. If we still don't have a publicId, use the fileUrl directly as fallback.
+        const secureUrl = cloudinary.url(publicId || material.fileUrl, {
+            resource_type: resourceType,
+            sign_url: true,
+            secure: true
+        });
+
+        console.log(`Proxying PDF view for: ${material.title} -> ${secureUrl}`);
+
+        const response = await fetch(secureUrl);
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Cloudinary fetch failed (${response.status}):`, errorText);
+            throw new Error(`Cloudinary responded with ${response.status}`);
+        }
+
+        const isPdf = material.fileType === 'pdf';
+        const contentType = isPdf ? 'application/pdf' : (response.headers.get('content-type') || 'image/jpeg');
+        res.setHeader('Content-Type', contentType);
+        
+        if (req.query.download === 'true') {
+            res.setHeader('Content-Disposition', `attachment; filename="${material.title || 'document'}.pdf"`);
+        } else {
+            // Force inline headers to ensure browser previewing
+            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Disposition', 'inline');
+            res.setHeader('X-Content-Type-Options', 'nosniff');
+        }
+        
+        const arrayBuffer = await response.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+    } catch (error) {
+        console.error("Proxy error:", error);
+        res.status(500).json({ 
+            message: "Error viewing document", 
+            details: process.env.NODE_ENV === 'development' ? error.message : undefined 
+        });
     }
 };
