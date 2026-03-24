@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
-import { 
-  CheckCircle2, 
-  ArrowRight, 
-  Sparkles, 
-  Zap, 
-  Users, 
-  BookOpen, 
-  Clock, 
-  BarChart3 
+import {
+  CheckCircle2,
+  ArrowRight,
+  Sparkles,
+  Zap,
+  Users,
+  BookOpen,
+  Clock,
+  BarChart3
 } from "lucide-react";
 import primeone from "../assets/primeone.png";
 import cluster from "../assets/cluster.png";
@@ -134,7 +134,7 @@ const ProgramCard = ({ program, index }) => {
       onMouseLeave={() => setHovered(false)}
     >
       {/* Dynamic Background Shadow */}
-      <div 
+      <div
         className="absolute -inset-1 rounded-[2rem] bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
       />
 
@@ -147,11 +147,11 @@ const ProgramCard = ({ program, index }) => {
             className={`w-full h-full object-cover transition-transform duration-1000 ${hovered ? 'scale-110' : 'scale-100'} ${program.objPos}`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-transparent to-transparent" />
-          
+
           <div className="absolute top-3 right-3">
-             <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
-                <span className="text-[9px] font-black text-white uppercase tracking-wider">{program.badge}</span>
-             </div>
+            <div className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full border border-white/20">
+              <span className="text-[9px] font-black text-white uppercase tracking-wider">{program.badge}</span>
+            </div>
           </div>
 
           <div className="absolute bottom-4 left-4">
@@ -162,10 +162,10 @@ const ProgramCard = ({ program, index }) => {
         {/* Content Area */}
         <div className="px-6 pb-6 pt-2 flex-1 flex flex-col">
           <div className="flex items-center gap-2 mb-3">
-             <div className="p-1.5 rounded-lg" style={{ background: program.pill.bg }}>
-                <program.icon className="w-3.5 h-3.5" style={{ color: program.pill.color }} />
-             </div>
-             <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight">{program.subtitle}</span>
+            <div className="p-1.5 rounded-lg" style={{ background: program.pill.bg }}>
+              <program.icon className="w-3.5 h-3.5" style={{ color: program.pill.color }} />
+            </div>
+            <span className="text-[11px] font-black text-slate-800 uppercase tracking-tight">{program.subtitle}</span>
           </div>
 
           <p className="text-[13px] text-slate-500 leading-relaxed mb-5 font-medium line-clamp-2">
@@ -177,13 +177,13 @@ const ProgramCard = ({ program, index }) => {
               <div key={i} className="flex items-center gap-2.5">
                 <div className="w-1 h-1 rounded-full shrink-0" style={{ backgroundColor: program.accentColor }} />
                 <span className="text-[11px] font-bold text-slate-600 uppercase tracking-tight">
-                    {feature}
+                  {feature}
                 </span>
               </div>
             ))}
           </div>
 
-          <button 
+          <button
             className="mt-auto group/btn flex items-center justify-center gap-2 w-full py-3 rounded-xl transition-all duration-300 active:scale-95 text-white font-black text-[11px] uppercase tracking-widest shadow-lg overflow-hidden relative"
             style={{ background: program.gradient }}
           >
@@ -289,9 +289,9 @@ const Program = () => {
 
         <div ref={headerRef} className="text-center mb-20 relative z-10">
           <div className={`header-anim ${headerVisible ? "visible" : ""}`}>
-             <span className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-[0.2em] text-cyan-600 bg-cyan-50 border border-cyan-100 rounded-full uppercase">
-                Curated Opportunities
-             </span>
+            <span className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-[0.2em] text-cyan-600 bg-cyan-50 border border-cyan-100 rounded-full uppercase">
+              Curated Opportunities
+            </span>
           </div>
           <h1 className={`header-anim ${headerVisible ? "visible" : ""} text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight font-['Outfit']`} style={{ transitionDelay: '100ms' }}>
             Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-indigo-600">Learning Journey</span>
@@ -311,4 +311,4 @@ const Program = () => {
   );
 };
 
-export default Program;
+export default Program;

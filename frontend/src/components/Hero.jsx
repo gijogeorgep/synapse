@@ -73,7 +73,7 @@ const Hero = () => {
                                 <img
                                     src={heroimg}
                                     alt="Students Learning"
-                                    className="w-full h-auto max-w-[90%] sm:max-w-full relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-105 md:scale-110 lg:scale-[1.15] xl:scale-[1.25] origin-bottom transition-transform duration-700"
+                                    className="w-full h-auto max-w-[90%] sm:max-w-full relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-105 md:scale-105 lg:scale-110 xl:scale-[1.15] origin-bottom transition-transform duration-700"
                                 />
 
                                 {/* Floating Stats Cards */}

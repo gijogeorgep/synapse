@@ -97,7 +97,7 @@ const Navbar = () => {
                         <div className="hidden md:flex items-center gap-2 bg-slate-50/90 px-3 py-1.5 rounded-full border border-slate-200">
                             <Layout className="w-4 h-4 text-cyan-600" />
                             <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
-                                {user.role} Portal
+                                {user?.role} Portal
                             </span>
                         </div>
                     )}
@@ -107,7 +107,7 @@ const Navbar = () => {
                         {user ? (
                             <div className="flex items-center gap-3">
                                 <Link
-                                    to={!user.role ? "/" : (user.role === "admin" || user.role === "superadmin" ? "/admin/dashboard" : `/${user.role}/dashboard`)}
+                                    to={!user?.role ? "/" : (user.role === "admin" || user.role === "superadmin" ? "/admin/dashboard" : `/${user.role}/dashboard`)}
                                     className="flex items-center gap-2 pr-4 pl-1.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-100 text-slate-800 font-semibold text-sm hover:bg-cyan-100 hover:border-cyan-200 transition-colors"
                                 >
                                     <div className="w-8 h-8 rounded-full overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-[10px] font-bold border-2 border-white">
@@ -195,7 +195,7 @@ const Navbar = () => {
                         {user ? (
                             <>
                                 <Link
-                                    to={!user.role ? "/" : (user.role === "admin" || user.role === "superadmin" ? "/admin/dashboard" : `/${user.role}/dashboard`)}
+                                    to={!user?.role ? "/" : (user.role === "admin" || user.role === "superadmin" ? "/admin/dashboard" : `/${user.role}/dashboard`)}
                                     onClick={() => setIsOpen(false)}
                                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-50 border border-cyan-100"
                                 >
