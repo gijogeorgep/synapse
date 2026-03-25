@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Menu, X, LogIn, User as UserIcon, LogOut, Layout, ChevronDown } from "lucide-react";
 import logo from "../../assets/synapse_logo.png";
 import AuthModal from "../Shared/AuthModal";
+import LogoutConfirmModal from "../Shared/LogoutConfirmModal";
 import { useAuth } from "../../context/AuthContext";
 import { Link, useLocation } from "react-router-dom";
 
@@ -11,6 +12,13 @@ const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState("login");
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    const handleLogoutConfirm = () => {
+        setShowLogoutModal(false);
+        setIsOpen(false);
+        logout();
+    };
 
     const openAuthModal = (mode) => {
         setAuthMode(mode);
@@ -31,8 +39,10 @@ const Navbar = () => {
             ]
         },
         { name: "Contact", href: "/#contact" },
-        { name: "Blog", href: "/#blog" }
+        { name: "Blog", href: "/blogs" }
     ];
+
+    const isHashLink = (href) => typeof href === "string" && href.startsWith("/#");
 
     const isDashboard = location.pathname.includes("/dashboard") ||
         location.pathname.includes("/student") ||
@@ -42,7 +52,7 @@ const Navbar = () => {
     return (
         <>
             <header className="w-full fixed top-0 left-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/70 shadow-sm">
-                <div className="max-w-7xl mx-auto h-20 md:h-22 flex items-center justify-between px-4 md:px-8 gap-4">
+                <div className="max-w-7xl mx-auto h-28 md:h-28 flex items-center justify-between px-4 md:px-8 gap-4">
                     {/* Logo + Brand */}
                     <Link
                         to="/"
@@ -51,7 +61,7 @@ const Navbar = () => {
                         <img
                             src={logo}
                             alt="Synapse Logo"
-                            className="h-14 md:h-16 w-auto object-contain"
+                            className="h-20 md:h-24 w-auto object-contain"
                         />
 
                     </Link>
@@ -79,14 +89,25 @@ const Navbar = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <a
+                                    isHashLink(item.href) ? (
+                                        <a
                                         key={item.name}
                                         href={item.href}
                                         className="relative px-4 py-1.5 text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors duration-200 rounded-full group"
                                     >
                                         {item.name}
                                         <span className="pointer-events-none absolute left-4 right-4 -bottom-1 h-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-200" />
-                                    </a>
+                                        </a>
+                                    ) : (
+                                        <Link
+                                            key={item.name}
+                                            to={item.href}
+                                            className="relative px-4 py-1.5 text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors duration-200 rounded-full group"
+                                        >
+                                            {item.name}
+                                            <span className="pointer-events-none absolute left-4 right-4 -bottom-1 h-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-200" />
+                                        </Link>
+                                    )
                                 )
                             ))}
                         </nav>
@@ -104,10 +125,10 @@ const Navbar = () => {
 
                     {/* Desktop Auth Area */}
                     <div className="hidden md:flex items-center gap-4">
-                        {user ? (
+                        {user && !["admin", "superadmin"].includes(user?.role) ? (
                             <div className="flex items-center gap-3">
                                 <Link
-                                    to={!user?.role ? "/" : (user.role === "admin" || user.role === "superadmin" ? "/admin/dashboard" : `/${user.role}/dashboard`)}
+                                    to={!user?.role ? "/" : `/${user.role}/dashboard`}
                                     className="flex items-center gap-2 pr-4 pl-1.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-100 text-slate-800 font-semibold text-sm hover:bg-cyan-100 hover:border-cyan-200 transition-colors"
                                 >
                                     <div className="w-8 h-8 rounded-full overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-[10px] font-bold border-2 border-white">
@@ -120,7 +141,7 @@ const Navbar = () => {
                                     <span>{user.name}</span>
                                 </Link>
                                 <button
-                                    onClick={logout}
+                                    onClick={() => setShowLogoutModal(true)}
                                     className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors"
                                     title="Logout"
                                 >
@@ -180,7 +201,8 @@ const Navbar = () => {
                                 </div>
                             </div>
                         ) : (
-                            <a
+                            isHashLink(item.href) ? (
+                                <a
                                 key={item.name}
                                 href={item.href}
                                 onClick={() => setIsOpen(false)}
@@ -188,14 +210,24 @@ const Navbar = () => {
                             >
                                 {item.name}
                             </a>
+                            ) : (
+                                <Link
+                                    key={item.name}
+                                    to={item.href}
+                                    onClick={() => setIsOpen(false)}
+                                    className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 hover:text-cyan-700 transition-colors"
+                                >
+                                    {item.name}
+                                </Link>
+                            )
                         )
                     ))}
 
                     <div className="pt-3 mt-2 border-t border-slate-200 space-y-3">
-                        {user ? (
+                        {user && !["admin", "superadmin"].includes(user?.role) ? (
                             <>
                                 <Link
-                                    to={!user?.role ? "/" : (user.role === "admin" || user.role === "superadmin" ? "/admin/dashboard" : `/${user.role}/dashboard`)}
+                                    to={!user?.role ? "/" : `/${user.role}/dashboard`}
                                     onClick={() => setIsOpen(false)}
                                     className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-50 border border-cyan-100"
                                 >
@@ -211,7 +243,7 @@ const Navbar = () => {
                                     </span>
                                 </Link>
                                 <button
-                                    onClick={logout}
+                                    onClick={() => setShowLogoutModal(true)}
                                     className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-red-600 border border-red-100 rounded-lg hover:bg-red-50 transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" />
@@ -245,6 +277,11 @@ const Navbar = () => {
                 isOpen={isAuthModalOpen}
                 onClose={() => setIsAuthModalOpen(false)}
                 initialMode={authMode}
+            />
+            <LogoutConfirmModal
+                isOpen={showLogoutModal}
+                onConfirm={handleLogoutConfirm}
+                onCancel={() => setShowLogoutModal(false)}
             />
         </>
     );

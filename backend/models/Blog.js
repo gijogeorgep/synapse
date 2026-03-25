@@ -48,11 +48,10 @@ const blogSchema = new mongoose.Schema(
 );
 
 // Middleware to set publishedAt when isPublished toggles to true
-blogSchema.pre("save", function (next) {
+blogSchema.pre("save", async function () {
     if (this.isModified("isPublished") && this.isPublished && !this.publishedAt) {
         this.publishedAt = new Date();
     }
-    next();
 });
 
 const Blog = mongoose.model("Blog", blogSchema);

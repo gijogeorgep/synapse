@@ -1,6 +1,85 @@
 @import "tailwindcss";
 
+@theme {
+  --font-outfit: "Outfit", sans-serif;
+}
+
 html, body {
   scroll-behavior: smooth;
   overflow-x: hidden;
+  font-family: var(--font-outfit);
+}
+
+/* Custom Markdown Styles */
+.prose-markdown {
+  @apply text-slate-700 leading-relaxed space-y-4;
+}
+
+.prose-markdown h1 {
+  @apply text-3xl font-extrabold text-slate-900 mt-8 mb-4;
+}
+
+.prose-markdown h2 {
+  @apply text-2xl font-bold text-slate-900 mt-8 mb-4 border-b border-slate-100 pb-2;
+}
+
+.prose-markdown h3 {
+  @apply text-xl font-bold text-slate-800 mt-6 mb-3;
+}
+
+.prose-markdown p {
+  @apply mb-4 leading-relaxed;
+}
+
+.prose-markdown ul {
+  @apply list-disc list-inside mb-4 space-y-2 ml-4;
+}
+
+.prose-markdown ol {
+  @apply list-decimal list-inside mb-4 space-y-2 ml-4;
+}
+
+.prose-markdown li {
+  @apply text-slate-700;
+}
+
+.prose-markdown blockquote {
+  @apply border-l-4 border-cyan-500 pl-4 italic text-slate-600 my-6;
+}
+
+.prose-markdown code {
+  @apply bg-slate-100 px-1.5 py-0.5 rounded text-rose-600 text-sm font-mono;
+}
+
+.prose-markdown pre {
+  @apply bg-slate-900 text-slate-100 p-4 rounded-2xl overflow-x-auto my-6 text-sm;
+}
+
+.prose-markdown img {
+  @apply rounded-[2rem] shadow-2xl shadow-slate-200/50 my-10 mx-auto max-w-full border-4 border-white object-cover max-h-[550px];
+}
+
+.prose-markdown table {
+  @apply w-full border-collapse my-6 text-sm;
+}
+
+.prose-markdown th {
+  @apply bg-slate-50 border border-slate-200 p-3 text-left font-bold text-slate-700;
+}
+
+.prose-markdown td {
+  @apply border border-slate-100 p-3 text-slate-600;
+}
+
+.prose-markdown a {
+  @apply text-cyan-700 underline decoration-cyan-700/30 hover:decoration-cyan-700 transition-all;
+}
+
+.prose-markdown strong {
+  @apply font-bold text-slate-900;
+}
+
+/* Custom Utilities */
+.glass-effect {
+  @apply bg-white/70 backdrop-blur-md border border-white/20;
 }

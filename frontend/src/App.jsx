@@ -41,23 +41,25 @@ import AdminBlogManagement from "./pages/Admin/BlogManagement";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
 import ClassroomSelection from "./pages/Student/ClassroomSelection";
+import Blogs from "./pages/Blogs/Blogs";
+import BlogPost from "./pages/Blogs/BlogPost";
 
 function LandingPage() {
   return (
     <>
-      <section id="home" className="scroll-mt-24">
+      <section id="home" className="scroll-mt-24 md:scroll-mt-28">
         <Hero />
       </section>
-      <section id="programs" className="scroll-mt-24">
+      <section id="programs" className="scroll-mt-24 md:scroll-mt-28">
         <Program />
       </section>
-      <section id="about" className="scroll-mt-24">
+      <section id="about" className="scroll-mt-24 md:scroll-mt-28">
         <About />
       </section>
       <TutorsMultilanguage />
       <VideoCard />
       <Crescent />
-      <section id="contact" className="scroll-mt-24">
+      <section id="contact" className="scroll-mt-24 md:scroll-mt-28">
         <Contact />
       </section>
     </>
@@ -71,10 +73,14 @@ function AppContent() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {!isAdminAuth && <Navbar />}
-      <div className={`flex-1 ${!isAdminAuth ? "mt-24" : ""}`}>
+      <div className={`flex-1 ${!isAdminAuth ? "mt-24 md:mt-28" : ""}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/admin-portal-auth" element={<AdminAuth />} />
+
+          {/* Public Blogs */}
+          <Route path="/blogs" element={<Blogs />} />
+          <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
 
           {/* Student Routes */}
           <Route element={<ProtectedRoute allowedRoles={["student", "admin", "superadmin"]} />}>

@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import LogoutConfirmModal from "../Shared/LogoutConfirmModal";
 import {
     LayoutDashboard,
     BookOpen,
@@ -13,10 +15,23 @@ import {
     Megaphone,
     Award,
     ArrowUpCircle,
-    BookCopy
+    BookCopy,
+    LogOut
 } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 const Sidebar = ({ role }) => {
+    const { logout } = useAuth();
+    const navigate = useNavigate();
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
+    const handleLogoutConfirm = () => {
+        setShowLogoutModal(false);
+        logout();
+        navigate("/");
+    };
+
     const links = {
         student: [
             { name: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
@@ -66,6 +81,12 @@ const Sidebar = ({ role }) => {
     const currentLinks = links[role] || [];
 
     return (
+        <>
+        <LogoutConfirmModal
+            isOpen={showLogoutModal}
+            onConfirm={handleLogoutConfirm}
+            onCancel={() => setShowLogoutModal(false)}
+        />
         <aside className="w-64 bg-white border-r border-slate-200 h-[calc(100vh-6rem)] sticky top-24 overflow-y-auto">
             <div className="p-6">
                 <nav className="space-y-2">
@@ -86,7 +107,18 @@ const Sidebar = ({ role }) => {
                     ))}
                 </nav>
             </div>
+
+            <div className="p-6 mt-auto border-t border-slate-100">
+                <button
+                    onClick={() => setShowLogoutModal(true)}
+                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-red-600 hover:bg-red-50 transition-all group"
+                >
+                    <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                    <span>Logout</span>
+                </button>
+            </div>
         </aside>
+        </>
     );
 };
 
