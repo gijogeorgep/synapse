@@ -1,222 +1,135 @@
 import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, Eye, Brain, FileText } from "lucide-react";
-import q_cloud_synapse from "../assets/q cloud synapse.png"; // Replace with actual image paths
-import q_cloud_synapse2 from "../assets/q cloud synapse 2.png"; // Replace with actual image paths
-import brainmap1 from "../assets/brainmap1.png"; // Replace with actual image paths
+import { ChevronLeft, ChevronRight, Eye, Brain, FileText, Sparkles, ExternalLink, Lock } from "lucide-react";
+import q_cloud_synapse from "../assets/q cloud synapse.png";
+import q_cloud_synapse2 from "../assets/q cloud synapse 2.png";
+import brainmap1 from "../assets/brainmap1.png";
 import brainmap2 from "../assets/brainmap2.png";
 import brainmap3 from "../assets/brainmap3.png";
 
-const QuestionPaperCard = () => {
-  const [paperIndex, setPaperIndex] = useState(0);
-  const [brainIndex, setBrainIndex] = useState(0);
-  const [isLoading, setIsLoading] = useState({ paper: false, brain: false });
+const SampleDisplay = ({ title, subTitle, images, category, icon: Icon, colorClass }) => {
+  const [index, setIndex] = useState(0);
+  const [isHovered, setIsHovered] = useState(false);
 
-  // Placeholder images - replace with your actual image imports
-  const questionPapers = [q_cloud_synapse, q_cloud_synapse2];
-
-  const brainmaps = [brainmap1, brainmap2, brainmap3];
-
-  const nextPaper = () => {
-    setIsLoading((prev) => ({ ...prev, paper: true }));
-    setTimeout(() => {
-      setPaperIndex((prev) => (prev + 1) % questionPapers.length);
-      setIsLoading((prev) => ({ ...prev, paper: false }));
-    }, 200);
-  };
-
-  const prevPaper = () => {
-    setIsLoading((prev) => ({ ...prev, paper: true }));
-    setTimeout(() => {
-      setPaperIndex(
-        (prev) => (prev - 1 + questionPapers.length) % questionPapers.length
-      );
-      setIsLoading((prev) => ({ ...prev, paper: false }));
-    }, 200);
-  };
-
-  const nextBrain = () => {
-    setIsLoading((prev) => ({ ...prev, brain: true }));
-    setTimeout(() => {
-      setBrainIndex((prev) => (prev + 1) % brainmaps.length);
-      setIsLoading((prev) => ({ ...prev, brain: false }));
-    }, 200);
-  };
-
-  const prevBrain = () => {
-    setIsLoading((prev) => ({ ...prev, brain: true }));
-    setTimeout(() => {
-      setBrainIndex((prev) => (prev - 1 + brainmaps.length) % brainmaps.length);
-      setIsLoading((prev) => ({ ...prev, brain: false }));
-    }, 200);
-  };
+  const next = () => setIndex((prev) => (prev + 1) % images.length);
+  const prev = () => setIndex((prev) => (prev - 1 + images.length) % images.length);
 
   return (
-    <div className="min-h-screen  p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-          Q Cloud Research Portal
-        </h1>
-        <p className="text-gray-600 text-lg">
-          Explore question papers and brain mapping visualizations
+    <div className="relative group/section flex flex-col h-full">
+      {/* Category Header */}
+      <div className="flex items-center gap-4 mb-8">
+        <div className={`p-3 rounded-2xl bg-white border border-slate-100 shadow-sm ${colorClass}`}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <div>
+          <h3 className="text-2xl font-black text-slate-800 tracking-tight font-['Outfit']">{title}</h3>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">{subTitle}</p>
+        </div>
+      </div>
+
+      {/* Main Display Frame */}
+      <div 
+        className="relative flex-1 min-h-[500px] rounded-[2.5rem] bg-white border border-slate-100 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] overflow-hidden transition-all duration-500 hover:shadow-[0_40px_80px_-20px_rgba(0,0,0,0.1)] hover:-translate-y-2"
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        {/* Sample Watermark */}
+        <div className="absolute top-6 left-6 z-20">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-900/90 backdrop-blur-md border border-white/20 text-white shadow-xl">
+            <Lock size={10} className="text-cyan-400" />
+            <span className="text-[9px] font-black uppercase tracking-[.2em]">Sample Copy</span>
+          </div>
+        </div>
+
+        {/* Image Content */}
+        <div className="absolute inset-0 p-8 flex items-center justify-center">
+          <img 
+            src={images[index]} 
+            alt={`${title} Sample`} 
+            className="w-full h-full object-contain rounded-xl transition-all duration-700 select-none pointer-events-none"
+          />
+        </div>
+
+        {/* Slide Controls */}
+        <div className="absolute bottom-8 inset-x-8 flex items-center justify-between z-40">
+          <div className="flex gap-2">
+            {images.map((_, i) => (
+              <button 
+                key={i} 
+                onClick={() => setIndex(i)}
+                className={`h-1.5 transition-all duration-500 rounded-full ${i === index ? 'w-8 bg-slate-900' : 'w-2 bg-slate-200 hover:bg-slate-400'}`}
+              />
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button onClick={prev} className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md border border-slate-100 text-slate-800 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-lg">
+              <ChevronLeft size={18} />
+            </button>
+            <button onClick={next} className="w-10 h-10 rounded-xl bg-white/90 backdrop-blur-md border border-slate-100 text-slate-800 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-lg">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const QuestionPaperCard = () => {
+  const questionPapers = [q_cloud_synapse, q_cloud_synapse2];
+  const brainmaps = [brainmap1, brainmap2, brainmap3];
+
+  return (
+    <div className="w-full py-12 font-['Plus_Jakarta_Sans',sans-serif]">
+      {/* Integrated Header */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
+        <div className="space-y-4">
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-100">
+            <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
+            <span className="text-[10px] font-black text-cyan-700 uppercase tracking-[.2em]">Q-Cloud Research Portal</span>
+          </div>
+          <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tighter font-['Outfit']">
+            Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Learning Blueprints</span>
+          </h2>
+        </div>
+        <p className="text-slate-500 font-medium text-sm max-w-sm leading-relaxed">
+          Proprietary question papers and brain-mapping insights designed to accelerate academic performance and cognitive clarity.
         </p>
       </div>
 
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Question Paper Section */}
-          <div className="group">
-            <div className=" backdrop-blur-sm shadow-2xl rounded-3xl p-6 border border-white/20 hover:shadow-3xl transition-all duration-500 hover:transform hover:scale-[1.02]">
-              {/* Section Header */}
-              <div className="flex items-center justify-center mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-blue-100 rounded-xl">
-                    <FileText className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    Model Question Papers
-                  </h2>
-                </div>
-              </div>
+      {/* Grid Layout */}
+      <div className="grid lg:grid-cols-2 gap-12 lg:gap-20">
+        <SampleDisplay 
+          title="Academic Papers" 
+          subTitle="Structure & Strategy"
+          images={questionPapers} 
+          category="papers"
+          icon={FileText}
+          colorClass="text-blue-600 border-blue-100"
+        />
+        <SampleDisplay 
+          title="Brain Mapping" 
+          subTitle="Cognitive Landscapes"
+          images={brainmaps} 
+          category="brain"
+          icon={Brain}
+          colorClass="text-indigo-600 border-indigo-100"
+        />
+      </div>
 
-              {/* Image Container */}
-              <div className="relative overflow-hidden rounded-2xl  shadow-inner">
-                <div
-                  className={`transition-all duration-300 ${isLoading.paper ? "opacity-50 blur-sm" : "opacity-100"
-                    }`}
-                >
-                  <img
-                    src={questionPapers[paperIndex]}
-                    alt={`Question Paper ${paperIndex + 1}`}
-                    className="w-full h-[40vh] sm:h-[50vh] md:h-[55vh] lg:h-[60vh] xl:h-[70vh] object-contain bg-white rounded-2xl shadow-lg"
-                  />
-                </div>
-
-                {/* Navigation Buttons */}
-                <button
-                  onClick={prevPaper}
-                  disabled={isLoading.paper}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-700 p-3 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed group-hover:opacity-100 opacity-70"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={nextPaper}
-                  disabled={isLoading.paper}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-700 p-3 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed group-hover:opacity-100 opacity-70"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-
-                {/* Loading Spinner */}
-                {isLoading.paper && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="mt-6 flex items-center justify-between">
-                <div className="flex space-x-1">
-                  {questionPapers.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setPaperIndex(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${index === paperIndex
-                        ? "bg-blue-600 w-8"
-                        : "bg-gray-300 hover:bg-gray-400"
-                        }`}
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                  <Eye className="w-4 h-4" />
-                  <span className="font-medium">
-                    {paperIndex + 1} of {questionPapers.length}
-                  </span>
-                </div>
-              </div>
-            </div>
+      {/* Trust Indicator Footer */}
+      <div className="mt-20 pt-10 border-t border-slate-200/60 flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
+          <div className="flex items-center gap-3 opacity-40">
+              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-800">Verified Content</span>
           </div>
-
-          {/* Brain Mapping Section */}
-          <div className="group">
-            <div className="backdrop-blur-sm shadow-2xl rounded-3xl p-6 border border-white/20 hover:shadow-3xl transition-all duration-500 hover:transform hover:scale-[1.02]">
-              {/* Section Header */}
-              <div className="flex items-center justify-center mb-6">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-purple-100 rounded-xl">
-                    <Brain className="w-6 h-6 text-purple-600" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-gray-800">
-                    Brain Mapping Visualizations
-                  </h2>
-                </div>
-              </div>
-
-              {/* Image Container */}
-              <div className="relative overflow-hidden rounded-2xl bg-gray-100 shadow-inner">
-                <div
-                  className={`transition-all duration-300 ${isLoading.brain ? "opacity-50 blur-sm" : "opacity-100"
-                    }`}
-                >
-                  <img
-                    src={brainmaps[brainIndex]}
-                    alt={`Brain Map ${brainIndex + 1}`}
-                    className="w-full h-[40vh] sm:h-[50vh] md:h-[55vh] lg:h-[60vh] xl:h-[70vh] object-contain rounded-2xl shadow-lg bg-white"
-                  />
-                </div>
-
-                {/* Navigation Buttons */}
-                <button
-                  onClick={prevBrain}
-                  disabled={isLoading.brain}
-                  className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-700 p-3 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed group-hover:opacity-100 opacity-70"
-                >
-                  <ChevronLeft className="w-5 h-5" />
-                </button>
-                <button
-                  onClick={nextBrain}
-                  disabled={isLoading.brain}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/90 backdrop-blur-sm text-gray-700 p-3 rounded-full shadow-lg hover:bg-white hover:shadow-xl transition-all duration-300 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed group-hover:opacity-100 opacity-70"
-                >
-                  <ChevronRight className="w-5 h-5" />
-                </button>
-
-                {/* Loading Spinner */}
-                {isLoading.brain && (
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-8 h-8 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
-                  </div>
-                )}
-              </div>
-
-              {/* Footer */}
-              <div className="mt-6 flex items-center justify-between">
-                <div className="flex space-x-1">
-                  {brainmaps.map((_, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setBrainIndex(index)}
-                      className={`w-3 h-3 rounded-full transition-all duration-300 ${index === brainIndex
-                        ? "bg-purple-600 w-8"
-                        : "bg-gray-300 hover:bg-gray-400"
-                        }`}
-                    />
-                  ))}
-                </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-100 px-3 py-1 rounded-full">
-                  <Eye className="w-4 h-4" />
-                  <span className="font-medium">
-                    {brainIndex + 1} of {brainmaps.length}
-                  </span>
-                </div>
-              </div>
-            </div>
+          <div className="flex items-center gap-3 opacity-40">
+              <div className="w-2 h-2 rounded-full bg-blue-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-800">Expert Curated</span>
           </div>
-        </div>
+          <div className="flex items-center gap-3 opacity-40">
+              <div className="w-2 h-2 rounded-full bg-cyan-500" />
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-800">Exclusive Portal</span>
+          </div>
       </div>
     </div>
   );

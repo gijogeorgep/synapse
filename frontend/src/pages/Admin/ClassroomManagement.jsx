@@ -29,6 +29,9 @@ const ClassroomManagement = () => {
         type: 'Other',
         price: 0,
         isPublished: false,
+        showOnHome: false,
+        description: '',
+        imageUrl: ''
     });
 
     const [editFormData, setEditFormData] = useState({
@@ -39,6 +42,9 @@ const ClassroomManagement = () => {
         type: 'Other',
         price: 0,
         isPublished: false,
+        showOnHome: false,
+        description: '',
+        imageUrl: ''
     });
 
     // Form for assigning users
@@ -109,7 +115,7 @@ const ClassroomManagement = () => {
             await createAdminClassroom(payload);
             setStatus({ type: 'success', message: 'Classroom created successfully!' });
 
-            setFormData({ name: '', className: '10', board: 'CBSE', subjects: '', type: 'Other', price: 0, isPublished: false });
+            setFormData({ name: '', className: '10', board: 'CBSE', subjects: '', type: 'Other', price: 0, isPublished: false, showOnHome: false, description: '', imageUrl: '' });
             fetchData();
             setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
@@ -129,6 +135,9 @@ const ClassroomManagement = () => {
             type: classroom.type || 'Other',
             price: classroom.price || 0,
             isPublished: classroom.isPublished || false,
+            showOnHome: classroom.showOnHome || false,
+            description: classroom.description || '',
+            imageUrl: classroom.imageUrl || '',
             subjects: classroom.subjects?.join(', ') || ''
         });
         setIsEditModalOpen(true);
@@ -260,11 +269,25 @@ const ClassroomManagement = () => {
                                 </div>
                             )}
 
-                            <div>
+                            <div className="grid grid-cols-2 gap-4">
                                 <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
                                     <input type="checkbox" name="isPublished" checked={editFormData.isPublished} onChange={(e) => setEditFormData({ ...editFormData, isPublished: e.target.checked })} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
-                                    <span className="text-sm font-medium text-slate-700">Publish (Visible to students)</span>
+                                    <span className="text-sm font-medium text-slate-700">Publish</span>
                                 </label>
+                                <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
+                                    <input type="checkbox" name="showOnHome" checked={editFormData.showOnHome} onChange={(e) => setEditFormData({ ...editFormData, showOnHome: e.target.checked })} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
+                                    <span className="text-sm font-medium text-slate-700">Show on Home</span>
+                                </label>
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Program Description (for Home Page)</label>
+                                <textarea name="description" value={editFormData.description} onChange={handleEditChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" rows="2" placeholder="Briefly describe the program for the home page card..." />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-700 mb-1">Program Image URL</label>
+                                <input type="text" name="imageUrl" value={editFormData.imageUrl} onChange={handleEditChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" placeholder="URL for the program card image..." />
                             </div>
                             <div className="flex gap-3 pt-4">
                                 <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors">Cancel</button>
@@ -391,11 +414,25 @@ const ClassroomManagement = () => {
 
 
 
-                        <div>
+                        <div className="grid grid-cols-2 gap-4">
                             <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
                                 <input type="checkbox" name="isPublished" checked={formData.isPublished} onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
-                                <span className="text-sm font-medium text-slate-700">Publish (Visible to students)</span>
+                                <span className="text-sm font-medium text-slate-700">Publish</span>
                             </label>
+                            <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
+                                <input type="checkbox" name="showOnHome" checked={formData.showOnHome} onChange={(e) => setFormData({ ...formData, showOnHome: e.target.checked })} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
+                                <span className="text-sm font-medium text-slate-700">Show on Home</span>
+                            </label>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Program Description (for Home Page)</label>
+                            <textarea name="description" value={formData.description} onChange={handleCreateChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" rows="2" placeholder="Briefly describe the program for the home page card..." />
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-slate-700 mb-1">Program Image URL</label>
+                            <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleCreateChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" placeholder="URL for the program card image..." />
                         </div>
 
                         <button

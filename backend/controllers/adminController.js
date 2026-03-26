@@ -151,7 +151,7 @@ export const getAdminUsers = async (req, res) => {
 // @access  Private/Admin
 export const createClassroom = async (req, res) => {
     try {
-        const { name, className, board, subjects, type, price, isPublished } = req.body;
+        const { name, className, board, subjects, type, price, isPublished, showOnHome, description, imageUrl } = req.body;
 
         if (!name) {
             return res.status(400).json({ message: "Please provide classroom name." });
@@ -168,6 +168,9 @@ export const createClassroom = async (req, res) => {
             type: type || "Other",
             price: price || 0,
             isPublished: isPublished || false,
+            showOnHome: showOnHome || false,
+            description: description || "",
+            imageUrl: imageUrl || "",
             subjects: type === 'Other' ? (subjects || []) : [],
             students: [],
             teachers: [],
@@ -201,7 +204,7 @@ export const getAdminClassrooms = async (req, res) => {
 export const updateClassroom = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, className, board, subjects, type, price, isPublished } = req.body;
+        const { name, className, board, subjects, type, price, isPublished, showOnHome, description, imageUrl } = req.body;
 
         const classroom = await Classroom.findById(id);
 
@@ -225,6 +228,9 @@ export const updateClassroom = async (req, res) => {
 
         if (price !== undefined) classroom.price = price;
         if (isPublished !== undefined) classroom.isPublished = isPublished;
+        if (showOnHome !== undefined) classroom.showOnHome = showOnHome;
+        if (description !== undefined) classroom.description = description;
+        if (imageUrl !== undefined) classroom.imageUrl = imageUrl;
 
         const updatedClassroom = await classroom.save();
         res.status(200).json(updatedClassroom);

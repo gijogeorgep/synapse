@@ -1,4 +1,5 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 import "./App.css";
 import Navbar from "./components/Layout/Navbar";
 import Footer from "./components/Footer";
@@ -13,6 +14,8 @@ import VideoCard from "./components/VideoCard";
 import TutorsMultilanguage from "./components/TutorsMultilanguage";
 import Crescent from "./components/Crescent";
 import Contact from "./components/Contact";
+import FAQ from "./components/FAQ";
+import AboutPage from "./pages/AboutPage";
 
 // Portal Pages
 import StudentDashboard from "./pages/Student/Dashboard";
@@ -47,19 +50,31 @@ import BlogPost from "./pages/Blogs/BlogPost";
 function LandingPage() {
   return (
     <>
-      <section id="home" className="scroll-mt-24 md:scroll-mt-28">
+      <section id="home" className="scroll-mt-20 md:scroll-mt-24">
         <Hero />
       </section>
-      <section id="programs" className="scroll-mt-24 md:scroll-mt-28">
+      <section id="programs" className="scroll-mt-20 md:scroll-mt-24">
         <Program />
       </section>
-      <section id="about" className="scroll-mt-24 md:scroll-mt-28">
+      <section id="about" className="scroll-mt-20 md:scroll-mt-24">
         <About />
+        <div className="bg-[#f8fafc] pb-20 text-center">
+            <Link 
+                to="/about"
+                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-cyan-700 rounded-2xl font-bold border border-cyan-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
+            >
+                Learn more about our mission
+                <ArrowRight className="w-4 h-4" />
+            </Link>
+        </div>
       </section>
       <TutorsMultilanguage />
       <VideoCard />
       <Crescent />
-      <section id="contact" className="scroll-mt-24 md:scroll-mt-28">
+      <section id="faq" className="scroll-mt-20 md:scroll-mt-24">
+        <FAQ />
+      </section>
+      <section id="contact" className="scroll-mt-20 md:scroll-mt-24">
         <Contact />
       </section>
     </>
@@ -73,12 +88,13 @@ function AppContent() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {!isAdminAuth && <Navbar />}
-      <div className={`flex-1 ${!isAdminAuth ? "mt-24 md:mt-28" : ""}`}>
+      <div className={`flex-1 ${!isAdminAuth ? "mt-20 md:mt-24" : ""}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/admin-portal-auth" element={<AdminAuth />} />
 
-          {/* Public Blogs */}
+          {/* Public Pages */}
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
 

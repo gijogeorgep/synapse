@@ -28,7 +28,7 @@ const Navbar = () => {
 
     const navItems = [
         { name: "Home", href: "/#home" },
-        { name: "About Us", href: "/#about" },
+        { name: "About Us", href: "/about" },
         { name: "Programs", href: "/#programs" },
         {
             name: "Resources",
@@ -52,7 +52,7 @@ const Navbar = () => {
     return (
         <>
             <header className="w-full fixed top-0 left-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/70 shadow-sm">
-                <div className="max-w-7xl mx-auto h-28 md:h-28 flex items-center justify-between px-4 md:px-8 gap-4">
+                <div className="max-w-7xl mx-auto h-20 md:h-24 flex items-center justify-between px-4 md:px-8 gap-4">
                     {/* Logo + Brand */}
                     <Link
                         to="/"
@@ -61,7 +61,7 @@ const Navbar = () => {
                         <img
                             src={logo}
                             alt="Synapse Logo"
-                            className="h-20 md:h-24 w-auto object-contain"
+                            className="h-32 md:h-40 w-auto object-contain"
                         />
 
                     </Link>
@@ -91,12 +91,12 @@ const Navbar = () => {
                                 ) : (
                                     isHashLink(item.href) ? (
                                         <a
-                                        key={item.name}
-                                        href={item.href}
-                                        className="relative px-4 py-1.5 text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors duration-200 rounded-full group"
-                                    >
-                                        {item.name}
-                                        <span className="pointer-events-none absolute left-4 right-4 -bottom-1 h-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-200" />
+                                            key={item.name}
+                                            href={item.href}
+                                            className="relative px-4 py-1.5 text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors duration-200 rounded-full group"
+                                        >
+                                            {item.name}
+                                            <span className="pointer-events-none absolute left-4 right-4 -bottom-1 h-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-200" />
                                         </a>
                                     ) : (
                                         <Link
@@ -203,13 +203,13 @@ const Navbar = () => {
                         ) : (
                             isHashLink(item.href) ? (
                                 <a
-                                key={item.name}
-                                href={item.href}
-                                onClick={() => setIsOpen(false)}
-                                className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 hover:text-cyan-700 transition-colors"
-                            >
-                                {item.name}
-                            </a>
+                                    key={item.name}
+                                    href={item.href}
+                                    onClick={() => setIsOpen(false)}
+                                    className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 hover:text-cyan-700 transition-colors"
+                                >
+                                    {item.name}
+                                </a>
                             ) : (
                                 <Link
                                     key={item.name}

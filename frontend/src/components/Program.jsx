@@ -9,10 +9,12 @@ import {
   Clock,
   BarChart3
 } from "lucide-react";
+import { getPublicClassrooms } from "../api/services";
 import primeone from "../assets/primeone.png";
 import cluster from "../assets/cluster.png";
 import planb from "../assets/planb.png";
 import deeprrot from "../assets/deep root.png";
+
 
 const programs = [
   {
@@ -201,8 +203,45 @@ const ProgramCard = ({ program, index }) => {
 const Program = () => {
   const headerRef = useRef(null);
   const [headerVisible, setHeaderVisible] = useState(false);
+  const [dynamicPrograms, setDynamicPrograms] = useState([]);
 
   useEffect(() => {
+    const fetchDynamicPrograms = async () => {
+      try {
+        const data = await getPublicClassrooms();
+        if (Array.isArray(data)) {
+          // Map backend classrooms to the ProgramCard format
+          const mapped = data.filter(c => c.showOnHome).map((c, i) => ({
+            img: c.imageUrl || primeone, // fallback to a known image if none provided
+            objPos: "object-center",
+            tag: c.name,
+            tagline: c.type === 'Other' ? `${c.className} ${c.board}` : c.type,
+            subtitle: c.type,
+            desc: c.description || `Specialized ${c.type} coaching program designed for academic success in ${c.board || 'various'} boards.`,
+            features: [
+              "Expert Guidance",
+              "Personalized Support",
+              "Comprehensive Materials",
+              "Regular Assessments"
+            ],
+            gradient: i % 2 === 0
+              ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)"
+              : "linear-gradient(135deg, #0c4a6e 0%, #0e7490 50%, #06b6d4 100%)",
+            glowColor: "rgba(6,182,212,0.4)",
+            accentColor: "#06b6d4",
+            badge: "New Batch",
+            icon: Sparkles,
+            pill: { bg: "rgba(6,182,212,0.1)", color: "#0891b2", border: "rgba(6,182,212,0.2)" },
+          }));
+          setDynamicPrograms(mapped);
+        }
+      } catch (error) {
+        console.error("Error fetching dynamic programs:", error);
+      }
+    };
+
+    fetchDynamicPrograms();
+
     const el = headerRef.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -217,6 +256,8 @@ const Program = () => {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
+
+  const allPrograms = [...programs, ...dynamicPrograms];
 
   return (
     <>
@@ -302,8 +343,8 @@ const Program = () => {
         </div>
 
         <div className="programs-grid">
-          {programs.map((program, index) => (
-            <ProgramCard key={program.tag} program={program} index={index} />
+          {allPrograms.map((program, index) => (
+            <ProgramCard key={program.tag + index} program={program} index={index} />
           ))}
         </div>
       </section>

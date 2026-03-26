@@ -58,6 +58,7 @@ export const uploadImage = (formData) => {
 export const getMyClassrooms = () => apiClient("/classrooms/my-classrooms");
 export const getTeacherClassrooms = () => apiClient("/classrooms/teacher-classrooms");
 export const getClassroomById = (id) => apiClient(`/classrooms/${id}`);
+export const getPublicClassrooms = () => apiClient("/classrooms/public");
 
 // Admin Services
 export const getAdminClassrooms = () => apiClient("/admin/classrooms");

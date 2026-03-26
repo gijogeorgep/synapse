@@ -59,6 +59,18 @@ const classroomSchema = mongoose.Schema(
             type: Boolean,
             default: false,
         },
+        showOnHome: {
+            type: Boolean,
+            default: false,
+        },
+        description: {
+            type: String,
+            default: "",
+        },
+        imageUrl: {
+            type: String,
+            default: "",
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
