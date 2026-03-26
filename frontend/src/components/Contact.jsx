@@ -45,7 +45,7 @@ const Contact = () => {
 
       <div className="relative z-10 w-full max-w-7xl">
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-stretch">
-          
+
           {/* Details Column */}
           <div className="w-full lg:w-[40%] flex flex-col justify-center space-y-12">
             <div className="space-y-6">
@@ -65,7 +65,7 @@ const Contact = () => {
             <div className="space-y-4">
               {[
                 { icon: Phone, label: "Call Us", value: "+91 81579 30567", link: "tel:+918157930567", color: "text-emerald-600", bg: "bg-emerald-50" },
-                { icon: Mail, label: "Email Us", value: "info@synapseedu.in", link: "mailto:info@synapseedu.in", color: "text-blue-600", bg: "bg-blue-50" },
+                { icon: Mail, label: "Email Us", value: "synapseeduhub@gmail.com", link: "mailto:info@synapseedu.in", color: "text-blue-600", bg: "bg-blue-50" },
                 { icon: MapPin, label: "Visit Us", value: "Kozhikode, Kerala, India", link: "#", color: "text-rose-600", bg: "bg-rose-50" }
               ].map((item, i) => (
                 <a key={i} href={item.link} className="group flex items-center gap-5 p-4 rounded-[2rem] bg-white border border-slate-200/60 shadow-sm hover:shadow-xl hover:border-cyan-200 transition-all duration-300">
@@ -107,14 +107,14 @@ const Contact = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-7">
                     <div className="space-y-2.5">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Your Identity</label>
-                      <input 
+                      <input
                         type="text" name="name" required placeholder="Full Name"
                         className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-6 py-4.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500/50 transition-all font-medium"
                       />
                     </div>
                     <div className="space-y-2.5">
                       <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Email Address</label>
-                      <input 
+                      <input
                         type="email" name="email" required placeholder="name@email.com"
                         className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-6 py-4.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500/50 transition-all font-medium"
                       />
@@ -123,7 +123,7 @@ const Contact = () => {
 
                   <div className="space-y-2.5">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Program of interest</label>
-                    <select 
+                    <select
                       name="program"
                       className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-6 py-4.5 text-slate-900 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500/50 transition-all font-medium appearance-none cursor-pointer"
                     >
@@ -137,13 +137,13 @@ const Contact = () => {
 
                   <div className="space-y-2.5">
                     <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Message Details</label>
-                    <textarea 
+                    <textarea
                       name="message" required rows="4" placeholder="How can we help you reach your academic goals?"
                       className="w-full bg-slate-50/50 border border-slate-200 rounded-2xl px-6 py-4.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500/50 transition-all resize-none font-medium"
                     />
                   </div>
 
-                  <button 
+                  <button
                     type="submit" disabled={loading}
                     className="group relative w-full py-5 rounded-2xl bg-slate-900 font-extrabold text-white uppercase tracking-[0.25em] text-[10px] overflow-hidden transition-all active:scale-[0.98] disabled:opacity-50"
                   >

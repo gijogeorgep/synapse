@@ -2,6 +2,7 @@ import Exam from "../models/Exam.js";
 import Question from "../models/Question.js";
 import Result from "../models/Result.js";
 import Classroom from "../models/Classroom.js";
+import { sendExamScheduledEmail } from "../utils/emailService.js";
 
 // @desc    Create a new exam
 // @route   POST /api/exams
@@ -22,6 +23,14 @@ export const createExam = async (req, res) => {
             examType: examType || "subject-wise",
             teacher: req.user._id,
         });
+
+        if (classroom) {
+            const classroomData = await Classroom.findById(classroom).populate("students", "email name");
+            if (classroomData && classroomData.students && classroomData.students.length > 0) {
+                const studentEmails = classroomData.students.map(s => s.email);
+                sendExamScheduledEmail(studentEmails, title, exam.date, classroomData.name);
+            }
+        }
 
         res.status(201).json(exam);
     } catch (error) {
@@ -125,6 +134,14 @@ export const createExamWithQuestions = async (req, res) => {
                 exam: exam._id,
             }));
             await Question.insertMany(questionsWithExamId);
+        }
+
+        if (classroom) {
+            const classroomData = await Classroom.findById(classroom).populate("students", "email name");
+            if (classroomData && classroomData.students && classroomData.students.length > 0) {
+                const studentEmails = classroomData.students.map(s => s.email);
+                sendExamScheduledEmail(studentEmails, title, exam.date, classroomData.name);
+            }
         }
 
         res.status(201).json(exam);

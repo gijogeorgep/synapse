@@ -1,15 +1,54 @@
 import User from "../models/User.js";
+import OTP from "../models/OTP.js";
 import generateToken from "../utils/generateToken.js";
+import { generateUniqueId } from "../utils/idGenerator.js";
+import { sendRegistrationEmail, sendOTPEmail } from "../utils/emailService.js";
+
+// @desc    Send OTP for Registration
+// @route   POST /api/auth/send-otp
+// @access  Public
+export const sendOTP = async (req, res) => {
+    const { email } = req.body;
+    
+    if (!email) {
+        return res.status(400).json({ message: "Email is required" });
+    }
+    
+    try {
+        const userExists = await User.findOne({ email });
+        if (userExists) {
+            return res.status(400).json({ message: "An account with this email already exists" });
+        }
+        
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Remove any existing OTPs for this email to prevent spam conflicts
+        await OTP.deleteMany({ email });
+        
+        await OTP.create({
+            email,
+            otp
+        });
+        
+        await sendOTPEmail(email, otp);
+        
+        res.status(200).json({ message: "OTP sent successfully" });
+    } catch (error) {
+        console.error("OTP generation error:", error);
+        res.status(500).json({ message: "Failed to send OTP" });
+    }
+};
 
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
 export const registerUser = async (req, res) => {
-    const { name, email, password } = req.body;
+    const { name, email, password, phoneNumber, otp } = req.body;
 
     // Basic validation
-    if (!name || !email || !password) {
-        return res.status(400).json({ message: "Name, email and password are required" });
+    if (!name || !email || !password || !phoneNumber || !otp) {
+        return res.status(400).json({ message: "Name, email, phone number, password, and OTP are required" });
     }
 
     try {
@@ -19,19 +58,38 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: "An account with this email already exists" });
         }
 
+        // Validate OTP
+        const otpRecord = await OTP.findOne({ email, otp });
+        if (!otpRecord) {
+            return res.status(400).json({ message: "Invalid or expired OTP" });
+        }
+
+        // Auto-generate Unique ID for independent registration
+        const finalUniqueId = await generateUniqueId("student", "Other");
+
         const user = await User.create({
             name,
             email,
             password,
+            phoneNumber,
             role: "student",
             userType: "independent",
+            uniqueId: finalUniqueId,
         });
         if (user) {
+            // Delete OTP record after successful use
+            await OTP.deleteMany({ email });
+
+            // Send Welcome Email asynchronously without awaiting to not block the request
+            sendRegistrationEmail(user.email, user.name);
+
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 email: user.email,
                 role: user.role,
+                phoneNumber: user.phoneNumber,
+                uniqueId: user.uniqueId,
                 userType: user.userType,
                 token: generateToken(user._id),
             });
@@ -69,6 +127,8 @@ export const authUser = async (req, res) => {
                 role: user.role,
                 userType: user.userType,
                 avatarUrl: user.avatarUrl,
+                uniqueId: user.uniqueId,
+                phoneNumber: user.phoneNumber,
                 class: user.class,
                 subjects: user.subjects,
                 token: generateToken(user._id),
@@ -88,12 +148,19 @@ export const getUserProfile = async (req, res) => {
     const user = await User.findById(req.user._id);
 
     if (user) {
+        // Migration: Generate uniqueId if missing for existing users
+        if (!user.uniqueId) {
+            user.uniqueId = await generateUniqueId(user.role, user.class);
+            await user.save();
+        }
+
         res.json({
             _id: user._id,
             name: user.name,
             email: user.email,
             role: user.role,
             userType: user.userType,
+            uniqueId: user.uniqueId,
             phoneNumber: user.phoneNumber,
             avatarUrl: user.avatarUrl,
             class: user.class,
@@ -124,6 +191,7 @@ export const updateUserProfile = async (req, res) => {
             email: updatedUser.email,
             role: updatedUser.role,
             userType: updatedUser.userType,
+            uniqueId: updatedUser.uniqueId,
             phoneNumber: updatedUser.phoneNumber,
             avatarUrl: updatedUser.avatarUrl,
             class: updatedUser.class,
@@ -180,6 +248,8 @@ export const adminLogin = async (req, res) => {
                     name: user.name,
                     email: user.email,
                     role: user.role,
+                    uniqueId: user.uniqueId,
+                    phoneNumber: user.phoneNumber,
                     token: token,
                 });
             } else {

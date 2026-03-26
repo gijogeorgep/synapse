@@ -7,6 +7,7 @@ import Announcement from "../models/Announcement.js";
 import AuditLog from "../models/AuditLog.js";
 import { generateUniqueId } from "../utils/idGenerator.js";
 import { generateInitialPassword } from "../utils/authUtils.js";
+import { sendStudyMaterialEmail } from "../utils/emailService.js";
 
 // @desc    Create a new user (Student or Teacher)
 // @route   POST /api/admin/users
@@ -129,7 +130,17 @@ export const getAdminUsers = async (req, res) => {
         }
 
         const users = await User.find(query).select("-password");
-        res.status(200).json(users);
+        
+        // Migration: Generate uniqueId for users who don't have it
+        const migratedUsers = await Promise.all(users.map(async (u) => {
+            if (!u.uniqueId) {
+                u.uniqueId = await generateUniqueId(u.role, u.class);
+                await u.save();
+            }
+            return u;
+        }));
+
+        res.status(200).json(migratedUsers);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
@@ -176,8 +187,8 @@ export const createClassroom = async (req, res) => {
 export const getAdminClassrooms = async (req, res) => {
     try {
         const classrooms = await Classroom.find()
-            .populate('students', 'name email role')
-            .populate('teachers', 'name email role');
+            .populate('students', 'name email role uniqueId phoneNumber')
+            .populate('teachers', 'name email role uniqueId phoneNumber');
         res.status(200).json(classrooms);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
@@ -284,8 +295,8 @@ export const assignUsersToClassroom = async (req, res) => {
         await classroom.save();
 
         const updatedClassroom = await Classroom.findById(id)
-            .populate('students', 'name email role')
-            .populate('teachers', 'name email role');
+            .populate('students', 'name email role uniqueId phoneNumber')
+            .populate('teachers', 'name email role uniqueId phoneNumber');
 
         res.status(200).json(updatedClassroom);
     } catch (error) {
@@ -500,6 +511,25 @@ export const createResource = async (req, res) => {
             year,
             uploadedBy: req.user._id
         });
+
+        let studentEmails = [];
+        let classroomName = 'Global / All Students';
+
+        if (classroom) {
+            const classroomData = await Classroom.findById(classroom).populate("students", "email");
+            if (classroomData && classroomData.students && classroomData.students.length > 0) {
+                studentEmails = classroomData.students.map(s => s.email);
+                classroomName = classroomData.name;
+            }
+        } else {
+            const allStudents = await User.find({ role: "student" }).select("email");
+            studentEmails = allStudents.map(s => s.email);
+        }
+
+        if (studentEmails.length > 0) {
+            sendStudyMaterialEmail(studentEmails, title, classroomName, category || "study_material");
+        }
+
         res.status(201).json(resource);
     } catch (error) {
         res.status(500).json({ message: error.message });

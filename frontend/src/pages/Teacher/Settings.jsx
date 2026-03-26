@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { User, Mail, Lock, Camera, Save, Loader2 } from "lucide-react";
-import { updateProfile, updatePassword, uploadImage } from "../../api/services";
+import { User, Mail, Lock, Camera, Save, Loader2, ShieldCheck, Phone } from "lucide-react";
+import { getProfile, updateProfile, updatePassword, uploadImage } from "../../api/services";
 
 const TeacherSettings = () => {
     const { user, updateUser } = useAuth();
@@ -10,7 +10,30 @@ const TeacherSettings = () => {
         name: user?.name || "",
         email: user?.email || "",
         phoneNumber: user?.phoneNumber || "",
+        uniqueId: user?.uniqueId || "",
     });
+
+    // Fetch fresh profile data on mount to ensure phoneNumber and uniqueId are present
+    useEffect(() => {
+        const fetchProfileData = async () => {
+            try {
+                const data = await getProfile();
+                setProfile({
+                    name: data.name || "",
+                    email: data.email || "",
+                    phoneNumber: data.phoneNumber || "",
+                    uniqueId: data.uniqueId || "",
+                });
+                // Also update the auth context if data has changed
+                if (data.phoneNumber !== user?.phoneNumber || data.uniqueId !== user?.uniqueId) {
+                    updateUser(data);
+                }
+            } catch (error) {
+                console.error("Error fetching profile:", error);
+            }
+        };
+        fetchProfileData();
+    }, []);
 
     const [passwords, setPasswords] = useState({
         currentPassword: "",
@@ -22,6 +45,8 @@ const TeacherSettings = () => {
     const [uploading, setUploading] = useState(false);
     const [saving, setSaving] = useState(false);
     const [updatingPassword, setUpdatingPassword] = useState(false);
+    const [isEditingProfile, setIsEditingProfile] = useState(false);
+    const [isEditingPassword, setIsEditingPassword] = useState(false);
 
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
@@ -67,9 +92,11 @@ const TeacherSettings = () => {
         e.preventDefault();
         setSaving(true);
         try {
-            const result = await updateProfile(profile);
-            updateUser(result);
+            // Only send name for update as per instructions
+            await updateProfile({ name: profile.name });
+            updateUser({ ...user, name: profile.name });
             alert("Profile updated successfully!");
+            setIsEditingProfile(false);
         } catch (error) {
             alert("Failed to update profile: " + error);
         } finally {
@@ -92,6 +119,7 @@ const TeacherSettings = () => {
             });
             alert("Password updated successfully!");
             setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
+            setIsEditingPassword(false);
         } catch (error) {
             alert("Failed to update password: " + error);
         } finally {
@@ -122,6 +150,15 @@ const TeacherSettings = () => {
                                 Update your public profile details.
                             </p>
                         </div>
+                        {!isEditingProfile && (
+                            <button
+                                onClick={() => setIsEditingProfile(true)}
+                                className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-all flex items-center gap-2"
+                            >
+                                <User className="w-4 h-4" />
+                                Edit Profile
+                            </button>
+                        )}
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-8 items-center sm:items-start border-t border-slate-50 pt-6">
@@ -159,6 +196,21 @@ const TeacherSettings = () => {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                 <div className="space-y-1.5">
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
+                                        SSEH Unique ID
+                                    </label>
+                                    <div className="relative">
+                                        <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500" />
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            value={profile.uniqueId || "Not Assigned"}
+                                            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-100 bg-slate-50 text-slate-500 text-sm font-bold cursor-not-allowed"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
                                         Full Name
                                     </label>
                                     <div className="relative">
@@ -169,7 +221,27 @@ const TeacherSettings = () => {
                                             placeholder="Enter your name"
                                             value={profile.name}
                                             onChange={handleProfileChange}
-                                            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 focus:bg-white text-sm font-medium transition-all"
+                                            readOnly={!isEditingProfile}
+                                            className={`w-full pl-11 pr-4 py-3 rounded-2xl border transition-all text-sm font-medium focus:outline-none ${
+                                                isEditingProfile 
+                                                    ? "border-cyan-200 bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500" 
+                                                    : "border-slate-100 bg-slate-50 text-slate-500 cursor-not-allowed"
+                                            }`}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
+                                        Email Address
+                                    </label>
+                                    <div className="relative">
+                                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="email"
+                                            readOnly
+                                            value={profile.email}
+                                            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-100 bg-slate-50 text-slate-500 text-sm font-medium cursor-not-allowed"
                                         />
                                     </div>
                                 </div>
@@ -178,48 +250,41 @@ const TeacherSettings = () => {
                                     <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
                                         Phone Number
                                     </label>
-                                    <input
-                                        type="tel"
-                                        name="phoneNumber"
-                                        placeholder="Enter your phone number"
-                                        value={profile.phoneNumber}
-                                        onChange={handleProfileChange}
-                                        className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 focus:bg-white text-sm font-medium transition-all"
-                                    />
+                                    <div className="relative">
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                        <input
+                                            type="tel"
+                                            readOnly
+                                            value={profile.phoneNumber}
+                                            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-100 bg-slate-50 text-slate-500 text-sm font-medium cursor-not-allowed"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="space-y-1.5">
-                                <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">
-                                    Email Address
-                                </label>
-                                <div className="relative">
-                                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        placeholder="Enter your email"
-                                        value={profile.email}
-                                        onChange={handleProfileChange}
-                                        className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 focus:bg-white text-sm font-medium transition-all"
-                                    />
+                            {isEditingProfile && (
+                                <div className="pt-4 flex justify-end gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditingProfile(false)}
+                                        className="px-6 py-3 rounded-2xl bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-all"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-cyan-600 text-white text-sm font-bold shadow-lg shadow-cyan-600/20 hover:bg-cyan-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {saving ? (
+                                            <Loader2 className="w-4 h-4 animate-spin" />
+                                        ) : (
+                                            <Save className="w-4 h-4" />
+                                        )}
+                                        <span>Save Changes</span>
+                                    </button>
                                 </div>
-                            </div>
-
-                            <div className="pt-4 flex justify-end">
-                                <button
-                                    type="submit"
-                                    disabled={saving}
-                                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-cyan-600 text-white text-sm font-bold shadow-lg shadow-cyan-600/20 hover:bg-cyan-700 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {saving ? (
-                                        <Loader2 className="w-4 h-4 animate-spin" />
-                                    ) : (
-                                        <Save className="w-4 h-4" />
-                                    )}
-                                    <span>Save Profile</span>
-                                </button>
-                            </div>
+                            )}
                         </form>
                     </div>
                 </section>
@@ -227,12 +292,25 @@ const TeacherSettings = () => {
                 {/* Password */}
                 <section className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
                     <div>
-                        <h2 className="text-lg font-semibold text-slate-900">
-                            Security Settings
-                        </h2>
-                        <p className="text-sm text-slate-500">
-                            Update your password regularly.
-                        </p>
+                        <div className="flex items-center justify-between gap-4">
+                            <div>
+                                <h2 className="text-lg font-semibold text-slate-900">
+                                    Security Settings
+                                </h2>
+                                <p className="text-sm text-slate-500">
+                                    Update your password regularly.
+                                </p>
+                            </div>
+                            {!isEditingPassword && (
+                                <button
+                                    onClick={() => setIsEditingPassword(true)}
+                                    className="px-4 py-2 rounded-xl bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-all flex items-center gap-2"
+                                >
+                                    <Lock className="w-4 h-4" />
+                                    Change Password
+                                </button>
+                            )}
+                        </div>
                     </div>
 
                     <form onSubmit={handleChangePassword} className="space-y-5 border-t border-slate-50 pt-6">
@@ -246,9 +324,14 @@ const TeacherSettings = () => {
                                     type="password"
                                     name="currentPassword"
                                     required
+                                    readOnly={!isEditingPassword}
                                     value={passwords.currentPassword}
                                     onChange={handlePasswordChange}
-                                    className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 focus:bg-white text-sm font-medium transition-all"
+                                    className={`w-full pl-11 pr-4 py-3 rounded-2xl border transition-all text-sm font-medium focus:outline-none ${
+                                        isEditingPassword 
+                                            ? "border-cyan-200 bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500" 
+                                            : "border-slate-100 bg-slate-50 text-slate-500 cursor-not-allowed"
+                                    }`}
                                 />
                             </div>
                         </div>
@@ -261,9 +344,14 @@ const TeacherSettings = () => {
                                 type="password"
                                 name="newPassword"
                                 required
+                                readOnly={!isEditingPassword}
                                 value={passwords.newPassword}
                                 onChange={handlePasswordChange}
-                                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 focus:bg-white text-sm font-medium transition-all"
+                                className={`w-full px-4 py-3 rounded-2xl border transition-all text-sm font-medium focus:outline-none ${
+                                    isEditingPassword 
+                                        ? "border-cyan-200 bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500" 
+                                        : "border-slate-100 bg-slate-50 text-slate-500 cursor-not-allowed"
+                                }`}
                             />
                         </div>
 
@@ -275,24 +363,40 @@ const TeacherSettings = () => {
                                 type="password"
                                 name="confirmPassword"
                                 required
+                                readOnly={!isEditingPassword}
                                 value={passwords.confirmPassword}
                                 onChange={handlePasswordChange}
-                                className="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-slate-50 focus:outline-none focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500 focus:bg-white text-sm font-medium transition-all"
+                                className={`w-full px-4 py-3 rounded-2xl border transition-all text-sm font-medium focus:outline-none ${
+                                    isEditingPassword 
+                                        ? "border-cyan-200 bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500" 
+                                        : "border-slate-100 bg-slate-50 text-slate-500 cursor-not-allowed"
+                                }`}
                             />
                         </div>
 
-                        <button
-                            type="submit"
-                            disabled={updatingPassword}
-                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold shadow-lg shadow-slate-900/20 hover:bg-slate-800 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            {updatingPassword ? (
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                            ) : (
-                                <Lock className="w-4 h-4" />
-                            )}
-                            <span>Change Password</span>
-                        </button>
+                        {isEditingPassword && (
+                            <div className="flex flex-col sm:flex-row gap-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsEditingPassword(false)}
+                                    className="flex-1 px-6 py-3 rounded-2xl bg-slate-100 text-slate-600 text-sm font-bold hover:bg-slate-200 transition-all"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={updatingPassword}
+                                    className="flex-[2] inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 text-white text-sm font-bold shadow-lg shadow-slate-900/20 hover:bg-slate-800 hover:-translate-y-0.5 active:translate-y-0 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    {updatingPassword ? (
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                    ) : (
+                                        <Lock className="w-4 h-4" />
+                                    )}
+                                    <span>Change Password</span>
+                                </button>
+                            </div>
+                        )}
                     </form>
                 </section>
             </div>

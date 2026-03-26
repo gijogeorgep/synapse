@@ -3,12 +3,13 @@ import User from "../models/User.js";
 import StudyMaterial from "../models/StudyMaterial.js";
 import { Subscription } from "../models/Financial.js";
 import cloudinary from "../config/cloudinary.js";
+import { sendStudyMaterialEmail } from "../utils/emailService.js";
 
 // @desc    Upload study material
 // @route   POST /api/materials
 // @access  Private (Teacher/Admin)
 export const uploadMaterial = async (req, res) => {
-    const { title, description, fileType, fileUrl, subject, isPaid, price } = req.body;
+    const { title, description, fileType, fileUrl, subject, isPaid, price, classroom, category } = req.body;
 
     try {
         const material = await StudyMaterial.create({
@@ -17,10 +18,30 @@ export const uploadMaterial = async (req, res) => {
             fileType,
             fileUrl,
             subject,
+            classroom,
+            category: category || "study_material",
             isPaid,
             price: isPaid ? price : 0,
             uploadedBy: req.user._id,
         });
+
+        let studentEmails = [];
+        let classroomName = 'Global / All Students';
+
+        if (classroom) {
+            const classroomData = await Classroom.findById(classroom).populate("students", "email");
+            if (classroomData && classroomData.students && classroomData.students.length > 0) {
+                studentEmails = classroomData.students.map(s => s.email);
+                classroomName = classroomData.name;
+            }
+        } else {
+            const allStudents = await User.find({ role: "student" }).select("email");
+            studentEmails = allStudents.map(s => s.email);
+        }
+
+        if (studentEmails.length > 0) {
+            sendStudyMaterialEmail(studentEmails, title, classroomName, category || "study_material");
+        }
 
         res.status(201).json(material);
     } catch (error) {

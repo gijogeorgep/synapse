@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Play, Sparkles, Youtube, Clock, Star, X, Zap } from "lucide-react";
-import shortThumbnail from "../assets/shorts_thumbnail.png";
+import english from "../assets/english_shorts.png";
+import hindi from "../assets/hindi_shorts.png";
+import tamil from "../assets/tamil_shorts.png";
 import QuestionPaperCard from "./QuestionPaperCard";
 
 const VideoCard = () => {
@@ -14,23 +16,23 @@ const VideoCard = () => {
       desc: "Comprehensive insights in Hindi for our diverse student base.",
       lang: "Hindi",
       color: "from-orange-500 to-red-600",
-      thumbnail: shortThumbnail
+      thumbnail: hindi
     },
     {
       id: "8aMqLAY3iIQ",
       title: "Tamil Edition",
       desc: "Master key concepts with our dedicated Tamil-medium guidance.",
-      lang: "Tamil",
+      lang: "Tamil ",
       color: "from-blue-600 to-indigo-700",
-      thumbnail: shortThumbnail
+      thumbnail: tamil
     },
     {
-      id: "-TaOmXBtYhk",
-      title: "General Intro",
+      id: "iRRp7D4f_II",
+      title: "English Edition",
       desc: "A quick glimpse into the Synapse Hub ecosystem.",
-      lang: "Malayalam",
+      lang: "English",
       color: "from-emerald-500 to-teal-600",
-      thumbnail: shortThumbnail
+      thumbnail: english
     }
   ];
 
@@ -66,7 +68,7 @@ const VideoCard = () => {
               <div className="relative bg-white rounded-[2rem] p-2.5 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.06)] border border-slate-100 transition-all duration-500 hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.1)]">
                 <div className="relative overflow-hidden rounded-[1.5rem] bg-slate-900 aspect-video group-hover:shadow-2xl transition-all duration-700">
                   <iframe
-                    src="https://www.youtube.com/embed/VvJBr0Fuklg?si=r3-NtHZqthj4QOdb"
+                    src="https://www.youtube.com/embed/F5IdNFtkCgI"
                     title="Synapse Mission"
                     frameBorder="0"
                     allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

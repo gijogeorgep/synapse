@@ -1,6 +1,6 @@
 import React from "react";
 import synapse_y_logo from "../assets/synapse y logo.png"; // background logo
-import amith from "../assets/amith.jpg"; // founder photo
+import amith from "../assets/amith.jpeg"; // founder photo
 import { Facebook, Phone, Instagram, Send, Star, Users, GraduationCap, Quote, Zap } from "lucide-react";
 
 const About = () => {

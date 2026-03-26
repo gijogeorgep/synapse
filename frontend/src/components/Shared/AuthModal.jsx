@@ -1,12 +1,13 @@
 import { useState } from "react";
-import { X, Mail, Lock, User, ShieldCheck, Loader2 } from "lucide-react";
+import { X, Mail, Lock, User, ShieldCheck, Loader2, Phone, CheckCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { sendOtpAPI } from "../../api/authService";
 import { useNavigate } from "react-router-dom";
 
 const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
     const { login, register } = useAuth();
     const navigate = useNavigate();
-    const [mode, setMode] = useState(initialMode); // 'login' or 'register'
+    const [mode, setMode] = useState(initialMode); // 'login', 'register', 'verify'
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [formData, setFormData] = useState({
@@ -14,6 +15,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         email: "",
         password: "",
         confirmPassword: "",
+        phoneNumber: "",
+        otp: "",
     });
 
     if (!isOpen) return null;
@@ -31,21 +34,34 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
         let result;
         if (mode === "login") {
             result = await login(formData.email, formData.password);
-        } else {
+        } else if (mode === "register") {
             if (formData.password !== formData.confirmPassword) {
                 setError("Passwords do not match");
                 setLoading(false);
                 return;
             }
-            result = await register(
-                formData.name,
-                formData.email,
-                formData.password
-            );
+            try {
+                await sendOtpAPI(formData.email);
+                setMode("verify");
+                setLoading(false);
+                return;
+            } catch (err) {
+                setError(err.response?.data?.message || "Failed to send OTP. Email may already be in use.");
+                setLoading(false);
+                return;
+            }
+        } else if (mode === "verify") {
+            result = await register({
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+                phoneNumber: formData.phoneNumber,
+                otp: formData.otp,
+            });
         }
 
         if (result.success) {
-            if (mode === "register") {
+            if (mode === "verify") {
                 navigate("/student/select-classroom");
             }
             onClose();
@@ -88,29 +104,52 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
                     {/* Mode Switcher */}
                     <div className="flex p-1 mb-8 bg-slate-100 rounded-xl">
                         <button
-                            disabled={loading}
+                            disabled={loading || mode === "verify"}
                             onClick={() => setMode("login")}
                             className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${mode === "login"
                                 ? "bg-white text-cyan-600 shadow-sm"
                                 : "text-slate-500 hover:text-slate-700"
-                                }`}
+                                } disabled:opacity-50`}
                         >
                             Login
                         </button>
                         <button
-                            disabled={loading}
+                            disabled={loading || mode === "verify"}
                             onClick={() => setMode("register")}
-                            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${mode === "register"
+                            className={`flex-1 py-2 text-sm font-semibold rounded-lg transition-all ${(mode === "register" || mode === "verify")
                                 ? "bg-white text-cyan-600 shadow-sm"
                                 : "text-slate-500 hover:text-slate-700"
-                                }`}
+                                } disabled:opacity-50`}
                         >
                             Register
                         </button>
                     </div>
 
                     <form onSubmit={handleSubmit} className="space-y-4">
-                        {mode === "register" && (
+                        {mode === "verify" && (
+                            <div className="text-center mb-6 animate-in fade-in zoom-in">
+                                <ShieldCheck className="w-12 h-12 text-emerald-500 mx-auto mb-2" />
+                                <h3 className="text-lg font-bold text-slate-800">Verify Your Email</h3>
+                                <p className="text-sm text-slate-500 mt-1">We've sent a 6-digit code to <span className="font-bold text-slate-700">{formData.email}</span></p>
+                                
+                                <div className="relative mt-6">
+                                    <CheckCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                    <input
+                                        type="text"
+                                        name="otp"
+                                        placeholder="6-Digit OTP"
+                                        required
+                                        disabled={loading}
+                                        value={formData.otp}
+                                        onChange={handleChange}
+                                        className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all disabled:opacity-50 tracking-widest text-center text-lg font-bold text-slate-700"
+                                        maxLength={6}
+                                    />
+                                </div>
+                            </div>
+                        )}
+
+                        {mode !== "verify" && mode === "register" && (
                             <div className="relative">
                                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
@@ -126,35 +165,55 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
                             </div>
                         )}
 
-                        <div className="relative">
-                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                            <input
-                                type="email"
-                                name="email"
-                                placeholder="Email Address"
-                                required
-                                disabled={loading}
-                                value={formData.email}
-                                onChange={handleChange}
-                                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
-                            />
-                        </div>
+                        {mode !== "verify" && (
+                            <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="email"
+                                    name="email"
+                                    placeholder="Email Address"
+                                    required
+                                    disabled={loading}
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
+                                />
+                            </div>
+                        )}
 
-                        <div className="relative">
-                            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                            <input
-                                type="password"
-                                name="password"
-                                placeholder="Password"
-                                required
-                                disabled={loading}
-                                value={formData.password}
-                                onChange={handleChange}
-                                className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
-                            />
-                        </div>
+                        {mode !== "verify" && mode === "register" && (
+                            <div className="relative">
+                                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="tel"
+                                    name="phoneNumber"
+                                    placeholder="Phone Number"
+                                    required
+                                    disabled={loading}
+                                    value={formData.phoneNumber}
+                                    onChange={handleChange}
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
+                                />
+                            </div>
+                        )}
 
-                        {mode === "register" && (
+                        {mode !== "verify" && (
+                            <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                                <input
+                                    type="password"
+                                    name="password"
+                                    placeholder="Password"
+                                    required
+                                    disabled={loading}
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
+                                />
+                            </div>
+                        )}
+
+                        {mode !== "verify" && mode === "register" && (
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                                 <input
@@ -173,10 +232,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
                         <button
                             type="submit"
                             disabled={loading}
-                            className="w-full py-4 bg-gradient-to-r from-cyan-600 to-indigo-600 text-white font-bold rounded-xl shadow-lg hover:shadow-cyan-500/30 hover:scale-[1.02] transition-all transform active:scale-95 duration-200 mt-4 disabled:opacity-70 flex items-center justify-center space-x-2"
+                            className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all transform active:scale-95 duration-200 mt-4 disabled:opacity-70 flex items-center justify-center space-x-2 ${
+                                mode === "verify" ? "bg-emerald-500 hover:bg-emerald-600 hover:shadow-emerald-500/30" : "bg-gradient-to-r from-cyan-600 to-indigo-600 hover:shadow-cyan-500/30 hover:scale-[1.02]"
+                            }`}
                         >
                             {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-                            <span>{mode === "login" ? "Sign In" : "Register Now"}</span>
+                            <span>{mode === "login" ? "Sign In" : mode === "verify" ? "Verify & Register" : "Continue"}</span>
                         </button>
                     </form>
 
