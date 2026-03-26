@@ -56,7 +56,7 @@ export const uploadImage = (formData) => {
 
 // Classroom Services
 export const getMyClassrooms = () => apiClient("/classrooms/my-classrooms");
-export const getTeacherClassrooms = () => apiClient("/classrooms/teacher-classrooms");
+export const getTeacherClassrooms = () => apiClient("/classrooms/my-classrooms");
 export const getClassroomById = (id) => apiClient(`/classrooms/${id}`);
 export const getPublicClassrooms = () => apiClient("/classrooms/public");
 

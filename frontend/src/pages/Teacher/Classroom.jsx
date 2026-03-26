@@ -230,7 +230,7 @@ const TeacherClassroom = () => {
                                 </button>
                             </div>
                             <p className="text-xs text-slate-500">
-                                Students will see this link in their classroom for this subject.
+                                Students will see a "Join Class" button in their portal when you save a link here.
                             </p>
                         </form>
                     </section>

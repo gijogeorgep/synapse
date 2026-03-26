@@ -7,8 +7,8 @@
  * @returns {string} Generated password
  */
 export const generateInitialPassword = (name, phoneNumber) => {
-    const namePart = (name || "U").charAt(0).toUpperCase();
-    const phonePart = phoneNumber ? phoneNumber.slice(-4) : Math.floor(1000 + Math.random() * 9000).toString();
+    const namePart = (name || "US").slice(0, 2).toUpperCase();
+    const phonePart = phoneNumber ? phoneNumber.replace(/\D/g, '').slice(-4) : Math.floor(1000 + Math.random() * 9000).toString();
     
-    return `${namePart}@${phonePart}`;
+    return `${namePart}${phonePart}`;
 };

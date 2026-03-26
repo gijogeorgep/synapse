@@ -88,7 +88,8 @@ const CreateUser = () => {
                 setGeneratedCredentials({
                     uniqueId: data.uniqueId,
                     password: data.password,
-                    name: data.name
+                    name: data.name,
+                    email: data.email
                 });
             }
 
@@ -286,6 +287,12 @@ const CreateUser = () => {
                             </div>
 
                             <div className="space-y-4">
+                                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
+                                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">Email / Username</label>
+                                    <div className="font-mono text-lg font-bold text-white select-all">
+                                        {generatedCredentials.email}
+                                    </div>
+                                </div>
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/10">
                                     <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">User ID</label>
                                     <div className="font-mono text-lg font-bold text-white select-all">
