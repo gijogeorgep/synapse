@@ -10,6 +10,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import classroomRoutes from "./routes/classroomRoutes.js";
 import reportRoutes from "./routes/reportRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
+import programRoutes from "./routes/programRoutes.js";
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/classrooms", classroomRoutes);
 app.use("/api/reports", reportRoutes);
 app.use("/api/blogs", blogRoutes);
+app.use("/api/programs", programRoutes);
 
 app.get("/", (req, res) => {
     res.send("API is running...");

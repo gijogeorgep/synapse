@@ -16,7 +16,8 @@ import {
     Award,
     ArrowUpCircle,
     BookCopy,
-    LogOut
+    LogOut,
+    Sparkles
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -58,6 +59,7 @@ const Sidebar = ({ role }) => {
             { name: "Reports", icon: BarChart3, path: "/admin/reports" },
             { name: "Bulk Promotions", icon: ArrowUpCircle, path: "/admin/promotions" },
             { name: "Resource Library", icon: BookCopy, path: "/admin/resources" },
+            { name: "Program Management", icon: Sparkles, path: "/admin/programs" },
             { name: "Blog Management", icon: FileText, path: "/admin/blogs" },
             { name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
@@ -71,6 +73,7 @@ const Sidebar = ({ role }) => {
             { name: "Reports", icon: BarChart3, path: "/admin/reports" },
             { name: "Bulk Promotions", icon: ArrowUpCircle, path: "/admin/promotions" },
             { name: "Resource Library", icon: BookCopy, path: "/admin/resources" },
+            { name: "Program Management", icon: Sparkles, path: "/admin/programs" },
             { name: "Blog Management", icon: FileText, path: "/admin/blogs" },
             { name: "Audit Logs", icon: History, path: "/admin/audit-logs" },
             { name: "Payments", icon: CreditCard, path: "/admin/payments" },

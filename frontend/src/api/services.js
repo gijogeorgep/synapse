@@ -82,3 +82,14 @@ export const deleteAdminUser = (id) =>
     apiClient(`/admin/users/${id}`, { method: "DELETE" });
 export const blockAdminUser = (id, blockData) => 
     apiClient(`/admin/users/${id}/block`, { method: "PATCH", body: blockData });
+
+// Program Services
+export const getPrograms = () => apiClient("/programs");
+export const getProgramById = (id) => apiClient(`/programs/${id}`);
+export const getAdminPrograms = () => apiClient("/programs/admin");
+export const createProgram = (programData) =>
+    apiClient("/programs", { method: "POST", body: programData });
+export const updateProgram = (id, programData) =>
+    apiClient(`/programs/${id}`, { method: "PATCH", body: programData });
+export const deleteProgram = (id) =>
+    apiClient(`/programs/${id}`, { method: "DELETE" });

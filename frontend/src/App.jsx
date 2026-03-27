@@ -41,11 +41,13 @@ import AdminSettings from "./pages/Admin/Settings";
 import AdminAuditLogs from "./pages/Admin/AuditLogs";
 import AdminReports from "./pages/Admin/Reports";
 import AdminBlogManagement from "./pages/Admin/BlogManagement";
+import AdminProgramManagement from "./pages/Admin/ProgramManagement";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
 import ClassroomSelection from "./pages/Student/ClassroomSelection";
 import Blogs from "./pages/Blogs/Blogs";
 import BlogPost from "./pages/Blogs/BlogPost";
+import ProgramDetail from "./pages/Programs/ProgramDetail";
 
 function LandingPage() {
   return (
@@ -97,6 +99,7 @@ function AppContent() {
           <Route path="/about" element={<AboutPage />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
+          <Route path="/programs/:id" element={<ProgramDetail />} />
 
           {/* Student Routes */}
           <Route element={<ProtectedRoute allowedRoles={["student", "admin", "superadmin"]} />}>
@@ -137,6 +140,7 @@ function AppContent() {
               <Route path="/admin/reports" element={<AdminReports />} />
               <Route path="/admin/promotions" element={<AdminPromotions />} />
               <Route path="/admin/resources" element={<AdminResources />} />
+              <Route path="/admin/programs" element={<AdminProgramManagement />} />
               <Route path="/admin/blogs" element={<AdminBlogManagement />} />
               <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
                 <Route index element={<AdminAuditLogs />} />
