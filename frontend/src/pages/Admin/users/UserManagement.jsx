@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserPlus, GraduationCap, Edit, Trash2, Ban, Search, Filter, X } from 'lucide-react';
+import { UserPlus, GraduationCap, Edit, Trash2, Ban, Search, Filter, X, CheckCircle2, AlertCircle } from 'lucide-react';
 import { getAdminUsers, updateAdminUser, deleteAdminUser, blockAdminUser } from '../../../api/services';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,6 +8,12 @@ const UserManagement = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [status, setStatus] = useState({ type: '', message: '' });
+
+    const showToast = (type, message) => {
+        const errorMsg = typeof message === 'object' ? (message.message || JSON.stringify(message)) : String(message);
+        setStatus({ type, message: errorMsg });
+        setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+    };
 
     // Search and Filter State
     const [searchTerm, setSearchTerm] = useState('');
@@ -27,7 +33,7 @@ const UserManagement = () => {
             setUsers(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching users:", error);
-            setStatus({ type: 'error', message: 'Failed to load users' });
+            showToast('error', 'Failed to load users');
         } finally {
             setLoading(false);
         }
@@ -53,13 +59,20 @@ const UserManagement = () => {
 
     const handleUpdateUser = async (e) => {
         e.preventDefault();
+        
+        // Frontend Phone validation
+        if (editFormData.phoneNumber && !/^\d{10}$/.test(editFormData.phoneNumber.replace(/\s+/g, ""))) {
+            showToast('error', 'Phone number must be exactly 10 digits');
+            return;
+        }
+
         try {
             await updateAdminUser(selectedUser._id, editFormData);
-            setStatus({ type: 'success', message: 'User updated successfully' });
+            showToast('success', 'User updated successfully');
             setIsEditModalOpen(false);
             fetchUsers();
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Update failed' });
+            showToast('error', error);
         }
     };
 
@@ -71,11 +84,12 @@ const UserManagement = () => {
     const confirmDelete = async () => {
         try {
             await deleteAdminUser(selectedUser._id);
-            setStatus({ type: 'success', message: 'User deleted successfully' });
+            showToast('success', 'User deleted successfully');
             setIsDeleteModalOpen(false);
+            setSelectedUser(null);
             fetchUsers();
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Delete failed' });
+            showToast('error', error);
         }
     };
 
@@ -91,11 +105,11 @@ const UserManagement = () => {
                 isBlocked,
                 reason: blockReason
             });
-            setStatus({ type: 'success', message: `User ${isBlocked ? 'blocked' : 'unblocked'} successfully` });
+            showToast('success', `User ${isBlocked ? 'blocked' : 'unblocked'} successfully`);
             setIsBlockModalOpen(false);
             fetchUsers();
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Action failed' });
+            showToast('error', error);
         }
     };
 
@@ -141,7 +155,7 @@ const UserManagement = () => {
                             </div>
                             <div>
                                 <label className="block text-sm font-medium text-slate-700 mb-1">Phone</label>
-                                <input type="text" value={editFormData.phoneNumber} onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-cyan-500" />
+                                <input type="text" pattern="[0-9]{10}" title="10-digit phone number" value={editFormData.phoneNumber} onChange={(e) => setEditFormData({ ...editFormData, phoneNumber: e.target.value })} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-cyan-500" />
                             </div>
                             {selectedUser.role === 'student' && (
                                 <div>
@@ -238,11 +252,18 @@ const UserManagement = () => {
                     </div>
                 </div>
 
+                {/* Toast Notification */}
                 {status.message && (
-                    <div className={`p-4 rounded-xl mb-6 flex items-start space-x-3 animate-in fade-in duration-300 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                        {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" /> : <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />}
-                        <p className="text-sm font-medium">{status.message}</p>
-                        <button onClick={() => setStatus({ type: '', message: '' })} className="ml-auto hover:bg-black/5 p-1 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
+                    <div className="fixed top-6 right-6 z-[100] animate-in slide-in-from-top-5 fade-in duration-300">
+                        <div className={`px-4 py-3 rounded-2xl shadow-xl border flex items-center space-x-3 ${
+                            status.type === 'success' 
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-emerald-100/50' 
+                                : 'bg-rose-50 text-rose-700 border-rose-100 shadow-rose-100/50'
+                        }`}>
+                            {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
+                            <p className="text-sm font-semibold">{status.message}</p>
+                            <button onClick={() => setStatus({ type: '', message: '' })} className="ml-2 hover:bg-black/5 p-1 rounded-md transition-colors"><X className="w-4 h-4" /></button>
+                        </div>
                     </div>
                 )}
 
@@ -357,10 +378,10 @@ const UserManagement = () => {
                                         <td className="py-4 px-6">
                                             <div className="flex items-center space-x-3">
                                                 <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-cyan-500 to-blue-500 flex items-center justify-center text-white font-bold text-sm shadow-sm">
-                                                    {user.name.charAt(0).toUpperCase()}
+                                                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                                 </div>
                                                 <div className="flex flex-col">
-                                                    <span className="font-semibold text-slate-800 text-sm whitespace-nowrap">{user.name}</span>
+                                                    <span className="font-semibold text-slate-800 text-sm whitespace-nowrap">{user.name || 'Unknown User'}</span>
                                                     <span className="text-[10px] text-slate-400 truncate max-w-[120px]">{user.email}</span>
                                                 </div>
                                             </div>

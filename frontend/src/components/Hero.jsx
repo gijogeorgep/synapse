@@ -64,7 +64,7 @@ const Hero = () => {
 
                     {/* Right Image Area */}
                     <div className="w-full lg:w-[45%] relative flex justify-center lg:justify-end mt-6 sm:mt-8 lg:mt-0">
-                        <div className="relative w-[115%] sm:w-full max-w-[22rem] sm:max-w-md lg:max-w-2xl xl:max-w-7xl">
+                        <div className="relative w-full max-w-[18rem] sm:max-w-[26rem] md:max-w-[34rem] lg:max-w-2xl xl:max-w-4xl">
 
                             {/* Image specific background blob */}
                             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-gradient-to-tr from-cyan-400 to-sky-300 rounded-full blur-[80px] opacity-30 animate-pulse duration-[5000ms] pointer-events-none"></div>
@@ -73,7 +73,7 @@ const Hero = () => {
                                 <img
                                     src={heroimg}
                                     alt="Students Learning"
-                                    className="w-full h-auto max-w-[90%] sm:max-w-full relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-105 md:scale-105 lg:scale-110 xl:scale-[1.15] origin-bottom transition-transform duration-700"
+                                    className="w-full h-auto relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-100 lg:scale-[1.15] origin-bottom hover:scale-105 lg:hover:scale-[1.20] transition-transform duration-700"
                                 />
 
                                 {/* Floating Stats Cards */}

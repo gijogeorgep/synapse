@@ -62,68 +62,58 @@ const TutorsMultilanguage = () => {
                 </div>
 
                 {/* IMAGE SHOWCASE */}
-                <div className="relative flex items-end justify-center w-full -space-x-8 sm:-space-x-10 md:-space-x-20 lg:-space-x-32 xl:-space-x-40">
+                <div className="relative flex items-end justify-center w-full max-w-6xl mx-auto">
 
                     {/* LEFT FAR */}
-                    <div className={`mt-8 z-10 ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}>
+                    <div className={`z-10 w-[20%] sm:w-[16%] lg:w-[14%] -mr-[6%] sm:-mr-[4%] lg:-mr-[3%] ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}>
                         <img
                             src={tchr1}
                             alt="Tutor 1"
-                            className="w-16 sm:w-24 md:w-56 lg:w-64 object-cover
-               transition-all duration-700 ease-in-out
-               hover:scale-105 cursor-pointer outline-none"
+                            className="w-full object-cover origin-bottom transition-all duration-700 ease-in-out hover:scale-105 cursor-pointer outline-none"
                         />
                     </div>
 
                     {/* LEFT */}
                     <div
-                        className={`mt-8 z-20 ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}
+                        className={`z-20 w-[28%] sm:w-[24%] lg:w-[20%] -mr-[8%] sm:-mr-[6%] lg:-mr-[5%] ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}
                         style={{ animationDelay: "0.2s" }}
                     >
                         <img
                             src={tchr2}
                             alt="Tutor 2"
-                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover ml-2 md:ml-18 
-               transition-all duration-700 ease-in-out
-               hover:scale-105 cursor-pointer outline-none"
+                            className="w-full object-cover origin-bottom transition-all duration-700 ease-in-out hover:scale-105 cursor-pointer outline-none"
                         />
                     </div>
 
                     {/* CENTER HERO */}
-                    <div className={`z-40 ${isVisible ? 'animate-zoom-in' : 'opacity-0'} relative`}>
+                    <div className={`z-40 w-[45%] sm:w-[35%] lg:w-[28%] relative ${isVisible ? 'animate-zoom-in' : 'opacity-0'}`}>
                         {/* Glow effect for main mentor */}
                         <div className="absolute inset-0 bg-cyan-400/20 blur-[60px] rounded-full scale-75 animate-pulse pointer-events-none"></div>
                         <img
                             src={heroImg}
                             alt="Main Mentor"
-                            className="w-48 sm:w-40 md:w-[20rem] lg:w-[26rem] xl:w-[30rem] h-auto object-contain relative z-10
-               transition-all duration-700 ease-in-out
-               scale-110 sm:scale-100 hover:scale-105 cursor-pointer outline-none drop-shadow-[0_20px_50px_rgba(6,182,212,0.3)]"
+                            className="w-full object-contain relative z-10 origin-bottom transition-all duration-700 ease-in-out scale-[1.15] hover:scale-[1.20] cursor-pointer outline-none drop-shadow-[0_20px_50px_rgba(6,182,212,0.3)]"
                         />
                     </div>
 
                     {/* RIGHT */}
                     <div
-                        className={`mt-8 z-20 ${isVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
+                        className={`z-20 w-[28%] sm:w-[24%] lg:w-[20%] -ml-[8%] sm:-ml-[6%] lg:-ml-[5%] ${isVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
                         style={{ animationDelay: "0.2s" }}
                     >
                         <img
                             src={tchr3}
                             alt="Tutor 3"
-                            className="w-20 sm:w-32 md:w-56 lg:w-64 object-cover mr-8 md:mr-14
-               transition-all duration-700 ease-in-out
-               hover:scale-105 cursor-pointer outline-none"
+                            className="w-full object-cover origin-bottom transition-all duration-700 ease-in-out hover:scale-105 cursor-pointer outline-none"
                         />
                     </div>
 
                     {/* RIGHT FAR */}
-                    <div className={`mt-8 z-10 ${isVisible ? 'animate-slide-in-right' : 'opacity-0'}`}>
+                    <div className={`z-10 w-[20%] sm:w-[16%] lg:w-[14%] -ml-[6%] sm:-ml-[4%] lg:-ml-[3%] ${isVisible ? 'animate-slide-in-right' : 'opacity-0'}`}>
                         <img
                             src={tchr4}
                             alt="Tutor 4"
-                            className="w-16 sm:w-24 md:w-56 lg:w-64 object-cover
-               transition-all duration-700 ease-in-out
-               hover:scale-105 cursor-pointer outline-none"
+                            className="w-full object-cover origin-bottom transition-all duration-700 ease-in-out hover:scale-105 cursor-pointer outline-none"
                         />
                     </div>
                 </div>
