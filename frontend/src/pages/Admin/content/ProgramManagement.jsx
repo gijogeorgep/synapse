@@ -23,7 +23,7 @@ import {
     updateProgram, 
     deleteProgram,
     uploadImage 
-} from "../../api/services";
+} from "../../../api/services";
 import { AlertCircle, X as CloseIcon } from "lucide-react";
 
 const iconsList = [

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Award, PlusCircle, User, BookOpen, Clock, CheckCircle2, AlertCircle, X, Search, Filter, Plus, Trash2, ChevronRight, ChevronLeft, Image as ImageIcon, Loader2, Users, BarChart2, TrendingUp, MoreVertical, Edit2 } from 'lucide-react';
-import { createBulkExam, deleteExam, updateBulkExam, getQuestions, getAdminExams, getAdminClassrooms, getExamDetails, submitAdminResult, uploadImage } from '../../api/services';
+import { createBulkExam, deleteExam, updateBulkExam, getQuestions, getAdminExams, getAdminClassrooms, getExamDetails, submitAdminResult, uploadImage } from '../../../api/services';
 
 const ExamsManagement = () => {
     const [exams, setExams] = useState([]);

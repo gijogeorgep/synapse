@@ -13,7 +13,7 @@ import {
     Tag as TagIcon,
     Search
 } from 'lucide-react';
-import blogService from '../../api/blogService';
+import blogService from '../../../api/blogService';
 
 const BlogManagement = () => {
     const [blogs, setBlogs] = useState([]);

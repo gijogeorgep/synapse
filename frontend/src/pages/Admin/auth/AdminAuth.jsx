@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { useAuth } from "../../context/AuthContext";
+import { useAuth } from "../../../context/AuthContext";
 import { Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import apiClient from "../../api/apiClient";
+import apiClient from "../../../api/apiClient";
 
 const AdminAuth = () => {
     const { login, updateUser } = useAuth();

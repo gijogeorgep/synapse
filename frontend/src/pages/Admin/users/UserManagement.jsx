@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { UserPlus, GraduationCap, Edit, Trash2, Ban, Search, Filter, X } from 'lucide-react';
-import { getAdminUsers, updateAdminUser, deleteAdminUser, blockAdminUser } from '../../api/services';
+import { getAdminUsers, updateAdminUser, deleteAdminUser, blockAdminUser } from '../../../api/services';
 import { useNavigate } from 'react-router-dom';
 
 const UserManagement = () => {

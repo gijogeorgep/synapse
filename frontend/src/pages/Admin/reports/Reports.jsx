@@ -14,10 +14,10 @@ import {
     getOverallStats, getClassroomReports, getStudentReport, 
     getSubjectStats, getStudentsListForReports, getTeachersListForReports,
     getAdminsListForReports, getTeacherReport, getAdminReport
-} from '../../api/services';
+} from '../../../api/services';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 
 const Reports = () => {
     const { user } = useAuth();

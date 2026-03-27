@@ -5,7 +5,7 @@ import {
     updateAdminClassroom,
     deleteAdminClassroom,
     assignUserToClassroom
-} from '../../api/services';
+} from '../../../api/services';
 import { X, GraduationCap, Users, PlusCircle, CheckCircle2, AlertCircle, BookOpen, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
