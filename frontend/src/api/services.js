@@ -93,3 +93,9 @@ export const updateProgram = (id, programData) =>
     apiClient(`/programs/${id}`, { method: "PATCH", body: programData });
 export const deleteProgram = (id) =>
     apiClient(`/programs/${id}`, { method: "DELETE" });
+
+// Notification Services
+export const getNotifications = () => apiClient("/notifications");
+export const markNotificationRead = (id) => apiClient(`/notifications/${id}/read`, { method: "PATCH" });
+export const markAllNotificationsRead = () => apiClient("/notifications/read-all", { method: "PATCH" });
+export const clearAllNotifications = () => apiClient("/notifications/clear-all", { method: "PATCH" });

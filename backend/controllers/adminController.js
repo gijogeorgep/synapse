@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import Notification from "../models/Notification.js";
 import StudentProfile from "../models/StudentProfile.js";
 import TeacherProfile from "../models/TeacherProfile.js";
 import Classroom from "../models/Classroom.js";
@@ -99,6 +100,14 @@ export const createAdminUser = async (req, res) => {
                 });
             }
 
+            // Welcome Notification
+            await Notification.create({
+                recipient: user._id,
+                title: "Welcome to Synapse",
+                message: "Your account has been created successfully. Welcome to the platform!",
+                type: "system"
+            });
+
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
@@ -129,7 +138,7 @@ export const getAdminUsers = async (req, res) => {
             query = { role: { $ne: 'superadmin' } };
         }
 
-        const users = await User.find(query).select("-password");
+        const users = await User.find(query).select("-password").populate("enrolledClassrooms");
         
         // Migration: Generate uniqueId for users who don't have it
         const migratedUsers = await Promise.all(users.map(async (u) => {
@@ -151,27 +160,27 @@ export const getAdminUsers = async (req, res) => {
 // @access  Private/Admin
 export const createClassroom = async (req, res) => {
     try {
-        const { name, className, board, subjects, type, price, isPublished, showOnHome, description, imageUrl } = req.body;
+        const { name, className, board, subjects, type, programType, price, isPublished, showOnHome, description, imageUrl } = req.body;
 
-        if (!name) {
-            return res.status(400).json({ message: "Please provide classroom name." });
+        if (!name || !programType) {
+            return res.status(400).json({ message: "Please provide classroom name and program type." });
         }
 
-        if (type === 'Other' && (!className || !board)) {
-            return res.status(400).json({ message: "Please provide className and board for standard classrooms." });
-        }
-
+        // For E-Zone, className is usually N/A and board is Entrance/Exam
+        const isEZone = programType === 'E-Zone';
+        
         const classroom = await Classroom.create({
             name,
-            className: type === 'Other' ? className : 'N/A',
-            board: type === 'Other' ? board : 'Other',
+            programType,
+            className: isEZone ? 'N/A' : (className || '10'),
+            board: isEZone ? 'Entrance/Exam' : (board || 'State'),
             type: type || "Other",
             price: price || 0,
             isPublished: isPublished || false,
             showOnHome: showOnHome || false,
             description: description || "",
             imageUrl: imageUrl || "",
-            subjects: type === 'Other' ? (subjects || []) : [],
+            subjects: subjects || [],
             students: [],
             teachers: [],
             createdBy: req.user._id,
@@ -204,7 +213,7 @@ export const getAdminClassrooms = async (req, res) => {
 export const updateClassroom = async (req, res) => {
     try {
         const { id } = req.params;
-        const { name, className, board, subjects, type, price, isPublished, showOnHome, description, imageUrl } = req.body;
+        const { name, className, board, subjects, type, programType, price, isPublished, showOnHome, description, imageUrl } = req.body;
 
         const classroom = await Classroom.findById(id);
 
@@ -213,17 +222,21 @@ export const updateClassroom = async (req, res) => {
         }
 
         classroom.name = name || classroom.name;
+        classroom.programType = programType || classroom.programType;
         classroom.type = type || classroom.type;
-        if (classroom.type === 'Other') {
+
+        const isEZone = classroom.programType === 'E-Zone';
+
+        if (!isEZone) {
             classroom.className = className || classroom.className;
             classroom.board = board || classroom.board;
-            if (subjects) {
-                classroom.subjects = Array.isArray(subjects) ? subjects : subjects.split(',').map(s => s.trim()).filter(s => s);
-            }
         } else {
             classroom.className = 'N/A';
-            classroom.board = 'Other';
-            classroom.subjects = [];
+            classroom.board = 'Entrance/Exam';
+        }
+
+        if (subjects) {
+            classroom.subjects = Array.isArray(subjects) ? subjects : subjects.split(',').map(s => s.trim()).filter(s => s);
         }
 
         if (price !== undefined) classroom.price = price;
@@ -299,6 +312,17 @@ export const assignUsersToClassroom = async (req, res) => {
         }
 
         await classroom.save();
+
+        // Send notifications to the newly assigned users
+        const notificationPayloads = userIds.map(uid => ({
+            recipient: uid,
+            title: "Classroom Assigned",
+            message: `You have been added to classroom: ${classroom.name}`,
+            type: "classroom"
+        }));
+        if (notificationPayloads.length > 0) {
+            await Notification.insertMany(notificationPayloads);
+        }
 
         const updatedClassroom = await Classroom.findById(id)
             .populate('students', 'name email role uniqueId phoneNumber')
@@ -433,14 +457,26 @@ export const blockAdminUser = async (req, res) => {
 // @route   POST /api/admin/announcements
 export const createAnnouncement = async (req, res) => {
     try {
-        const { title, content, targetType, targetId } = req.body;
+        const { title, content, targetRole, targetClassroom } = req.body;
+        
+        // Create Announcement record (for history/admin view)
         const announcement = await Announcement.create({
             title,
             content,
-            targetType,
-            targetId,
+            targetRole: targetRole || 'all',
+            targetClassroom: targetClassroom || null,
             author: req.user._id
         });
+
+        // Trigger Notification in the premium system
+        await Notification.create({
+            title,
+            message: content,
+            type: 'announcement',
+            targetRole: targetRole || 'all',
+            targetClassroom: targetClassroom || null
+        });
+
         res.status(201).json(announcement);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -534,6 +570,23 @@ export const createResource = async (req, res) => {
 
         if (studentEmails.length > 0) {
             sendStudyMaterialEmail(studentEmails, title, classroomName, category || "study_material");
+        }
+
+        // Send logic for internal Notification system
+        if (classroom) {
+            await Notification.create({
+                targetClassroom: classroom,
+                title: "New Material Uploaded",
+                message: `${title} has been added to ${classroomName}.`,
+                type: "material"
+            });
+        } else {
+            await Notification.create({
+                targetRole: "student", // Since global materials are for all students conceptually
+                title: "New Material Uploaded",
+                message: `${title} has been added to the global library.`,
+                type: "material"
+            });
         }
 
         res.status(201).json(resource);

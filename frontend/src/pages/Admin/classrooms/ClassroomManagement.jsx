@@ -21,11 +21,18 @@ const ClassroomManagement = () => {
     const [selectedClassroom, setSelectedClassroom] = useState(null);
     const [activeMenu, setActiveMenu] = useState(null);
 
+    const SUBJECT_TAGS = {
+        State: ['Social Science', 'Chemistry', 'Physics', 'Mathematics', 'Biology', 'English', 'Malayalam', 'Hindi'],
+        CBSE: ['Mathematics', 'Science', 'Social Science', 'English', 'Hindi', 'Computer Science'],
+        'E-Zone': ['NEET', 'PSC', 'JEE']
+    };
+
     const [formData, setFormData] = useState({
         name: '',
+        programType: 'PrimeOne',
         className: '10',
         board: 'CBSE',
-        subjects: '',
+        subjects: [],
         type: 'Other',
         price: 0,
         isPublished: false,
@@ -36,9 +43,10 @@ const ClassroomManagement = () => {
 
     const [editFormData, setEditFormData] = useState({
         name: '',
+        programType: 'PrimeOne',
         className: '10',
         board: 'CBSE',
-        subjects: '',
+        subjects: [],
         type: 'Other',
         price: 0,
         isPublished: false,
@@ -107,15 +115,22 @@ const ClassroomManagement = () => {
         setStatus({ type: '', message: '' });
 
         try {
-            const payload = {
-                ...formData,
-                subjects: formData.subjects.split(',').map(s => s.trim()).filter(s => s)
-            };
-
-            await createAdminClassroom(payload);
+            await createAdminClassroom(formData);
             setStatus({ type: 'success', message: 'Classroom created successfully!' });
 
-            setFormData({ name: '', className: '10', board: 'CBSE', subjects: '', type: 'Other', price: 0, isPublished: false, showOnHome: false, description: '', imageUrl: '' });
+            setFormData({
+                name: '',
+                programType: 'PrimeOne',
+                className: '10',
+                board: 'CBSE',
+                subjects: [],
+                type: 'Other',
+                price: 0,
+                isPublished: false,
+                showOnHome: false,
+                description: '',
+                imageUrl: ''
+            });
             fetchData();
             setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
@@ -130,6 +145,7 @@ const ClassroomManagement = () => {
         setSelectedClassroom(classroom);
         setEditFormData({
             name: classroom.name,
+            programType: classroom.programType || 'PrimeOne',
             className: classroom.className,
             board: classroom.board,
             type: classroom.type || 'Other',
@@ -138,7 +154,7 @@ const ClassroomManagement = () => {
             showOnHome: classroom.showOnHome || false,
             description: classroom.description || '',
             imageUrl: classroom.imageUrl || '',
-            subjects: classroom.subjects?.join(', ') || ''
+            subjects: Array.isArray(classroom.subjects) ? classroom.subjects : []
         });
         setIsEditModalOpen(true);
         setActiveMenu(null);
@@ -148,11 +164,7 @@ const ClassroomManagement = () => {
         e.preventDefault();
         setIsSubmitting(true);
         try {
-            const payload = {
-                ...editFormData,
-                subjects: editFormData.subjects.split(',').map(s => s.trim()).filter(s => s)
-            };
-            await updateAdminClassroom(selectedClassroom._id, payload);
+            await updateAdminClassroom(selectedClassroom._id, editFormData);
             setStatus({ type: 'success', message: 'Classroom updated successfully!' });
             setIsEditModalOpen(false);
             fetchData();
@@ -161,6 +173,17 @@ const ClassroomManagement = () => {
         } finally {
             setIsSubmitting(false);
         }
+    };
+
+    const toggleSubject = (isEdit, subject) => {
+        const currentData = isEdit ? editFormData : formData;
+        const setter = isEdit ? setEditFormData : setFormData;
+        
+        const newSubjects = currentData.subjects.includes(subject)
+            ? currentData.subjects.filter(s => s !== subject)
+            : [...currentData.subjects, subject];
+            
+        setter({ ...currentData, subjects: newSubjects });
     };
 
     const handleDeleteClick = (e, classroom) => {
@@ -224,31 +247,44 @@ const ClassroomManagement = () => {
                             <h2 className="text-xl font-bold text-slate-800">Edit Classroom</h2>
                             <button onClick={() => setIsEditModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors"><X className="w-5 h-5 text-slate-400" /></button>
                         </div>
-                        <form onSubmit={handleUpdateSubmit} className="space-y-4">
+                        <form onSubmit={handleUpdateSubmit} className="space-y-6">
+                            {/* Program Type Selection */}
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
-                                <select name="type" value={editFormData.type} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
-                                    <option value="Other">Standard (Class-wise)</option>
-                                    <option value="NEET">NEET</option>
-                                    <option value="JEE">JEE</option>
-                                    <option value="PSC">PSC</option>
-                                </select>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-3 tracking-widest">Program Type</label>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {['PrimeOne', 'Cluster', 'PlanB', 'E-Zone'].map((type) => (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => setEditFormData({ ...editFormData, programType: type, subjects: [] })}
+                                            className={`py-2 px-3 rounded-lg border-2 transition-all font-bold text-xs ${
+                                                editFormData.programType === type
+                                                    ? 'border-cyan-500 bg-cyan-50 text-cyan-700'
+                                                    : 'border-slate-100 bg-slate-50 text-slate-400'
+                                            }`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Classroom Name</label>
-                                <input type="text" name="name" value={editFormData.name} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" required />
-                            </div>
-                            {editFormData.type === 'Other' ? (
-                                <>
+
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-wider">Classroom Name</label>
+                                    <input type="text" name="name" value={editFormData.name} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none font-medium" required />
+                                </div>
+
+                                {editFormData.programType !== 'E-Zone' && (
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Standard / Class</label>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-wider">Standard / Class</label>
                                             <select name="className" value={editFormData.className} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
                                                 {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(c => <option key={c} value={c.toString()}>Class {c}</option>)}
                                             </select>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium text-slate-700 mb-1">Board</label>
+                                            <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-wider">Board</label>
                                             <select name="board" value={editFormData.board} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
                                                 <option value="State">State</option>
                                                 <option value="CBSE">CBSE</option>
@@ -257,41 +293,56 @@ const ClassroomManagement = () => {
                                             </select>
                                         </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Subjects (comma-separated)</label>
-                                        <input type="text" name="subjects" value={editFormData.subjects} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" />
-                                    </div>
-                                </>
-                            ) : (
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹)</label>
-                                    <input type="number" name="price" value={editFormData.price} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" min="0" />
+                                )}
+                            </div>
+
+                            {/* Subject Pills */}
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-wider">Subjects / Tags</label>
+                                <div className="flex flex-wrap gap-1.5">
+                                    {(SUBJECT_TAGS[editFormData.programType === 'E-Zone' ? 'E-Zone' : editFormData.board] || []).map(tag => (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => toggleSubject(true, tag)}
+                                            className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
+                                                editFormData.subjects.includes(tag)
+                                                    ? 'bg-cyan-600 border-cyan-600 text-white'
+                                                    : 'bg-white border-slate-200 text-slate-500 hover:border-cyan-300'
+                                            }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
                                 </div>
-                            )}
+                            </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
-                                    <input type="checkbox" name="isPublished" checked={editFormData.isPublished} onChange={(e) => setEditFormData({ ...editFormData, isPublished: e.target.checked })} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
-                                    <span className="text-sm font-medium text-slate-700">Publish</span>
-                                </label>
-                                <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
-                                    <input type="checkbox" name="showOnHome" checked={editFormData.showOnHome} onChange={(e) => setEditFormData({ ...editFormData, showOnHome: e.target.checked })} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
-                                    <span className="text-sm font-medium text-slate-700">Show on Home</span>
-                                </label>
+                                <div>
+                                    <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-wider">Price (₹)</label>
+                                    <input type="number" name="price" value={editFormData.price} onChange={handleEditChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm font-bold" min="0" />
+                                </div>
+                                <div className="flex items-end gap-2">
+                                    <label className="flex items-center space-x-2 cursor-pointer p-2 bg-slate-50 rounded-lg border border-slate-200 w-full">
+                                        <input type="checkbox" name="isPublished" checked={editFormData.isPublished} onChange={(e) => setEditFormData({ ...editFormData, isPublished: e.target.checked })} className="w-4 h-4 accent-cyan-600 rounded" />
+                                        <span className="text-[10px] font-bold text-slate-600 uppercase">Published</span>
+                                    </label>
+                                </div>
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Program Description (for Home Page)</label>
-                                <textarea name="description" value={editFormData.description} onChange={handleEditChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" rows="2" placeholder="Briefly describe the program for the home page card..." />
+                                <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-wider">Description</label>
+                                <textarea name="description" value={editFormData.description} onChange={handleEditChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-xs" rows="2" />
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Program Image URL</label>
-                                <input type="text" name="imageUrl" value={editFormData.imageUrl} onChange={handleEditChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" placeholder="URL for the program card image..." />
+                                <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-wider">Image URL</label>
+                                <input type="text" name="imageUrl" value={editFormData.imageUrl} onChange={handleEditChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-[10px]" />
                             </div>
+
                             <div className="flex gap-3 pt-4">
-                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-2.5 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors">Cancel</button>
-                                <button type="submit" disabled={isSubmitting} className="flex-1 py-2.5 bg-cyan-600 text-white rounded-xl font-medium hover:bg-cyan-700 transition-colors">Save Changes</button>
+                                <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors">Cancel</button>
+                                <button type="submit" disabled={isSubmitting} className="flex-1 py-3 bg-cyan-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-cyan-700 transition-colors">Save Changes</button>
                             </div>
                         </form>
                     </div>
@@ -335,43 +386,55 @@ const ClassroomManagement = () => {
                         <div className="p-2 bg-cyan-50 text-cyan-600 rounded-xl">
                             <PlusCircle className="w-5 h-5" />
                         </div>
-                        <h2 className="text-xl font-bold text-slate-800">New Classroom</h2>
+                        <h2 className="text-xl font-bold text-slate-800">New Program / Classroom</h2>
                     </div>
 
-                    <form onSubmit={handleCreateSubmit} className="space-y-4">
+                    <form onSubmit={handleCreateSubmit} className="space-y-6">
+                        {/* Program Type Selection */}
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
-                            <select name="type" value={formData.type} onChange={handleCreateChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700">
-                                <option value="Other">Standard (Class-wise)</option>
-                                <option value="NEET">NEET</option>
-                                <option value="JEE">JEE</option>
-                                <option value="PSC">PSC</option>
-                            </select>
+                            <label className="block text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wider">Select Program Type</label>
+                            <div className="grid grid-cols-2 gap-3">
+                                {['PrimeOne', 'Cluster', 'PlanB', 'E-Zone'].map((type) => (
+                                    <button
+                                        key={type}
+                                        type="button"
+                                        onClick={() => setFormData({ ...formData, programType: type, subjects: [] })}
+                                        className={`py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm ${
+                                            formData.programType === type
+                                                ? 'border-cyan-500 bg-cyan-50 text-cyan-700 shadow-sm'
+                                                : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'
+                                        }`}
+                                    >
+                                        {type}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Classroom Name (e.g. Section A)</label>
-                            <input
-                                type="text"
-                                name="name"
-                                value={formData.name}
-                                onChange={handleCreateChange}
-                                required
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none"
-                                placeholder="E.g., Section A"
-                            />
-                        </div>
+                        {/* Basic Info */}
+                        <div className="space-y-4 pt-2 border-t border-slate-50">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Classroom Name</label>
+                                <input
+                                    type="text"
+                                    name="name"
+                                    value={formData.name}
+                                    onChange={handleCreateChange}
+                                    required
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                                    placeholder={formData.programType === 'E-Zone' ? 'E.g., Special Batch 2024' : 'E.g., Section A'}
+                                />
+                            </div>
 
-                        {formData.type === 'Other' ? (
-                            <>
+                            {formData.programType !== 'E-Zone' && (
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Standard / Class</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Standard / Class</label>
                                         <select
                                             name="className"
                                             value={formData.className}
                                             onChange={handleCreateChange}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 font-medium"
                                         >
                                             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(c => (
                                                 <option key={c} value={c.toString()}>Class {c}</option>
@@ -379,12 +442,12 @@ const ClassroomManagement = () => {
                                         </select>
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-medium text-slate-700 mb-1">Board</label>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Board</label>
                                         <select
                                             name="board"
                                             value={formData.board}
                                             onChange={handleCreateChange}
-                                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700"
+                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 font-medium"
                                         >
                                             <option value="State">State</option>
                                             <option value="CBSE">CBSE</option>
@@ -393,54 +456,67 @@ const ClassroomManagement = () => {
                                         </select>
                                     </div>
                                 </div>
-                                <div>
-                                    <label className="block text-sm font-medium text-slate-700 mb-1">Subjects (comma-separated)</label>
-                                    <input
-                                        type="text"
-                                        name="subjects"
-                                        value={formData.subjects}
-                                        onChange={handleCreateChange}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 placeholder-slate-400"
-                                        placeholder="Math, Science, English"
-                                    />
-                                </div>
-                            </>
-                        ) : (
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Price (₹)</label>
-                                <input type="number" name="price" value={formData.price} onChange={handleCreateChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" min="0" />
+                            )}
+                        </div>
+
+                        {/* Subject Pills Selection */}
+                        <div className="pt-2 border-t border-slate-50">
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-3 tracking-widest">Select Subjects / Tags</label>
+                            <div className="flex flex-wrap gap-2">
+                                {(SUBJECT_TAGS[formData.programType === 'E-Zone' ? 'E-Zone' : formData.board] || []).map(tag => (
+                                    <button
+                                        key={tag}
+                                        type="button"
+                                        onClick={() => toggleSubject(false, tag)}
+                                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                                            formData.subjects.includes(tag)
+                                                ? 'bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-900/10'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:border-cyan-300 hover:text-cyan-600'
+                                        }`}
+                                    >
+                                        {tag}
+                                    </button>
+                                ))}
                             </div>
-                        )}
+                        </div>
 
-
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
-                                <input type="checkbox" name="isPublished" checked={formData.isPublished} onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })} className="w-5 h-5 accent-cyan-600 rounded cursor-pointer" />
-                                <span className="text-sm font-medium text-slate-700">Publish</span>
-                            </label>
-                            <label className="flex items-center space-x-3 cursor-pointer p-3 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
-                                <input type="checkbox" name="showOnHome" checked={formData.showOnHome} onChange={(e) => setFormData({ ...formData, showOnHome: e.target.checked })} className="w-5 h-5 accent-indigo-600 rounded cursor-pointer" />
-                                <span className="text-sm font-medium text-slate-700">Show on Home</span>
-                            </label>
+                        {/* Branding & Pricing */}
+                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-50">
+                             <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Price (₹)</label>
+                                <input type="number" name="price" value={formData.price} onChange={handleCreateChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm font-bold" min="0" />
+                            </div>
+                            <div className="flex flex-col justify-end gap-2">
+                                <label className="flex items-center space-x-3 cursor-pointer p-2.5 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
+                                    <input type="checkbox" name="isPublished" checked={formData.isPublished} onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })} className="w-4 h-4 accent-cyan-600 rounded cursor-pointer" />
+                                    <span className="text-xs font-bold text-slate-700 uppercase">Publish</span>
+                                </label>
+                            </div>
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Program Description (for Home Page)</label>
-                            <textarea name="description" value={formData.description} onChange={handleCreateChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" rows="2" placeholder="Briefly describe the program for the home page card..." />
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Program Description</label>
+                            <textarea name="description" value={formData.description} onChange={handleCreateChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" rows="2" placeholder="Brief program overview..." />
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Program Image URL</label>
-                            <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleCreateChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" placeholder="URL for the program card image..." />
+                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Cover Photo URL</label>
+                            <div className="flex gap-3">
+                                <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleCreateChange} className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-xs" placeholder="https://image-url.com/photo.jpg" />
+                                {formData.imageUrl && (
+                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                                        <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         <button
                             type="submit"
                             disabled={isSubmitting}
-                            className="w-full flex items-center justify-center py-3 px-4 mt-6 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 transition-all font-semibold"
+                            className="w-full flex items-center justify-center py-4 px-4 mt-6 border border-transparent rounded-2xl shadow-lg shadow-cyan-900/10 text-sm font-black text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 transition-all uppercase tracking-widest"
                         >
-                            Create Classroom
+                            {isSubmitting ? 'Creating...' : 'Create Program / Class'}
                         </button>
                     </form>
                 </div>
@@ -465,7 +541,9 @@ const ClassroomManagement = () => {
                             >
                                 {classrooms.length === 0 && <option value="">No classrooms available</option>}
                                 {classrooms.map(c => (
-                                    <option key={c._id} value={c._id}>{c.className} {c.board} - {c.name}</option>
+                                    <option key={c._id} value={c._id}>
+                                        {c.programType === 'E-Zone' ? '[E-Zone]' : `[Class ${c.className} ${c.board}]`} - {c.name}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -538,18 +616,18 @@ const ClassroomManagement = () => {
                                 <div className="relative z-10">
                                     <div className="flex justify-between items-start mb-3">
                                         <div>
-                                            <div className="flex items-center gap-2 mb-1">
+                                            <div className="flex items-center gap-2 mb-1 flex-wrap">
                                                 <h3 className="font-bold text-lg text-slate-800 ">{c.name}</h3>
-                                                {c.type !== 'Other' && (
-                                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded bg-cyan-100 text-cyan-700 uppercase`}>
-                                                        {c.type}
-                                                    </span>
-                                                )}
-                                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded uppercase ${c.isPublished ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-500'}`}>
-                                                    {c.isPublished ? 'Published' : 'Draft'}
+                                                <span className={`px-2 py-0.5 text-[10px] font-black rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase`}>
+                                                    {c.programType || 'PrimeOne'}
+                                                </span>
+                                                <span className={`px-2 py-0.5 text-[9px] font-bold rounded-lg uppercase ${c.isPublished ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
+                                                    {c.isPublished ? 'Live' : 'Draft'}
                                                 </span>
                                             </div>
-                                            <p className="text-sm font-medium text-cyan-600">Class {c.className} • {c.board}</p>
+                                            <p className="text-xs font-bold text-cyan-600 uppercase tracking-wider">
+                                                {c.className === 'N/A' ? 'Special Program' : `Class ${c.className}`} • {c.board}
+                                            </p>
                                         </div>
                                         <div className="relative">
                                             <button
@@ -576,14 +654,14 @@ const ClassroomManagement = () => {
                                     </div>
 
                                     <div className="space-y-2 mb-4">
-                                        <div className="flex flex-wrap gap-1">
-                                            {c.subjects?.slice(0, 3).map(sub => (
-                                                <span key={sub} className="text-xs px-2 py-1 bg-slate-50 border border-slate-100 text-slate-600 rounded-md">
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {c.subjects?.slice(0, 4).map(sub => (
+                                                <span key={sub} className="text-[10px] font-bold px-2.5 py-1 bg-slate-50 border border-slate-100 text-slate-500 rounded-full">
                                                     {sub}
                                                 </span>
                                             ))}
-                                            {c.subjects?.length > 3 && (
-                                                <span className="text-xs px-2 py-1 bg-slate-50 text-slate-500 rounded-md">+{c.subjects.length - 3}</span>
+                                            {c.subjects?.length > 4 && (
+                                                <span className="text-[10px] font-bold px-2 py-1 bg-cyan-50 text-cyan-600 rounded-full">+{c.subjects.length - 4}</span>
                                             )}
                                         </div>
                                     </div>

@@ -6,13 +6,19 @@ const classroomSchema = mongoose.Schema(
             type: String,
             required: true,
         },
+        programType: {
+            type: String,
+            enum: ["PrimeOne", "Cluster", "PlanB", "E-Zone"],
+            required: true,
+            default: "PrimeOne",
+        },
         className: { // renamed from 'class' because it's a reserved keyword in JS if destructured, but we can stick to 'className' or 'standard'
-            type: String, // e.g., '10', '9'
+            type: String, // e.g., '10', '9', 'N/A'
             required: true,
         },
         board: {
             type: String,
-            enum: ["State", "CBSE", "ICSE", "Other"],
+            enum: ["State", "CBSE", "ICSE", "Entrance/Exam", "Other"],
             required: true,
             default: "State",
         },

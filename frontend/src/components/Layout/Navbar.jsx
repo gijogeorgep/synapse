@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Menu, X, LogIn, User as UserIcon, LogOut, Layout, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Menu, X, LogIn, User as UserIcon, LogOut, Layout, ChevronDown, Bell } from "lucide-react";
 import logo from "../../assets/synapse_logo.png";
 import AuthModal from "../Shared/AuthModal";
 import LogoutConfirmModal from "../Shared/LogoutConfirmModal";
@@ -13,6 +13,20 @@ const Navbar = () => {
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState("login");
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        if (user) {
+            import("../../api/services").then(({ getNotifications }) => {
+                getNotifications().then(res => {
+                    if(res && Array.isArray(res)){
+                        const unread = res.filter(n => !n.readBy.includes(user._id)).length;
+                        setUnreadCount(unread);
+                    }
+                }).catch(console.error);
+            });
+        }
+    }, [user]);
 
     const handleLogoutConfirm = () => {
         setShowLogoutModal(false);
@@ -113,8 +127,8 @@ const Navbar = () => {
                         </nav>
                     )}
 
-                    {/* Dashboard indicator */}
-                    {user && isDashboard && (
+                    {/* Dashboard indicator - Hide for Admins/Superadmins in portal */}
+                    {user && isDashboard && !["admin", "superadmin"].includes(user?.role) && (
                         <div className="hidden md:flex items-center gap-2 bg-slate-50/90 px-3 py-1.5 rounded-full border border-slate-200">
                             <Layout className="w-4 h-4 text-cyan-600" />
                             <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
@@ -125,45 +139,82 @@ const Navbar = () => {
 
                     {/* Desktop Auth Area */}
                     <div className="hidden md:flex items-center gap-4">
-                        {user && !["admin", "superadmin"].includes(user?.role) ? (
-                            <div className="flex items-center gap-3">
-                                <Link
-                                    to={!user?.role ? "/" : `/${user.role}/dashboard`}
-                                    className="flex items-center gap-2 pr-4 pl-1.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-100 text-slate-800 font-semibold text-sm hover:bg-cyan-100 hover:border-cyan-200 transition-colors"
-                                >
-                                    <div className="w-8 h-8 rounded-full overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-[10px] font-bold border-2 border-white">
-                                        {user?.avatarUrl ? (
-                                            <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            (user?.name || "U")[0].toUpperCase()
-                                        )}
-                                    </div>
-                                    <span>{user.name}</span>
-                                </Link>
+                        {/* Admin Minimal Portal View */}
+                        {user && ["admin", "superadmin"].includes(user?.role) && isDashboard ? (
+                            <div className="flex items-center gap-6">
+                                <div className="flex flex-col items-end">
+                                    <span className="text-sm font-black text-slate-800 tracking-tight leading-none uppercase">
+                                        {user.role === 'superadmin' ? 'Amith Girish' : user.name}
+                                    </span>
+                                    <span className="text-[10px] font-black text-cyan-500 uppercase tracking-widest mt-1">
+                                        {user.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+                                    </span>
+                                </div>
                                 <button
                                     onClick={() => setShowLogoutModal(true)}
-                                    className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors"
-                                    title="Logout"
+                                    className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" />
                                     <span>Logout</span>
                                 </button>
+                                <Link to="/notifications" className="relative p-2 text-slate-500 hover:text-cyan-600 transition-colors bg-slate-50 hover:bg-cyan-50 rounded-full border border-slate-200">
+                                    <Bell className="w-5 h-5" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-white"></span>
+                                    )}
+                                </Link>
                             </div>
                         ) : (
-                            <div className="flex items-center gap-3">
-                                <button
-                                    onClick={() => openAuthModal("login")}
-                                    className="text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors"
-                                >
-                                    Login
-                                </button>
-                                <button
-                                    onClick={() => openAuthModal("register")}
-                                    className="px-5 py-2.5 rounded-full bg-cyan-600 text-white text-sm font-semibold shadow-md shadow-cyan-600/25 hover:bg-cyan-700 hover:shadow-cyan-600/40 transition-all"
-                                >
-                                    Enrol now
-                                </button>
-                            </div>
+                            <>
+                                {user && (
+                                    <Link to="/notifications" className="relative p-2 text-slate-500 hover:text-cyan-600 transition-colors bg-slate-50 hover:bg-cyan-50 rounded-full border border-slate-200">
+                                        <Bell className="w-5 h-5" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-white"></span>
+                                        )}
+                                    </Link>
+                                )}
+                                {user ? (
+                                    <div className="flex items-center gap-3">
+                                        <Link
+                                            to={!user?.role ? "/" : (["admin", "superadmin"].includes(user.role) ? "/admin/dashboard" : `/${user.role}/dashboard`)}
+                                            className="flex items-center gap-2 pr-4 pl-1.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-100 text-slate-800 font-semibold text-sm hover:bg-cyan-100 hover:border-cyan-200 transition-colors"
+                                        >
+                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-[10px] font-bold border-2 border-white">
+                                                {user?.avatarUrl ? (
+                                                    <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    (user?.name || "U")[0].toUpperCase()
+                                                )}
+                                            </div>
+                                            <span>{user.name}</span>
+                                        </Link>
+                                        <button
+                                            onClick={() => setShowLogoutModal(true)}
+                                            className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors"
+                                            title="Logout"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            <span>Logout</span>
+                                        </button>
+                                    </div>
+                                ) : (
+                                    <div className="flex items-center gap-3">
+                                        <button
+                                            onClick={() => openAuthModal("login")}
+                                            className="text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors"
+                                        >
+                                            Login
+                                        </button>
+                                        <button
+                                            onClick={() => openAuthModal("register")}
+                                            className="px-5 py-2.5 rounded-full bg-cyan-600 text-white text-sm font-semibold shadow-md shadow-cyan-600/25 hover:bg-cyan-700 hover:shadow-cyan-600/40 transition-all"
+                                        >
+                                            Enrol now
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
 
@@ -224,47 +275,108 @@ const Navbar = () => {
                     ))}
 
                     <div className="pt-3 mt-2 border-t border-slate-200 space-y-3">
-                        {user && !["admin", "superadmin"].includes(user?.role) ? (
+                        {/* Admin Minimal Portal View (Mobile) */}
+                        {user && ["admin", "superadmin"].includes(user?.role) && isDashboard ? (
                             <>
-                                <Link
-                                    to={!user?.role ? "/" : `/${user.role}/dashboard`}
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-50 border border-cyan-100"
-                                >
-                                    <div className="w-10 h-10 rounded-xl overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white shadow-sm">
-                                        {user?.avatarUrl ? (
-                                            <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
-                                        ) : (
-                                            (user?.name || "U")[0].toUpperCase()
-                                        )}
+                                <div className="px-3 py-2 border-l-4 border-cyan-500 bg-cyan-50/30">
+                                    <div className="text-xs font-black text-slate-800 uppercase tracking-widest">
+                                        {user.role === 'superadmin' ? 'Amith Girish' : user.name}
                                     </div>
-                                    <span className="font-semibold text-slate-800 text-sm">
-                                        {user.name}
-                                    </span>
-                                </Link>
+                                    <div className="text-[9px] font-black text-cyan-600 uppercase tracking-widest mt-0.5">
+                                        {user.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+                                    </div>
+                                </div>
                                 <button
                                     onClick={() => setShowLogoutModal(true)}
-                                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-red-600 border border-red-100 rounded-lg hover:bg-red-50 transition-colors"
+                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
                                 >
-                                    <LogOut className="w-4 h-4" />
+                                    <LogOut className="w-5 h-5" />
                                     <span>Logout</span>
                                 </button>
+                                <Link
+                                    to="/notifications"
+                                    onClick={() => setIsOpen(false)}
+                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 transition-colors"
+                                >
+                                    <div className="relative">
+                                        <Bell className="w-5 h-5 text-slate-500" />
+                                        {unreadCount > 0 && (
+                                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                                        )}
+                                    </div>
+                                    <span>Notifications</span>
+                                    {unreadCount > 0 && (
+                                        <span className="ml-auto bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                                            {unreadCount}
+                                        </span>
+                                    )}
+                                </Link>
                             </>
                         ) : (
                             <>
-                                <button
-                                    onClick={() => openAuthModal("login")}
-                                    className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                                >
-                                    <LogIn className="w-4 h-4" />
-                                    <span>Login</span>
-                                </button>
-                                <button
-                                    onClick={() => openAuthModal("register")}
-                                    className="w-full py-3 rounded-lg bg-cyan-600 text-white text-sm font-semibold shadow-md shadow-cyan-600/25 hover:bg-cyan-700 transition-colors"
-                                >
-                                    Enrol now
-                                </button>
+                                {user && (
+                                    <Link
+                                        to="/notifications"
+                                        onClick={() => setIsOpen(false)}
+                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 transition-colors"
+                                    >
+                                        <div className="relative">
+                                            <Bell className="w-5 h-5 text-slate-500" />
+                                            {unreadCount > 0 && (
+                                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                                            )}
+                                        </div>
+                                        <span>Notifications</span>
+                                        {unreadCount > 0 && (
+                                            <span className="ml-auto bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
+                                                {unreadCount} new
+                                            </span>
+                                        )}
+                                    </Link>
+                                )}
+                                {user ? (
+                                    <>
+                                        <Link
+                                            to={!user?.role ? "/" : (["admin", "superadmin"].includes(user.role) ? "/admin/dashboard" : `/${user.role}/dashboard`)}
+                                            onClick={() => setIsOpen(false)}
+                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-50 border border-cyan-100"
+                                        >
+                                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white shadow-sm">
+                                                {user?.avatarUrl ? (
+                                                    <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    (user?.name || "U")[0].toUpperCase()
+                                                )}
+                                            </div>
+                                            <span className="font-semibold text-slate-800 text-sm">
+                                                {user.name}
+                                            </span>
+                                        </Link>
+                                        <button
+                                            onClick={() => setShowLogoutModal(true)}
+                                            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-red-600 border border-red-100 rounded-lg hover:bg-red-50 transition-colors"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                            <span>Logout</span>
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            onClick={() => openAuthModal("login")}
+                                            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                                        >
+                                            <LogIn className="w-4 h-4" />
+                                            <span>Login</span>
+                                        </button>
+                                        <button
+                                            onClick={() => openAuthModal("register")}
+                                            className="w-full py-3 rounded-lg bg-cyan-600 text-white text-sm font-semibold shadow-md shadow-cyan-600/25 hover:bg-cyan-700 transition-colors"
+                                        >
+                                            Enrol now
+                                        </button>
+                                    </>
+                                )}
                             </>
                         )}
                     </div>

@@ -48,6 +48,7 @@ import ClassroomSelection from "./pages/Student/ClassroomSelection";
 import Blogs from "./pages/Blogs/Blogs";
 import BlogPost from "./pages/Blogs/BlogPost";
 import ProgramDetail from "./pages/Programs/ProgramDetail";
+import Notifications from "./pages/Notifications/Notifications";
 
 function LandingPage() {
   return (
@@ -100,6 +101,11 @@ function AppContent() {
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
           <Route path="/programs/:id" element={<ProgramDetail />} />
+
+          {/* General Protected Routes */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/notifications" element={<Notifications />} />
+          </Route>
 
           {/* Student Routes */}
           <Route element={<ProtectedRoute allowedRoles={["student", "admin", "superadmin"]} />}>

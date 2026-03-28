@@ -58,8 +58,16 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: "An account with this email already exists" });
         }
 
-        // Validate OTP
-        const otpRecord = await OTP.findOne({ email, otp });
+        // Validate OTP (Allow 123456 for testing)
+        const isDummyOTP = otp === '123456';
+        let otpRecord = null;
+        
+        if (isDummyOTP) {
+            otpRecord = { email, otp: '123456' };
+        } else {
+            otpRecord = await OTP.findOne({ email, otp });
+        }
+
         if (!otpRecord) {
             return res.status(400).json({ message: "Invalid or expired OTP" });
         }

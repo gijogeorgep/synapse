@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { UserPlus, GraduationCap, Edit, Trash2, Ban, Search, Filter, X, CheckCircle2, AlertCircle } from 'lucide-react';
+import { UserPlus, GraduationCap, Edit, Trash2, Ban, Search, Filter, X, CheckCircle2, AlertCircle, Layers } from 'lucide-react';
 import { getAdminUsers, updateAdminUser, deleteAdminUser, blockAdminUser } from '../../../api/services';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,6 +19,7 @@ const UserManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [roleFilter, setRoleFilter] = useState('all');
     const [classFilter, setClassFilter] = useState('all');
+    const [programFilter, setProgramFilter] = useState('all');
 
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
@@ -124,15 +125,21 @@ const UserManagement = () => {
             // Role Match
             const matchesRole = roleFilter === 'all' || user.role === roleFilter;
 
-            // Class Match (only applies if role is student, otherwise ignore or require 'all')
+            // Class Match
             let matchesClass = true;
             if (classFilter !== 'all') {
                 matchesClass = user.class === classFilter;
             }
 
-            return matchesSearch && matchesRole && matchesClass;
+            // Program Match
+            let matchesProgram = true;
+            if (programFilter !== 'all') {
+                matchesProgram = user.enrolledClassrooms?.some(c => c.programType === programFilter);
+            }
+
+            return matchesSearch && matchesRole && matchesClass && matchesProgram;
         });
-    }, [users, searchTerm, roleFilter, classFilter]);
+    }, [users, searchTerm, roleFilter, classFilter, programFilter]);
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto p-4 md:p-8">
@@ -321,10 +328,28 @@ const UserManagement = () => {
                             </div>
                         </div>
 
+                        <div className="relative min-w-[140px]">
+                            <Layers className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                            <select
+                                value={programFilter}
+                                onChange={(e) => setProgramFilter(e.target.value)}
+                                className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all outline-none text-slate-700 appearance-none shadow-sm font-medium"
+                            >
+                                <option value="all">All Programs</option>
+                                <option value="PrimeOne">PrimeOne</option>
+                                <option value="Cluster">Cluster</option>
+                                <option value="PlanB">PlanB</option>
+                                <option value="E-Zone">E-Zone</option>
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
+                            </div>
+                        </div>
+
                         <div className="flex items-center gap-3">
-                            {(searchTerm || roleFilter !== 'all' || classFilter !== 'all') && (
+                            {(searchTerm || roleFilter !== 'all' || classFilter !== 'all' || programFilter !== 'all') && (
                                 <button
-                                    onClick={() => { setSearchTerm(''); setRoleFilter('all'); setClassFilter('all'); }}
+                                    onClick={() => { setSearchTerm(''); setRoleFilter('all'); setClassFilter('all'); setProgramFilter('all'); }}
                                     className="flex items-center justify-center p-2.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100"
                                     title="Clear filters"
                                 >
@@ -362,6 +387,7 @@ const UserManagement = () => {
                                     <th className="py-4 text-sm font-semibold text-slate-600 px-6">Name</th>
                                     <th className="py-4 text-sm font-semibold text-slate-600 px-6">Role</th>
                                     <th className="py-4 text-sm font-semibold text-slate-600 px-6">Status</th>
+                                    <th className="py-4 text-sm font-semibold text-slate-600 px-6">Program</th>
                                     <th className="py-4 text-sm font-semibold text-slate-600 px-6">Class</th>
                                     <th className="py-4 text-sm font-semibold text-slate-600 px-6">Joined</th>
                                     <th className="py-4 text-sm font-semibold text-slate-600 px-6 text-right">Actions</th>
@@ -405,7 +431,36 @@ const UserManagement = () => {
                                                 </span>
                                             )}
                                         </td>
-                                        <td className="py-4 px-6 text-sm text-slate-600">{user.class || '-'}</td>
+                                        <td className="py-4 px-6 text-sm text-slate-600">
+                                            {user.enrolledClassrooms?.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {[...new Set(user.enrolledClassrooms.map(c => c.programType))].map(prog => (
+                                                        <span key={prog} className="px-1.5 py-0.5 bg-slate-100 text-[9px] font-black text-slate-700 rounded border border-slate-200 uppercase tracking-tighter w-fit">
+                                                            {prog}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-[10px] text-slate-400 italic font-medium">Unassigned</span>
+                                            )}
+                                        </td>
+                                        <td className="py-4 px-6 text-sm text-slate-600">
+                                            {user.enrolledClassrooms?.length > 0 ? (
+                                                <div className="flex flex-wrap gap-1">
+                                                    {user.enrolledClassrooms.map(c => (
+                                                        <span key={c._id} className="text-[10px] font-bold text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-100 whitespace-nowrap">
+                                                            {c.programType === 'E-Zone' 
+                                                                ? (c.subjects?.[0] || 'Special') 
+                                                                : (c.className !== 'N/A' ? c.className : '-')}
+                                                        </span>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-slate-500">
+                                                    {user.class || '-'}
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="py-4 px-6 text-sm text-slate-500 whitespace-nowrap">{new Date(user.createdAt).toLocaleDateString()}</td>
                                         <td className="py-4 px-6">
                                             <div className="flex items-center justify-end space-x-2">

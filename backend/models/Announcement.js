@@ -10,13 +10,14 @@ const announcementSchema = mongoose.Schema(
             type: String,
             required: true,
         },
-        targetType: {
+        targetRole: {
             type: String,
-            enum: ['all', 'role', 'classroom'],
+            enum: ['all', 'student', 'teacher', 'admin', 'superadmin'],
             default: 'all',
         },
-        targetId: {
-            type: String, // Can be a role (student/teacher) or classroom ID
+        targetClassroom: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'Classroom',
             default: null,
         },
         author: {

@@ -77,11 +77,8 @@ export const updateClassroomResources = async (req, res) => {
 export const getPublicClassrooms = async (req, res) => {
     try {
         const classrooms = await Classroom.find({ 
-            $or: [
-                { type: { $in: ["NEET", "JEE", "PSC"] }, isPublished: true },
-                { showOnHome: true, isPublished: true }
-            ]
-        }).select("name type price className board showOnHome description imageUrl");
+            isPublished: true 
+        }).select("name type programType price className board showOnHome description imageUrl subjects");
         res.status(200).json(classrooms);
     } catch (error) {
         console.error(error);

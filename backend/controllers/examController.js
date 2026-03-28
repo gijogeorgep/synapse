@@ -3,6 +3,7 @@ import Question from "../models/Question.js";
 import Result from "../models/Result.js";
 import Classroom from "../models/Classroom.js";
 import { sendExamScheduledEmail } from "../utils/emailService.js";
+import Notification from "../models/Notification.js";
 
 // @desc    Create a new exam
 // @route   POST /api/exams
@@ -30,6 +31,14 @@ export const createExam = async (req, res) => {
                 const studentEmails = classroomData.students.map(s => s.email);
                 sendExamScheduledEmail(studentEmails, title, exam.date, classroomData.name);
             }
+
+            // Send Application Notification
+            await Notification.create({
+                targetClassroom: classroom,
+                title: "New Exam Scheduled",
+                message: `${title} is now scheduled for your classroom.`,
+                type: "exam"
+            });
         }
 
         res.status(201).json(exam);
@@ -142,6 +151,14 @@ export const createExamWithQuestions = async (req, res) => {
                 const studentEmails = classroomData.students.map(s => s.email);
                 sendExamScheduledEmail(studentEmails, title, exam.date, classroomData.name);
             }
+
+            // Send Application Notification
+            await Notification.create({
+                targetClassroom: classroom,
+                title: "New Exam Scheduled",
+                message: `${title} is now scheduled for your classroom.`,
+                type: "exam"
+            });
         }
 
         res.status(201).json(exam);

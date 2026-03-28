@@ -90,18 +90,27 @@ const ClassroomSelection = () => {
 
                         <div className="relative z-10">
                             <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm border ${
-                                cls.type === 'NEET' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-                                cls.type === 'JEE' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
+                                cls.programType === 'E-Zone' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
+                                cls.programType === 'PrimeOne' ? 'bg-cyan-50 border-cyan-100 text-cyan-600' :
+                                cls.programType === 'Cluster' ? 'bg-rose-50 border-rose-100 text-rose-600' :
                                 'bg-emerald-50 border-emerald-100 text-emerald-600'
                             }`}>
                                 <GraduationCap className="w-7 h-7" />
                             </div>
 
+                            <div className="flex items-center gap-2 mb-2">
+                                <span className="px-2 py-0.5 bg-slate-100 text-[10px] font-black text-slate-600 rounded uppercase tracking-tighter border border-slate-200">
+                                    {cls.programType}
+                                </span>
+                            </div>
+
                             <h3 className="text-2xl font-bold text-slate-900 mb-2">{cls.name}</h3>
                             <div className="flex items-center gap-2 text-slate-500 text-sm mb-6">
-                                <span className="font-semibold text-cyan-600">Class {cls.className}</span>
+                                <span className="font-semibold text-cyan-600">
+                                    {cls.programType === 'E-Zone' ? (cls.subjects?.[0] || 'Entrance') : `Class ${cls.className}`}
+                                </span>
                                 <span>•</span>
-                                <span>{cls.board} Board</span>
+                                <span>{cls.board}</span>
                             </div>
 
                             <div className="space-y-4 mb-8">

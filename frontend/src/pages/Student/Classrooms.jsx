@@ -82,14 +82,32 @@ const StudentClassrooms = () => {
                             className="group relative bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                         >
                             {/* Card Header Illustration/Background */}
-                            <div className={`h-32 bg-gradient-to-br ${getSubjectColor(c.subjects?.[0])} p-6 relative overflow-hidden`}>
+                            <div className={`h-36 relative overflow-hidden p-6 bg-gradient-to-br ${getSubjectColor(c.subjects?.[0])}`}>
+                                {c.imageUrl && (
+                                    <img 
+                                        src={c.imageUrl} 
+                                        alt={c.name} 
+                                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 mix-blend-overlay"
+                                    />
+                                )}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none" />
                                 {/* Decorative element */}
                                 <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-700" />
 
-                                <div className="relative flex justify-between items-start">
+                                <div className={`relative flex justify-between items-start`}>
                                     <div>
-                                        <h3 className="text-2xl font-bold text-white tracking-tight">{c.name}</h3>
-                                        <p className="text-white/80 text-sm font-medium mt-1">Class {c.className} • {c.board}</p>
+                                        <div className="flex items-center gap-2 mb-1">
+                                            <span className="px-2 py-0.5 bg-white/20 backdrop-blur-md border border-white/30 text-[10px] font-black text-white rounded-lg uppercase tracking-tight">
+                                                {c.programType || 'PrimeOne'}
+                                            </span>
+                                            {c.className !== 'N/A' && (
+                                                <span className="px-2 py-0.5 bg-black/10 backdrop-blur-md text-[10px] font-bold text-white rounded-lg uppercase tracking-tight">
+                                                    Class {c.className}
+                                                </span>
+                                            )}
+                                        </div>
+                                        <h3 className="text-2xl font-black text-white tracking-tight drop-shadow-sm">{c.name}</h3>
+                                        <p className="text-white/80 text-xs font-bold mt-0.5 uppercase tracking-widest">{c.board}</p>
                                     </div>
                                     <button
                                         type="button"

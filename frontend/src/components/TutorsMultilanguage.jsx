@@ -1,9 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import heroImg from "../assets/heroimg.png";
-import tchr1 from "../assets/tchr1.png";
-import tchr2 from "../assets/tchr2.png";
-import tchr3 from "../assets/tchr3.png";
-import tchr4 from "../assets/tchr4.png";
+import tutorsImg from "../assets/tutors_img.png";
 import { Languages, Globe, BookOpen } from "lucide-react";
 
 const TutorsMultilanguage = () => {
@@ -62,58 +58,14 @@ const TutorsMultilanguage = () => {
                 </div>
 
                 {/* IMAGE SHOWCASE */}
-                <div className="relative flex items-end justify-center w-full max-w-6xl mx-auto">
-
-                    {/* LEFT FAR */}
-                    <div className={`z-10 w-[20%] sm:w-[16%] lg:w-[14%] -mr-[6%] sm:-mr-[4%] lg:-mr-[3%] ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}>
+                <div className="relative flex items-center justify-center w-full max-w-6xl mx-auto mt-12 px-2 sm:px-6">
+                    <div className={`relative w-full max-w-4xl lg:max-w-5xl ${isVisible ? 'animate-fade-in' : 'opacity-0'}`}>
+                        {/* Subtle background glow */}
+                        <div className="absolute inset-0 bg-cyan-400/10 blur-[80px] rounded-full scale-90 animate-pulse pointer-events-none"></div>
                         <img
-                            src={tchr1}
-                            alt="Tutor 1"
-                            className="w-full object-cover origin-bottom transition-all duration-700 ease-in-out hover:scale-105 cursor-pointer outline-none"
-                        />
-                    </div>
-
-                    {/* LEFT */}
-                    <div
-                        className={`z-20 w-[28%] sm:w-[24%] lg:w-[20%] -mr-[8%] sm:-mr-[6%] lg:-mr-[5%] ${isVisible ? 'animate-slide-in-left' : 'opacity-0'}`}
-                        style={{ animationDelay: "0.2s" }}
-                    >
-                        <img
-                            src={tchr2}
-                            alt="Tutor 2"
-                            className="w-full object-cover origin-bottom transition-all duration-700 ease-in-out hover:scale-105 cursor-pointer outline-none"
-                        />
-                    </div>
-
-                    {/* CENTER HERO */}
-                    <div className={`z-40 w-[45%] sm:w-[35%] lg:w-[28%] relative ${isVisible ? 'animate-zoom-in' : 'opacity-0'}`}>
-                        {/* Glow effect for main mentor */}
-                        <div className="absolute inset-0 bg-cyan-400/20 blur-[60px] rounded-full scale-75 animate-pulse pointer-events-none"></div>
-                        <img
-                            src={heroImg}
-                            alt="Main Mentor"
-                            className="w-full object-contain relative z-10 origin-bottom transition-all duration-700 ease-in-out scale-[1.15] hover:scale-[1.20] cursor-pointer outline-none drop-shadow-[0_20px_50px_rgba(6,182,212,0.3)]"
-                        />
-                    </div>
-
-                    {/* RIGHT */}
-                    <div
-                        className={`z-20 w-[28%] sm:w-[24%] lg:w-[20%] -ml-[8%] sm:-ml-[6%] lg:-ml-[5%] ${isVisible ? 'animate-slide-in-right' : 'opacity-0'}`}
-                        style={{ animationDelay: "0.2s" }}
-                    >
-                        <img
-                            src={tchr3}
-                            alt="Tutor 3"
-                            className="w-full object-cover origin-bottom transition-all duration-700 ease-in-out hover:scale-105 cursor-pointer outline-none"
-                        />
-                    </div>
-
-                    {/* RIGHT FAR */}
-                    <div className={`z-10 w-[20%] sm:w-[16%] lg:w-[14%] -ml-[6%] sm:-ml-[4%] lg:-ml-[3%] ${isVisible ? 'animate-slide-in-right' : 'opacity-0'}`}>
-                        <img
-                            src={tchr4}
-                            alt="Tutor 4"
-                            className="w-full object-cover origin-bottom transition-all duration-700 ease-in-out hover:scale-105 cursor-pointer outline-none"
+                            src={tutorsImg}
+                            alt="Expert Multilanguage Tutors"
+                            className="w-full h-auto object-contain relative z-10 hover:scale-105 transition-transform duration-700 ease-out drop-shadow-2xl"
                         />
                     </div>
                 </div>
