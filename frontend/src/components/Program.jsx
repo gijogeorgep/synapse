@@ -25,6 +25,7 @@ const ProgramCard = ({ program, index }) => {
   const cardRef = useRef(null);
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
+  const features = Array.isArray(program.features) ? program.features : [];
 
   useEffect(() => {
     const el = cardRef.current;
@@ -72,15 +73,15 @@ const ProgramCard = ({ program, index }) => {
             {program.description}
           </p>
           <div className="flex flex-wrap gap-2 mb-6">
-            {program.features.slice(0, 3).map((f, i) => (
+            {features.slice(0, 3).map((f, i) => (
               <div key={i} className="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded-lg text-[10px] font-bold text-slate-500 uppercase">
                 <CheckCircle2 className="w-3 h-3 text-cyan-500" />
                 {f}
               </div>
             ))}
-            {program.features.length > 3 && (
+            {features.length > 3 && (
               <div className="bg-slate-50 px-2 py-1 rounded-lg text-[10px] font-bold text-slate-500">
-                +{program.features.length - 3} more
+                +{features.length - 3} more
               </div>
             )}
           </div>
@@ -108,14 +109,21 @@ const Program = () => {
   const headerRef = useRef(null);
   const [headerVisible, setHeaderVisible] = useState(false);
   const [programs, setPrograms] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const fetchProgramsData = async () => {
       try {
+        setLoading(true);
+        setError("");
         const data = await getPrograms();
-        setPrograms(data);
+        setPrograms(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error fetching programs:", error);
+        setError(typeof error === "string" ? error : "Unable to load programs right now.");
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -135,8 +143,6 @@ const Program = () => {
     observer.observe(el);
     return () => observer.disconnect();
   }, []);
-
-  const allPrograms = programs;
 
   return (
     <>
@@ -226,11 +232,31 @@ const Program = () => {
           </p>
         </div>
 
-        <div className="programs-grid">
-          {programs.map((program, index) => (
-            <ProgramCard key={program._id || index} program={program} index={index} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="max-w-5xl mx-auto relative z-10">
+            <div className="rounded-[2rem] border border-slate-200 bg-white/80 px-6 py-8 text-center text-slate-500 shadow-sm">
+              Loading programs...
+            </div>
+          </div>
+        ) : error ? (
+          <div className="max-w-5xl mx-auto relative z-10">
+            <div className="rounded-[2rem] border border-rose-200 bg-rose-50 px-6 py-8 text-center text-rose-600 shadow-sm">
+              {error}
+            </div>
+          </div>
+        ) : programs.length === 0 ? (
+          <div className="max-w-5xl mx-auto relative z-10">
+            <div className="rounded-[2rem] border border-slate-200 bg-white/80 px-6 py-8 text-center text-slate-500 shadow-sm">
+              No published programs available yet.
+            </div>
+          </div>
+        ) : (
+          <div className="programs-grid">
+            {programs.map((program, index) => (
+              <ProgramCard key={program._id || index} program={program} index={index} />
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

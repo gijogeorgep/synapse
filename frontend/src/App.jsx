@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import "./App.css";
+import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import Navbar from "./components/Layout/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/Shared/ProtectedRoute";
@@ -15,7 +16,12 @@ import TutorsMultilanguage from "./components/TutorsMultilanguage";
 import Crescent from "./components/Crescent";
 import Contact from "./components/Contact";
 import FAQ from "./components/FAQ";
+import Testimonials from "./components/Testimonials";
 import AboutPage from "./pages/AboutPage";
+import MaintenancePage from "./pages/MaintenancePage";
+import NotFound from "./pages/NotFound";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsConditions from "./pages/TermsConditions";
 
 // Portal Pages
 import StudentDashboard from "./pages/Student/Dashboard";
@@ -74,6 +80,9 @@ function LandingPage() {
       <TutorsMultilanguage />
       <VideoCard />
       <Crescent />
+      <section id="reviews" className="scroll-mt-20 md:scroll-mt-24">
+        <Testimonials />
+      </section>
       <section id="faq" className="scroll-mt-20 md:scroll-mt-24">
         <FAQ />
       </section>
@@ -87,10 +96,16 @@ function LandingPage() {
 function AppContent() {
   const location = useLocation();
   const isAdminAuth = location.pathname === "/admin-portal-auth";
+  const isDashboardRoute =
+    location.pathname.startsWith("/student") ||
+    location.pathname.startsWith("/teacher") ||
+    location.pathname.startsWith("/admin");
+  const showFloatingWhatsApp = !isAdminAuth && !isDashboardRoute;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       {!isAdminAuth && <Navbar />}
+      {showFloatingWhatsApp && <FloatingWhatsApp />}
       <div className={`flex-1 ${!isAdminAuth ? "mt-20 md:mt-24" : ""}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -98,6 +113,9 @@ function AppContent() {
 
           {/* Public Pages */}
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/maintenance" element={<MaintenancePage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/terms-conditions" element={<TermsConditions />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
           <Route path="/programs/:id" element={<ProgramDetail />} />
@@ -157,7 +175,7 @@ function AppContent() {
           </Route>
 
           {/* Fallback */}
-          <Route path="*" element={<div className="flex items-center justify-center p-20 text-slate-500">Page not found</div>} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
       {!isAdminAuth && <Footer />}
