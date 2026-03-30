@@ -12,6 +12,7 @@ import reportRoutes from "./routes/reportRoutes.js";
 import blogRoutes from "./routes/blogRoutes.js";
 import programRoutes from "./routes/programRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
+import contactRoutes from "./routes/contactRoutes.js";
 
 dotenv.config();
 
@@ -38,6 +39,7 @@ app.use("/api/reports", reportRoutes);
 app.use("/api/blogs", blogRoutes);
 app.use("/api/programs", programRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/contact", contactRoutes);
 
 app.get("/", (req, res) => {
     res.send("API is running...");

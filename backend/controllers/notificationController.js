@@ -27,6 +27,7 @@ export const getNotifications = async (req, res) => {
             $or: [
                 { recipient: userId }, 
                 { 
+                  recipient: null,
                   targetRole: { $in: [userRole, 'all'] },
                   $or: [
                     { targetClassroom: null },
@@ -94,6 +95,7 @@ export const markAllNotificationsRead = async (req, res) => {
             $or: [
                 { recipient: userId },
                 { 
+                  recipient: null,
                   targetRole: { $in: [userRole, 'all'] },
                   $or: [
                     { targetClassroom: null },
@@ -146,6 +148,7 @@ export const clearAllNotifications = async (req, res) => {
             $or: [
                 { recipient: userId },
                 { 
+                  recipient: null,
                   targetRole: { $in: [userRole, 'all'] },
                   $or: [
                     { targetClassroom: null },

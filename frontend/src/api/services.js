@@ -99,3 +99,7 @@ export const getNotifications = () => apiClient("/notifications");
 export const markNotificationRead = (id) => apiClient(`/notifications/${id}/read`, { method: "PATCH" });
 export const markAllNotificationsRead = () => apiClient("/notifications/read-all", { method: "PATCH" });
 export const clearAllNotifications = () => apiClient("/notifications/clear-all", { method: "PATCH" });
+
+// Contact Services
+export const submitContactForm = (contactData) =>
+    apiClient("/contact", { method: "POST", body: contactData });

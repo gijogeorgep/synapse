@@ -156,6 +156,14 @@ const commonAttachments = [
     }
 ];
 
+const escapeHtml = (value = '') =>
+    String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
 export const sendRegistrationEmail = async (userEmail, userName) => {
     try {
         const mailOptions = {
@@ -294,5 +302,55 @@ export const sendExamScheduledEmail = async (studentEmails, examTitle, date, cla
         console.log(`Exam Scheduled email sent to ${studentEmails.length} students`);
     } catch (error) {
         console.error('Error sending exam scheduled email:', error);
+    }
+};
+
+export const sendContactInquiryEmail = async ({ recipientEmails, name, email, program, message }) => {
+    try {
+        if (!recipientEmails || recipientEmails.length === 0) {
+            throw new Error('No recipient email configured for contact inquiries');
+        }
+
+        const safeName = escapeHtml(name);
+        const safeEmail = escapeHtml(email);
+        const safeProgram = escapeHtml(program || 'Not specified');
+        const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
+
+        const mailOptions = {
+            from: `"Synapse EduHub" <${process.env.EMAIL_USER || 'synapseeduhub@gmail.com'}>`,
+            to: recipientEmails,
+            replyTo: email,
+            subject: `New Contact Form Message from ${name}`,
+            html: emailLayout(
+                'New Contact Inquiry',
+                `
+                <p>A new message has been submitted through the Synapse EduHub contact form.</p>
+                <div class="highlight-card">
+                    <span class="label">Name</span>
+                    <span class="value">${safeName}</span>
+                    <div style="margin-top: 16px;">
+                        <span class="label">Email</span>
+                        <span class="value">${safeEmail}</span>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <span class="label">Program of Interest</span>
+                        <span class="value">${safeProgram}</span>
+                    </div>
+                    <div style="margin-top: 16px;">
+                        <span class="label">Message</span>
+                        <span class="value" style="font-weight: 500; line-height: 1.8;">${safeMessage}</span>
+                    </div>
+                </div>
+                <p>You can reply directly to this email to respond to the user.</p>
+                `
+            ),
+            attachments: commonAttachments
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`Contact inquiry email sent to ${recipientEmails.join(', ')}`);
+    } catch (error) {
+        console.error('Error sending contact inquiry email:', error);
+        throw error;
     }
 };

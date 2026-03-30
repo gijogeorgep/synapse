@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Send, Instagram, Facebook, Linkedin, MessageCircle } from "lucide-react";
+import { submitContactForm } from "../api/services";
 
 const Contact = () => {
   const [status, setStatus] = useState("");
@@ -12,23 +13,20 @@ const Contact = () => {
     setStatus("");
 
     try {
-      const response = await fetch("https://formspree.io/f/xovnoadv", {
-        method: "POST",
-        body: new FormData(form),
-        headers: { Accept: "application/json" },
+      const formData = new FormData(form);
+      await submitContactForm({
+        name: formData.get("name"),
+        email: formData.get("email"),
+        program: formData.get("program"),
+        message: formData.get("message"),
       });
 
-      if (response.ok) {
-        setStatus("success");
-        form.reset();
-        setTimeout(() => setStatus(""), 4000);
-      } else {
-        const data = await response.json();
-        setStatus(data.errors ? data.errors.map((err) => err.message).join(", ") : "error");
-      }
+      setStatus("success");
+      form.reset();
+      setTimeout(() => setStatus(""), 4000);
     } catch (error) {
       console.error(error);
-      setStatus("error");
+      setStatus(error || "error");
     }
     setLoading(false);
   };
@@ -156,7 +154,7 @@ const Contact = () => {
 
                   {status && (
                     <div className={`text-center pt-2 text-[10px] font-black uppercase tracking-[0.3em] ${status === 'success' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                      {status === 'success' ? '— Transmission Received —' : '— Transmission Failed —'}
+                      {status === 'success' ? '— Transmission Received —' : `— ${String(status).toUpperCase()} —`}
                     </div>
                   )}
                 </form>
