@@ -6,7 +6,7 @@ import {
     deleteAdminClassroom,
     assignUserToClassroom
 } from '../../../api/services';
-import { X, GraduationCap, Users, PlusCircle, CheckCircle2, AlertCircle, BookOpen, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { X, GraduationCap, Users, PlusCircle, CheckCircle2, AlertCircle, BookOpen, MoreVertical, Edit, Trash2, Search, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 const ClassroomManagement = () => {
@@ -16,6 +16,7 @@ const ClassroomManagement = () => {
     const [loading, setLoading] = useState(true);
 
     // Modal State
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedClassroom, setSelectedClassroom] = useState(null);
@@ -41,6 +42,19 @@ const ClassroomManagement = () => {
         imageUrl: ''
     });
 
+    // When programType changes, reset className to appropriate default
+    const handleProgramTypeChange = (type, isEdit) => {
+        const setter = isEdit ? setEditFormData : setFormData;
+        const currentData = isEdit ? editFormData : formData;
+        setter({
+            ...currentData,
+            programType: type,
+            subjects: [],
+            className: type === 'E-Zone' ? 'NEET' : '10',
+            board: type === 'E-Zone' ? 'Entrance/Exam' : 'CBSE'
+        });
+    };
+
     const [editFormData, setEditFormData] = useState({
         name: '',
         programType: 'PrimeOne',
@@ -58,9 +72,13 @@ const ClassroomManagement = () => {
     // Form for assigning users
     const [assignData, setAssignData] = useState({
         classroomId: '',
-        userId: '',
+        userIds: [],
         role: 'student'
     });
+    const [assignClassroomPickerOpen, setAssignClassroomPickerOpen] = useState(false);
+    const [assignClassroomSearch, setAssignClassroomSearch] = useState('');
+    const [assignUserPickerOpen, setAssignUserPickerOpen] = useState(false);
+    const [assignUserSearch, setAssignUserSearch] = useState('');
 
     const [status, setStatus] = useState({ type: '', message: '' });
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -109,6 +127,15 @@ const ClassroomManagement = () => {
         setAssignData({ ...assignData, [e.target.name]: e.target.value });
     };
 
+    const toggleAssignUser = (userId) => {
+        setAssignData((prev) => ({
+            ...prev,
+            userIds: prev.userIds.includes(userId)
+                ? prev.userIds.filter((id) => id !== userId)
+                : [...prev.userIds, userId]
+        }));
+    };
+
     const handleCreateSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
@@ -117,6 +144,7 @@ const ClassroomManagement = () => {
         try {
             await createAdminClassroom(formData);
             setStatus({ type: 'success', message: 'Classroom created successfully!' });
+            setIsCreateModalOpen(false);
 
             setFormData({
                 name: '',
@@ -210,8 +238,8 @@ const ClassroomManagement = () => {
     const handleAssignSubmit = async (e) => {
         e.preventDefault();
 
-        if (!assignData.classroomId || !assignData.userId) {
-            setStatus({ type: 'error', message: 'Please select a classroom and a user.' });
+        if (!assignData.classroomId || assignData.userIds.length === 0) {
+            setStatus({ type: 'error', message: 'Please select a classroom and at least one user.' });
             return;
         }
 
@@ -220,11 +248,14 @@ const ClassroomManagement = () => {
 
         try {
             await assignUserToClassroom(assignData.classroomId, {
-                userIds: [assignData.userId],
+                userIds: assignData.userIds,
                 role: assignData.role
             });
 
-            setStatus({ type: 'success', message: 'User assigned to classroom successfully!' });
+            setStatus({ type: 'success', message: `${assignData.userIds.length} ${assignData.role}${assignData.userIds.length > 1 ? 's' : ''} assigned successfully!` });
+            setAssignData(prev => ({ ...prev, userIds: [] }));
+            setAssignUserPickerOpen(false);
+            setAssignUserSearch('');
             fetchData(); // Refresh classrooms with new data
             setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
@@ -236,6 +267,27 @@ const ClassroomManagement = () => {
 
     // Filter users dynamically based on role selected in assign form
     const availableUsersToAssign = users.filter(u => u.role === assignData.role);
+    const selectedAssignClassroom = classrooms.find(c => c._id === assignData.classroomId);
+    const filteredAssignableClassrooms = classrooms.filter((classroom) => {
+        const query = assignClassroomSearch.trim().toLowerCase();
+        if (!query) return true;
+        return (
+            classroom.name?.toLowerCase().includes(query) ||
+            classroom.programType?.toLowerCase().includes(query) ||
+            classroom.className?.toLowerCase().includes(query) ||
+            classroom.board?.toLowerCase().includes(query)
+        );
+    });
+    const filteredAssignableUsers = availableUsersToAssign.filter((user) => {
+        const query = assignUserSearch.trim().toLowerCase();
+        if (!query) return true;
+        return (
+            user.name?.toLowerCase().includes(query) ||
+            user.email?.toLowerCase().includes(query) ||
+            user.uniqueId?.toLowerCase().includes(query)
+        );
+    });
+    const selectedAssignUsers = availableUsersToAssign.filter(u => assignData.userIds.includes(u._id));
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto p-4 md:p-8">
@@ -251,8 +303,8 @@ const ClassroomManagement = () => {
                             {/* Program Type Selection */}
                             <div>
                                 <label className="block text-xs font-bold text-slate-500 uppercase mb-3 tracking-widest">Program Type</label>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {['PrimeOne', 'Cluster', 'PlanB', 'E-Zone'].map((type) => (
+                                <div className="grid grid-cols-3 gap-2">
+                                    {['PrimeOne', 'Cluster', 'PlanB', 'Deep Roots', 'E-Zone'].map((type) => (
                                         <button
                                             key={type}
                                             type="button"
@@ -275,7 +327,27 @@ const ClassroomManagement = () => {
                                     <input type="text" name="name" value={editFormData.name} onChange={handleEditChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none font-medium" required />
                                 </div>
 
-                                {editFormData.programType !== 'E-Zone' && (
+                                {editFormData.programType === 'E-Zone' ? (
+                                    <div>
+                                        <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-wider">Exam / Subject Type</label>
+                                        <div className="grid grid-cols-3 gap-2">
+                                            {['NEET', 'JEE', 'PSC'].map(exam => (
+                                                <button
+                                                    key={exam}
+                                                    type="button"
+                                                    onClick={() => setEditFormData({ ...editFormData, className: exam })}
+                                                    className={`py-2 rounded-lg border-2 font-bold text-xs transition-all ${
+                                                        editFormData.className === exam
+                                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                            : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'
+                                                    }`}
+                                                >
+                                                    {exam}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="block text-[10px] font-black text-slate-400 uppercase mb-1 tracking-wider">Standard / Class</label>
@@ -366,9 +438,187 @@ const ClassroomManagement = () => {
                 </div>
             )}
 
-            <div>
-                <h1 className="text-3xl font-bold text-slate-800">Classroom Management</h1>
-                <p className="text-slate-500 mt-2">Create classrooms and assign students/teachers to them.</p>
+            {isCreateModalOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-3xl p-6 w-full max-w-3xl shadow-2xl animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-center space-x-3">
+                                <div className="p-2 bg-cyan-50 text-cyan-600 rounded-xl">
+                                    <PlusCircle className="w-5 h-5" />
+                                </div>
+                                <h2 className="text-xl font-bold text-slate-800">Create Classroom</h2>
+                            </div>
+                            <button type="button" onClick={() => setIsCreateModalOpen(false)} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
+                                <X className="w-5 h-5 text-slate-400" />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleCreateSubmit} className="space-y-6">
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wider">Select Program Type</label>
+                                <div className="grid grid-cols-3 gap-3">
+                                    {['PrimeOne', 'Cluster', 'PlanB', 'Deep Roots', 'E-Zone'].map((type) => (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => handleProgramTypeChange(type, false)}
+                                            className={`py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm ${
+                                                formData.programType === type
+                                                    ? 'border-cyan-500 bg-cyan-50 text-cyan-700 shadow-sm'
+                                                    : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'
+                                            }`}
+                                        >
+                                            {type}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="space-y-4 pt-2 border-t border-slate-50">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Classroom Name</label>
+                                    <input
+                                        type="text"
+                                        name="name"
+                                        value={formData.name}
+                                        onChange={handleCreateChange}
+                                        required
+                                        className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
+                                        placeholder={formData.programType === 'E-Zone' ? 'E.g., Special Batch 2024' : 'E.g., Section A'}
+                                    />
+                                </div>
+
+                                {formData.programType === 'E-Zone' ? (
+                                    <div>
+                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Exam / Subject Type</label>
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {['NEET', 'JEE', 'PSC'].map(exam => (
+                                                <button
+                                                    key={exam}
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, className: exam })}
+                                                    className={`py-2.5 rounded-xl border-2 font-bold text-sm transition-all ${
+                                                        formData.className === exam
+                                                            ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                                                            : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'
+                                                    }`}
+                                                >
+                                                    {exam}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Standard / Class</label>
+                                            <select
+                                                name="className"
+                                                value={formData.className}
+                                                onChange={handleCreateChange}
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 font-medium"
+                                            >
+                                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(c => (
+                                                    <option key={c} value={c.toString()}>Class {c}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Board</label>
+                                            <select
+                                                name="board"
+                                                value={formData.board}
+                                                onChange={handleCreateChange}
+                                                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 font-medium"
+                                            >
+                                                <option value="State">State</option>
+                                                <option value="CBSE">CBSE</option>
+                                                <option value="ICSE">ICSE</option>
+                                                <option value="Other">Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="pt-2 border-t border-slate-50">
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-3 tracking-widest">Select Subjects / Tags</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {(SUBJECT_TAGS[formData.programType === 'E-Zone' ? 'E-Zone' : formData.board] || []).map(tag => (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => toggleSubject(false, tag)}
+                                            className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
+                                                formData.subjects.includes(tag)
+                                                    ? 'bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-900/10'
+                                                    : 'bg-white border-slate-200 text-slate-600 hover:border-cyan-300 hover:text-cyan-600'
+                                            }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-50">
+                                <div>
+                                    <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Price (₹)</label>
+                                    <input type="number" name="price" value={formData.price} onChange={handleCreateChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm font-bold" min="0" />
+                                </div>
+                                <div className="flex flex-col justify-end gap-2">
+                                    <label className="flex items-center space-x-3 cursor-pointer p-2.5 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
+                                        <input type="checkbox" name="isPublished" checked={formData.isPublished} onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })} className="w-4 h-4 accent-cyan-600 rounded cursor-pointer" />
+                                        <span className="text-xs font-bold text-slate-700 uppercase">Publish</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Program Description</label>
+                                <textarea name="description" value={formData.description} onChange={handleCreateChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" rows="2" placeholder="Brief program overview..." />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Cover Photo URL</label>
+                                <div className="flex gap-3">
+                                    <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleCreateChange} className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-xs" placeholder="https://image-url.com/photo.jpg" />
+                                    {formData.imageUrl && (
+                                        <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0">
+                                            <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-2">
+                                <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors">Cancel</button>
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className="flex-1 flex items-center justify-center py-3 px-4 border border-transparent rounded-xl shadow-lg shadow-cyan-900/10 text-sm font-black text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 transition-all uppercase tracking-widest"
+                                >
+                                    {isSubmitting ? 'Creating...' : 'Create Classroom'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-slate-800">Classroom Management</h1>
+                    <p className="text-slate-500 mt-2">Create classrooms and assign students/teachers to them.</p>
+                </div>
+                <button
+                    type="button"
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-cyan-600 px-5 py-3 text-sm font-black text-white shadow-lg shadow-cyan-900/10 transition-all hover:bg-cyan-700"
+                >
+                    <PlusCircle className="w-5 h-5" />
+                    <span>Create Classroom</span>
+                </button>
             </div>
 
             {status.message && (
@@ -379,217 +629,6 @@ const ClassroomManagement = () => {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {/* Create Classroom Form */}
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 h-fit">
-                    <div className="flex items-center space-x-3 mb-6">
-                        <div className="p-2 bg-cyan-50 text-cyan-600 rounded-xl">
-                            <PlusCircle className="w-5 h-5" />
-                        </div>
-                        <h2 className="text-xl font-bold text-slate-800">New Program / Classroom</h2>
-                    </div>
-
-                    <form onSubmit={handleCreateSubmit} className="space-y-6">
-                        {/* Program Type Selection */}
-                        <div>
-                            <label className="block text-sm font-semibold text-slate-700 mb-3 uppercase tracking-wider">Select Program Type</label>
-                            <div className="grid grid-cols-2 gap-3">
-                                {['PrimeOne', 'Cluster', 'PlanB', 'E-Zone'].map((type) => (
-                                    <button
-                                        key={type}
-                                        type="button"
-                                        onClick={() => setFormData({ ...formData, programType: type, subjects: [] })}
-                                        className={`py-3 px-4 rounded-xl border-2 transition-all font-bold text-sm ${
-                                            formData.programType === type
-                                                ? 'border-cyan-500 bg-cyan-50 text-cyan-700 shadow-sm'
-                                                : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'
-                                        }`}
-                                    >
-                                        {type}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Basic Info */}
-                        <div className="space-y-4 pt-2 border-t border-slate-50">
-                            <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Classroom Name</label>
-                                <input
-                                    type="text"
-                                    name="name"
-                                    value={formData.name}
-                                    onChange={handleCreateChange}
-                                    required
-                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none transition-all"
-                                    placeholder={formData.programType === 'E-Zone' ? 'E.g., Special Batch 2024' : 'E.g., Section A'}
-                                />
-                            </div>
-
-                            {formData.programType !== 'E-Zone' && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Standard / Class</label>
-                                        <select
-                                            name="className"
-                                            value={formData.className}
-                                            onChange={handleCreateChange}
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 font-medium"
-                                        >
-                                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(c => (
-                                                <option key={c} value={c.toString()}>Class {c}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Board</label>
-                                        <select
-                                            name="board"
-                                            value={formData.board}
-                                            onChange={handleCreateChange}
-                                            className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-slate-700 font-medium"
-                                        >
-                                            <option value="State">State</option>
-                                            <option value="CBSE">CBSE</option>
-                                            <option value="ICSE">ICSE</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Subject Pills Selection */}
-                        <div className="pt-2 border-t border-slate-50">
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-3 tracking-widest">Select Subjects / Tags</label>
-                            <div className="flex flex-wrap gap-2">
-                                {(SUBJECT_TAGS[formData.programType === 'E-Zone' ? 'E-Zone' : formData.board] || []).map(tag => (
-                                    <button
-                                        key={tag}
-                                        type="button"
-                                        onClick={() => toggleSubject(false, tag)}
-                                        className={`px-4 py-2 rounded-full text-xs font-bold transition-all border ${
-                                            formData.subjects.includes(tag)
-                                                ? 'bg-cyan-600 border-cyan-600 text-white shadow-md shadow-cyan-900/10'
-                                                : 'bg-white border-slate-200 text-slate-600 hover:border-cyan-300 hover:text-cyan-600'
-                                        }`}
-                                    >
-                                        {tag}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Branding & Pricing */}
-                        <div className="grid grid-cols-2 gap-4 pt-2 border-t border-slate-50">
-                             <div>
-                                <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Price (₹)</label>
-                                <input type="number" name="price" value={formData.price} onChange={handleCreateChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm font-bold" min="0" />
-                            </div>
-                            <div className="flex flex-col justify-end gap-2">
-                                <label className="flex items-center space-x-3 cursor-pointer p-2.5 bg-slate-50 rounded-xl border border-slate-200 hover:border-cyan-200 transition-colors">
-                                    <input type="checkbox" name="isPublished" checked={formData.isPublished} onChange={(e) => setFormData({ ...formData, isPublished: e.target.checked })} className="w-4 h-4 accent-cyan-600 rounded cursor-pointer" />
-                                    <span className="text-xs font-bold text-slate-700 uppercase">Publish</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Program Description</label>
-                            <textarea name="description" value={formData.description} onChange={handleCreateChange} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-sm" rows="2" placeholder="Brief program overview..." />
-                        </div>
-
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 tracking-widest">Cover Photo URL</label>
-                            <div className="flex gap-3">
-                                <input type="text" name="imageUrl" value={formData.imageUrl} onChange={handleCreateChange} className="flex-1 px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-xs" placeholder="https://image-url.com/photo.jpg" />
-                                {formData.imageUrl && (
-                                    <div className="w-10 h-10 rounded-lg overflow-hidden border border-slate-200 shrink-0">
-                                        <img src={formData.imageUrl} alt="Preview" className="w-full h-full object-cover" />
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isSubmitting}
-                            className="w-full flex items-center justify-center py-4 px-4 mt-6 border border-transparent rounded-2xl shadow-lg shadow-cyan-900/10 text-sm font-black text-white bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 transition-all uppercase tracking-widest"
-                        >
-                            {isSubmitting ? 'Creating...' : 'Create Program / Class'}
-                        </button>
-                    </form>
-                </div>
-
-                {/* Assign Users Form */}
-                <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 h-fit">
-                    <div className="flex items-center space-x-3 mb-6">
-                        <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
-                            <Users className="w-5 h-5" />
-                        </div>
-                        <h2 className="text-xl font-bold text-slate-800">Assign Users</h2>
-                    </div>
-
-                    <form onSubmit={handleAssignSubmit} className="space-y-4">
-                        <div>
-                            <label className="block text-sm font-medium text-slate-700 mb-1">Select Classroom</label>
-                            <select
-                                name="classroomId"
-                                value={assignData.classroomId}
-                                onChange={handleAssignChange}
-                                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700"
-                            >
-                                {classrooms.length === 0 && <option value="">No classrooms available</option>}
-                                {classrooms.map(c => (
-                                    <option key={c._id} value={c._id}>
-                                        {c.programType === 'E-Zone' ? '[E-Zone]' : `[Class ${c.className} ${c.board}]`} - {c.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Role to Assign</label>
-                                <select
-                                    name="role"
-                                    value={assignData.role}
-                                    onChange={handleAssignChange}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700"
-                                >
-                                    <option value="student">Student</option>
-                                    <option value="teacher">Teacher</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-medium text-slate-700 mb-1">Select {assignData.role === 'student' ? 'Student' : 'Teacher'}</label>
-                                <select
-                                    name="userId"
-                                    value={assignData.userId}
-                                    onChange={handleAssignChange}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-slate-700"
-                                >
-                                    <option value="">-- Select --</option>
-                                    {availableUsersToAssign.map(u => (
-                                        <option key={u._id} value={u._id}>{u.name} ({u.email})</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={isSubmitting || classrooms.length === 0}
-                            className="w-full flex items-center justify-center py-3 px-4 mt-6 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 transition-all font-semibold"
-                        >
-                            Assign User
-                        </button>
-                    </form>
-                </div>
-            </div>
-
-            {/* List Active Classrooms */}
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
                 <div className="flex items-center space-x-3 mb-6">
                     <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
@@ -618,7 +657,7 @@ const ClassroomManagement = () => {
                                         <div>
                                             <div className="flex items-center gap-2 mb-1 flex-wrap">
                                                 <h3 className="font-bold text-lg text-slate-800 ">{c.name}</h3>
-                                                <span className={`px-2 py-0.5 text-[10px] font-black rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase`}>
+                                                <span className="px-2 py-0.5 text-[10px] font-black rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 uppercase">
                                                     {c.programType || 'PrimeOne'}
                                                 </span>
                                                 <span className={`px-2 py-0.5 text-[9px] font-bold rounded-lg uppercase ${c.isPublished ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-slate-100 text-slate-400 border border-slate-200'}`}>
@@ -626,7 +665,9 @@ const ClassroomManagement = () => {
                                                 </span>
                                             </div>
                                             <p className="text-xs font-bold text-cyan-600 uppercase tracking-wider">
-                                                {c.className === 'N/A' ? 'Special Program' : `Class ${c.className}`} • {c.board}
+                                                {c.programType === 'E-Zone'
+                                                    ? `${c.className || 'E-Zone'} • Entrance/Exam`
+                                                    : `Class ${c.className} • ${c.board}`}
                                             </p>
                                         </div>
                                         <div className="relative">
@@ -687,6 +728,289 @@ const ClassroomManagement = () => {
                         ))}
                     </div>
                 )}
+            </div>
+
+            <div className="grid grid-cols-1 gap-8">
+                {/* Assign Users Form */}
+                <div className="bg-white rounded-[2rem] p-5 md:p-6 shadow-sm border border-slate-100 h-fit max-w-5xl">
+                    <div className="flex items-start justify-between gap-4 mb-6">
+                        <div className="flex items-center space-x-3">
+                            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-2xl">
+                                <Users className="w-5 h-5" />
+                            </div>
+                            <div>
+                                <h2 className="text-xl font-bold text-slate-800">Assign Users</h2>
+                                <p className="text-sm text-slate-500 mt-1">Choose a classroom, pick a role, and assign one or more users in a single step.</p>
+                            </div>
+                        </div>
+                        <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-2xl bg-slate-50 border border-slate-100 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                            <Users className="w-5 h-5" />
+                            <span>{availableUsersToAssign.length} available</span>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleAssignSubmit} className="space-y-5">
+                        <div className="grid grid-cols-1 lg:grid-cols-[1.25fr_0.9fr] gap-6">
+                            <div className="space-y-2">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Select Classroom</label>
+                                <div className="relative">
+                                    <button
+                                        type="button"
+                                        onClick={() => setAssignClassroomPickerOpen((prev) => !prev)}
+                                        className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-slate-700 transition-all hover:border-indigo-300"
+                                    >
+                                        <div className="min-w-0 flex-1">
+                                            {selectedAssignClassroom ? (
+                                                <div className="space-y-0.5">
+                                                    <p className="truncate text-sm font-bold text-slate-800">{selectedAssignClassroom.name}</p>
+                                                    <p className="truncate text-xs text-slate-500">
+                                                        {selectedAssignClassroom.programType === 'E-Zone'
+                                                            ? `${selectedAssignClassroom.className} • Entrance/Exam`
+                                                            : `Class ${selectedAssignClassroom.className} • ${selectedAssignClassroom.board}`}
+                                                    </p>
+                                                </div>
+                                            ) : (
+                                                <span className="text-sm font-medium text-slate-400">Choose a classroom</span>
+                                            )}
+                                        </div>
+                                        <ChevronDown className={`ml-3 h-5 w-5 shrink-0 text-slate-400 transition-transform ${assignClassroomPickerOpen ? 'rotate-180' : ''}`} />
+                                    </button>
+
+                                    {assignClassroomPickerOpen && (
+                                        <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                                            <div className="border-b border-slate-100 p-3">
+                                                <div className="relative">
+                                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                                    <input
+                                                        type="text"
+                                                        value={assignClassroomSearch}
+                                                        onChange={(e) => setAssignClassroomSearch(e.target.value)}
+                                                        placeholder="Search classroom by name, program, class, or board"
+                                                        className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="max-h-72 overflow-y-auto p-2">
+                                                {filteredAssignableClassrooms.length === 0 ? (
+                                                    <div className="px-4 py-8 text-center text-sm text-slate-400">
+                                                        No classrooms found.
+                                                    </div>
+                                                ) : (
+                                                    filteredAssignableClassrooms.map((classroom) => {
+                                                        const isSelected = assignData.classroomId === classroom._id;
+                                                        return (
+                                                            <button
+                                                                key={classroom._id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    setAssignData((prev) => ({ ...prev, classroomId: classroom._id }));
+                                                                    setAssignClassroomPickerOpen(false);
+                                                                    setAssignClassroomSearch('');
+                                                                }}
+                                                                className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all ${
+                                                                    isSelected
+                                                                        ? 'bg-indigo-50 text-indigo-700'
+                                                                        : 'text-slate-700 hover:bg-slate-50'
+                                                                }`}
+                                                            >
+                                                                <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                                                                    isSelected
+                                                                        ? 'border-indigo-500 bg-indigo-600 text-white'
+                                                                        : 'border-slate-300 bg-white'
+                                                                }`}>
+                                                                    {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                                                                </div>
+                                                                <div className="min-w-0 flex-1">
+                                                                    <p className="truncate text-sm font-bold">{classroom.name}</p>
+                                                                    <p className="truncate text-xs text-slate-500">
+                                                                        {classroom.programType === 'E-Zone'
+                                                                            ? `${classroom.className} • Entrance/Exam`
+                                                                            : `Class ${classroom.className} • ${classroom.board}`}
+                                                                    </p>
+                                                                </div>
+                                                                <span className="rounded-full bg-white/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200">
+                                                                    {classroom.programType || 'Program'}
+                                                                </span>
+                                                            </button>
+                                                        );
+                                                    })
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">Role to Assign</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {[
+                                        { value: 'student', label: 'Student' },
+                                        { value: 'teacher', label: 'Teacher' }
+                                    ].map((roleOption) => (
+                                        <button
+                                            key={roleOption.value}
+                                            type="button"
+                                            onClick={() => {
+                                                setAssignData({ ...assignData, role: roleOption.value, userIds: [] });
+                                                setAssignUserPickerOpen(false);
+                                                setAssignUserSearch('');
+                                            }}
+                                            className={`rounded-2xl border px-4 py-3 text-sm font-bold transition-all ${
+                                                assignData.role === roleOption.value
+                                                    ? 'border-indigo-500 bg-indigo-50 text-indigo-700 shadow-sm'
+                                                    : 'border-slate-200 bg-slate-50 text-slate-500 hover:border-slate-300'
+                                            }`}
+                                        >
+                                            {roleOption.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+                            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3.5">
+                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.18em] mb-2">Chosen Classroom</p>
+                                {selectedAssignClassroom ? (
+                                    <div className="space-y-1">
+                                        <p className="text-base font-bold text-slate-800">{selectedAssignClassroom.name}</p>
+                                        <p className="text-xs font-semibold text-cyan-600 uppercase tracking-wider">
+                                            {selectedAssignClassroom.programType === 'E-Zone'
+                                                ? `${selectedAssignClassroom.className} • Entrance/Exam`
+                                                : `Class ${selectedAssignClassroom.className} • ${selectedAssignClassroom.board}`}
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-400">Pick a classroom to continue.</p>
+                                )}
+                            </div>
+
+                            <div className="rounded-2xl border border-slate-100 bg-slate-50/80 p-3.5">
+                                <p className="text-[11px] font-black text-slate-400 uppercase tracking-[0.18em] mb-2">Chosen {assignData.role === 'student' ? 'Students' : 'Teachers'}</p>
+                                {selectedAssignUsers.length > 0 ? (
+                                    <div className="flex flex-wrap gap-2">
+                                        {selectedAssignUsers.map((user) => (
+                                            <span key={user._id} className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-700">
+                                                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-indigo-100 text-[10px] text-indigo-700">
+                                                    {(user.name?.[0] || '?').toUpperCase()}
+                                                </span>
+                                                <span>{user.name}</span>
+                                            </span>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p className="text-sm text-slate-400">Select one or more {assignData.role}s from the picker below.</p>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest">
+                                Select {assignData.role === 'student' ? 'Students' : 'Teachers'}
+                            </label>
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setAssignUserPickerOpen((prev) => !prev)}
+                                    className="flex w-full items-center justify-between rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-left text-slate-700 transition-all hover:border-indigo-300"
+                                >
+                                    <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+                                        {selectedAssignUsers.length > 0 ? (
+                                            selectedAssignUsers.map((user) => (
+                                                <span key={user._id} className="inline-flex items-center gap-2 rounded-full bg-white border border-slate-200 px-3 py-1 text-xs font-bold text-slate-700">
+                                                    <span className="truncate max-w-[120px]">{user.name}</span>
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-sm font-medium text-slate-400">
+                                                Choose one or more {assignData.role}s
+                                            </span>
+                                        )}
+                                    </div>
+                                    <ChevronDown className={`ml-3 h-5 w-5 shrink-0 text-slate-400 transition-transform ${assignUserPickerOpen ? 'rotate-180' : ''}`} />
+                                </button>
+
+                                {assignUserPickerOpen && (
+                                    <div className="absolute z-30 mt-2 w-full overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl">
+                                        <div className="border-b border-slate-100 p-3">
+                                            <div className="relative">
+                                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                                                <input
+                                                    type="text"
+                                                    value={assignUserSearch}
+                                                    onChange={(e) => setAssignUserSearch(e.target.value)}
+                                                    placeholder={`Search ${assignData.role} by name, email, or ID`}
+                                                    className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-2.5 pl-10 pr-4 text-sm text-slate-700 outline-none focus:ring-2 focus:ring-indigo-500"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        <div className="max-h-72 overflow-y-auto p-2">
+                                            {filteredAssignableUsers.length === 0 ? (
+                                                <div className="px-4 py-8 text-center text-sm text-slate-400">
+                                                    No {assignData.role}s found.
+                                                </div>
+                                            ) : (
+                                                filteredAssignableUsers.map((user) => {
+                                                    const isSelected = assignData.userIds.includes(user._id);
+                                                    return (
+                                                        <button
+                                                            key={user._id}
+                                                            type="button"
+                                                            onClick={() => toggleAssignUser(user._id)}
+                                                            className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-all ${
+                                                                isSelected
+                                                                    ? 'bg-indigo-50 text-indigo-700'
+                                                                    : 'text-slate-700 hover:bg-slate-50'
+                                                            }`}
+                                                        >
+                                                            <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
+                                                                isSelected
+                                                                    ? 'border-indigo-500 bg-indigo-600 text-white'
+                                                                    : 'border-slate-300 bg-white'
+                                                            }`}>
+                                                                {isSelected && <CheckCircle2 className="h-3.5 w-3.5" />}
+                                                            </div>
+                                                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-100 text-sm font-bold text-slate-700">
+                                                                {(user.name?.[0] || '?').toUpperCase()}
+                                                            </div>
+                                                            <div className="min-w-0 flex-1">
+                                                                <p className="truncate text-sm font-bold">{user.name}</p>
+                                                                <p className="truncate text-xs text-slate-500">{user.email}</p>
+                                                            </div>
+                                                            {user.uniqueId && (
+                                                                <span className="rounded-full bg-white/80 px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-500 border border-slate-200">
+                                                                    {user.uniqueId}
+                                                                </span>
+                                                            )}
+                                                        </button>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                            <p className="text-xs text-slate-400">Custom multi-select picker. You can choose multiple users at once.</p>
+                        </div>
+
+                        <div className="flex justify-end pt-1">
+                            <button
+                                type="submit"
+                                disabled={isSubmitting || classrooms.length === 0}
+                                className="inline-flex min-w-[180px] items-center justify-center rounded-xl border border-transparent bg-indigo-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-indigo-700 disabled:opacity-50"
+                            >
+                                {isSubmitting
+                                    ? 'Assigning...'
+                                    : selectedAssignUsers.length > 0
+                                        ? `Assign ${selectedAssignUsers.length} ${assignData.role === 'student' ? 'Student' : 'Teacher'}${selectedAssignUsers.length === 1 ? '' : 's'}`
+                                        : `Assign ${assignData.role === 'student' ? 'Students' : 'Teachers'}`}
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     );

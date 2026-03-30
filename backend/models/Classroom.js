@@ -8,7 +8,7 @@ const classroomSchema = mongoose.Schema(
         },
         programType: {
             type: String,
-            enum: ["PrimeOne", "Cluster", "PlanB", "E-Zone"],
+            enum: ["PrimeOne", "Cluster", "PlanB", "Deep Roots", "E-Zone"],
             required: true,
             default: "PrimeOne",
         },

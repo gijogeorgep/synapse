@@ -13,6 +13,6 @@ router.get("/", protect, getMaterials);
 router.get("/view/:id", viewMaterialProxy);
 router.get("/view/:id/:filename", viewMaterialProxy); // suffix support for better previewing
 router.get("/:id", protect, getMaterialById);
-router.post("/", protect, authorize("teacher", "admin"), uploadMaterial);
+router.post("/", protect, authorize("teacher", "admin", "superadmin"), uploadMaterial);
 
 export default router;

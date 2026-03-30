@@ -1,58 +1,174 @@
-import { Users, CreditCard, ShieldCheck, Settings, Bell, TrendingUp } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Users, CreditCard, ShieldCheck, GraduationCap, BookOpen } from "lucide-react";
+import { getOverallStats, getClassroomReports, getAdminsListForReports } from "../../../api/services";
+import { useAuth } from "../../../context/AuthContext";
+
+const formatCurrency = (amount) =>
+    new Intl.NumberFormat("en-IN", {
+        style: "currency",
+        currency: "INR",
+        maximumFractionDigits: 0,
+    }).format(amount || 0);
 
 const AdminDashboard = () => {
-    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-    const isSuperAdmin = userInfo?.role === 'superadmin';
+    const { user } = useAuth();
+    const [overallStats, setOverallStats] = useState(null);
+    const [classroomReports, setClassroomReports] = useState([]);
+    const [adminCount, setAdminCount] = useState(0);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            try {
+                setLoading(true);
+                const isSuperAdmin = user?.role === "superadmin";
+                const [statsRes, classroomRes, adminsRes] = await Promise.all([
+                    getOverallStats(),
+                    getClassroomReports(),
+                    isSuperAdmin ? getAdminsListForReports() : Promise.resolve([]),
+                ]);
+
+                setOverallStats(statsRes || null);
+                setClassroomReports(Array.isArray(classroomRes) ? classroomRes : []);
+                setAdminCount(Array.isArray(adminsRes) ? adminsRes.length : 0);
+            } catch (error) {
+                console.error("Failed to fetch admin dashboard data:", error);
+                setOverallStats(null);
+                setClassroomReports([]);
+                setAdminCount(0);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, [user?.role]);
 
     const stats = [
-        { name: "Total Students", value: "1,240", icon: Users, color: "text-blue-600", bg: "bg-blue-50" },
-        { name: "Total Teachers", value: "48", icon: ShieldCheck, color: "text-indigo-600", bg: "bg-indigo-50" },
-        ...(isSuperAdmin ? [
-            { name: "Total Admins", value: "3", icon: Users, color: "text-cyan-600", bg: "bg-cyan-50" }
-        ] : []),
-        { name: "Revenue (MTD)", property: "₹45,200", icon: CreditCard, color: "text-emerald-600", bg: "bg-emerald-50" },
+        {
+            name: "Total Students",
+            value: overallStats?.totalStudents ?? 0,
+            icon: Users,
+            color: "text-blue-600",
+            bg: "bg-blue-50",
+        },
+        {
+            name: "Total Teachers",
+            value: overallStats?.totalTeachers ?? 0,
+            icon: ShieldCheck,
+            color: "text-indigo-600",
+            bg: "bg-indigo-50",
+        },
+        ...(user?.role === "superadmin"
+            ? [
+                  {
+                      name: "Total Admins",
+                      value: adminCount,
+                      icon: Users,
+                      color: "text-cyan-600",
+                      bg: "bg-cyan-50",
+                  },
+              ]
+            : []),
+        {
+            name: "Total Revenue",
+            value: formatCurrency(overallStats?.totalRevenue),
+            icon: CreditCard,
+            color: "text-emerald-600",
+            bg: "bg-emerald-50",
+        },
     ];
+
+    const topClassrooms = [...classroomReports]
+        .sort((a, b) => (b.avgScore || 0) - (a.avgScore || 0))
+        .slice(0, 5);
+
+    const revenueTrends = overallStats?.revenueTrends || [];
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <div className="flex justify-between items-end">
-                <div>
-                    <h1 className="text-3xl font-bold text-slate-800">Admin Command Center</h1>
-                    <p className="text-slate-500 mt-2">Global system overview and management.</p>
-                </div>
-                <div className="flex bg-white rounded-2xl p-1 shadow-sm border border-slate-100">
-                    <button className="px-4 py-2 text-sm font-semibold bg-slate-50 text-slate-600 rounded-xl hover:bg-slate-100 transition-colors">7 Days</button>
-                    <button className="px-4 py-2 text-sm font-semibold bg-cyan-600 text-white rounded-xl shadow-md">30 Days</button>
-                </div>
+            <div>
+                <h1 className="text-3xl font-bold text-slate-800">Admin Command Center</h1>
+                <p className="text-slate-500 mt-2">Live overview of students, classrooms, exams, and revenue.</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {stats.map((stat) => (
                     <div key={stat.name} className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
-                        <div className="flex items-center justify-between">
-                            <div className={`${stat.bg} ${stat.color} p-3 rounded-2xl`}>
-                                <stat.icon className="w-6 h-6" />
-                            </div>
-                            <div className="flex items-center text-emerald-500 text-xs font-bold bg-emerald-50 px-2 py-1 rounded-full">
-                                <TrendingUp className="w-3 h-3 mr-1" />
-                                +12%
-                            </div>
+                        <div className={`${stat.bg} ${stat.color} inline-flex p-3 rounded-2xl`}>
+                            <stat.icon className="w-6 h-6" />
                         </div>
                         <div className="mt-4">
                             <h3 className="text-slate-500 text-sm font-medium">{stat.name}</h3>
-                            <p className="text-2xl font-bold text-slate-800 mt-1">{stat.value || stat.property}</p>
+                            <p className="text-2xl font-bold text-slate-800 mt-1">
+                                {loading ? "..." : stat.value}
+                            </p>
                         </div>
                     </div>
                 ))}
             </div>
 
-            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-xl font-bold text-slate-800">Recent Transactions</h2>
-                    <button className="text-cyan-600 text-sm font-semibold hover:underline">View All</button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="p-2 bg-cyan-50 text-cyan-600 rounded-xl">
+                            <GraduationCap className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800">Top Classrooms</h2>
+                            <p className="text-sm text-slate-500">Ranked by average score from real report data.</p>
+                        </div>
+                    </div>
+
+                    {loading ? (
+                        <p className="text-slate-400 text-sm py-8 text-center">Loading classroom analytics...</p>
+                    ) : topClassrooms.length === 0 ? (
+                        <p className="text-slate-400 text-sm py-8 text-center">No classroom report data available yet.</p>
+                    ) : (
+                        <div className="space-y-3">
+                            {topClassrooms.map((classroom) => (
+                                <div key={classroom._id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                    <div>
+                                        <p className="font-bold text-slate-800">{classroom.name}</p>
+                                        <p className="text-xs text-slate-500">
+                                            {classroom.studentCount} students • {classroom.examCount} exams
+                                        </p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Avg Score</p>
+                                        <p className="text-lg font-black text-cyan-600">{classroom.avgScore ?? 0}</p>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
-                <div className="space-y-4">
-                    <p className="text-slate-500 text-sm text-center py-8">Transaction logs are loading...</p>
+
+                <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                    <div className="flex items-center gap-3 mb-5">
+                        <div className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">
+                            <BookOpen className="w-5 h-5" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-bold text-slate-800">Revenue Trend</h2>
+                            <p className="text-sm text-slate-500">Recent monthly collections from completed payments.</p>
+                        </div>
+                    </div>
+
+                    {loading ? (
+                        <p className="text-slate-400 text-sm py-8 text-center">Loading revenue data...</p>
+                    ) : revenueTrends.length === 0 ? (
+                        <p className="text-slate-400 text-sm py-8 text-center">No revenue trend data available yet.</p>
+                    ) : (
+                        <div className="space-y-3">
+                            {revenueTrends.map((entry) => (
+                                <div key={entry.month} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3">
+                                    <p className="font-bold text-slate-800">{entry.month}</p>
+                                    <p className="text-sm font-black text-emerald-600">{formatCurrency(entry.amount)}</p>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

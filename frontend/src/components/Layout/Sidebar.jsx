@@ -59,8 +59,8 @@ const Sidebar = ({ role }) => {
             { name: "Reports", icon: BarChart3, path: "/admin/reports" },
             { name: "Bulk Promotions", icon: ArrowUpCircle, path: "/admin/promotions" },
             { name: "Resource Library", icon: BookCopy, path: "/admin/resources" },
-            { name: "Program Management", icon: Sparkles, path: "/admin/programs" },
-            { name: "Blog Management", icon: FileText, path: "/admin/blogs" },
+            { name: "Programs ", icon: Sparkles, path: "/admin/programs" },
+            { name: "Blogs ", icon: FileText, path: "/admin/blogs" },
             { name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
         ],
@@ -73,8 +73,8 @@ const Sidebar = ({ role }) => {
             { name: "Reports", icon: BarChart3, path: "/admin/reports" },
             { name: "Bulk Promotions", icon: ArrowUpCircle, path: "/admin/promotions" },
             { name: "Resource Library", icon: BookCopy, path: "/admin/resources" },
-            { name: "Program Management", icon: Sparkles, path: "/admin/programs" },
-            { name: "Blog Management", icon: FileText, path: "/admin/blogs" },
+            { name: "Programs ", icon: Sparkles, path: "/admin/programs" },
+            { name: "Blogs ", icon: FileText, path: "/admin/blogs" },
             { name: "Audit Logs", icon: History, path: "/admin/audit-logs" },
             { name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
@@ -85,42 +85,42 @@ const Sidebar = ({ role }) => {
 
     return (
         <>
-        <LogoutConfirmModal
-            isOpen={showLogoutModal}
-            onConfirm={handleLogoutConfirm}
-            onCancel={() => setShowLogoutModal(false)}
-        />
-        <aside className="w-64 bg-white border-r border-slate-200 h-[calc(100vh-6rem)] sticky top-24 overflow-y-auto">
-            <div className="p-6">
-                <nav className="space-y-2">
-                    {currentLinks.map((link) => (
-                        <NavLink
-                            key={link.path}
-                            to={link.path}
-                            className={({ isActive }) =>
-                                `flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold transition-all ${isActive
-                                    ? "bg-cyan-50 text-cyan-600 shadow-sm"
-                                    : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600"
-                                }`
-                            }
-                        >
-                            <link.icon className="w-5 h-5" />
-                            <span>{link.name}</span>
-                        </NavLink>
-                    ))}
-                </nav>
-            </div>
+            <LogoutConfirmModal
+                isOpen={showLogoutModal}
+                onConfirm={handleLogoutConfirm}
+                onCancel={() => setShowLogoutModal(false)}
+            />
+            <aside className="sticky top-24 flex h-[calc(100vh-6rem)] w-64 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white">
+                <div className="p-6">
+                    <nav className="space-y-2">
+                        {currentLinks.map((link) => (
+                            <NavLink
+                                key={link.path}
+                                to={link.path}
+                                className={({ isActive }) =>
+                                    `flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold transition-all ${isActive
+                                        ? "bg-cyan-50 text-cyan-600 shadow-sm"
+                                        : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600"
+                                    }`
+                                }
+                            >
+                                <link.icon className="w-5 h-5" />
+                                <span>{link.name}</span>
+                            </NavLink>
+                        ))}
+                    </nav>
+                </div>
 
-            <div className="p-6 mt-auto border-t border-slate-100">
-                <button
-                    onClick={() => setShowLogoutModal(true)}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-red-600 hover:bg-red-50 transition-all group"
-                >
-                    <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                    <span>Logout</span>
-                </button>
-            </div>
-        </aside>
+                <div className="p-6 mt-auto border-t border-slate-100">
+                    <button
+                        onClick={() => setShowLogoutModal(true)}
+                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-red-600 hover:bg-red-50 transition-all group"
+                    >
+                        <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        <span>Logout</span>
+                    </button>
+                </div>
+            </aside>
         </>
     );
 };

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, Award } from "lucide-react";
-import { getExamsBySpecificClassroom, getMyResults } from "../../api/services";
+import { getExams, getExamsBySpecificClassroom, getMyResults } from "../../api/services";
 
 const StudentClassroom = () => {
     const { user } = useAuth();
@@ -29,6 +29,7 @@ const StudentClassroom = () => {
 
     const fallbackSubject = classroom?.subjects?.[0] || classroom?.name || "Subject";
     const fallbackClass = classroom?.className || user?.class || "10";
+    const availableExams = exams.filter((exam) => !results.some((result) => result.exam?._id === exam._id));
 
     useEffect(() => {
         const fetchExams = async () => {
@@ -37,8 +38,32 @@ const StudentClassroom = () => {
                 return;
             }
             try {
-                const data = await getExamsBySpecificClassroom(classroom._id);
-                setExams(data);
+                const [classroomExamData, allExamData] = await Promise.all([
+                    getExamsBySpecificClassroom(classroom._id),
+                    getExams()
+                ]);
+
+                const normalizedClassroomId = classroom._id?.toString();
+                const mergedExams = new Map();
+
+                (Array.isArray(classroomExamData) ? classroomExamData : []).forEach((exam) => {
+                    if (exam?._id) {
+                        mergedExams.set(exam._id, exam);
+                    }
+                });
+
+                (Array.isArray(allExamData) ? allExamData : []).forEach((exam) => {
+                    const examClassroomId =
+                        typeof exam?.classroom === "object"
+                            ? exam.classroom?._id?.toString()
+                            : exam?.classroom?.toString();
+
+                    if (exam?._id && examClassroomId === normalizedClassroomId) {
+                        mergedExams.set(exam._id, exam);
+                    }
+                });
+
+                setExams(Array.from(mergedExams.values()));
             } catch (error) {
                 console.error("Error fetching exams:", error);
             } finally {
@@ -221,19 +246,17 @@ const StudentClassroom = () => {
                                 Upcoming & active exams
                             </h3>
                             <span className="text-xs font-medium text-slate-400">
-                                {exams?.length || 0} exams
+                                {availableExams?.length || 0} exams
                             </span>
                         </div>
 
                         <div className="space-y-3">
                             {loadingExams ? (
                                 <div className="text-center py-4 text-slate-400 text-sm">Loading exams...</div>
-                            ) : exams.length === 0 ? (
+                            ) : availableExams.length === 0 ? (
                                 <div className="text-center py-4 text-slate-400 text-sm">No exams scheduled for this subject.</div>
                             ) : (
-                                exams.map((exam) => {
-                                    const isSubmitted = results.some(r => r.exam?._id === exam._id);
-                                    
+                                availableExams.map((exam) => {
                                     return (
                                         <div
                                             key={exam._id}
@@ -248,20 +271,13 @@ const StudentClassroom = () => {
                                                     {exam.duration} mins • {exam.isActive ? 'Active' : 'Archived'}
                                                 </p>
                                             </div>
-                                            {isSubmitted ? (
-                                                <div className="px-4 py-2 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold flex items-center gap-1.5">
-                                                    <Award className="w-3.5 h-3.5" />
-                                                    <span>Completed</span>
-                                                </div>
-                                            ) : (
-                                                <button
-                                                    onClick={() => navigate("/student/exams", { state: { startExamId: exam._id } })}
-                                                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-cyan-600 text-white text-xs font-semibold shadow-sm hover:bg-cyan-700 transition-colors"
-                                                >
-                                                    <PlayCircle className="w-4 h-4" />
-                                                    <span>Take exam</span>
-                                                </button>
-                                            )}
+                                            <button
+                                                onClick={() => navigate("/student/exams", { state: { startExamId: exam._id } })}
+                                                className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-cyan-600 text-white text-xs font-semibold shadow-sm hover:bg-cyan-700 transition-colors"
+                                            >
+                                                <PlayCircle className="w-4 h-4" />
+                                                <span>Take exam</span>
+                                            </button>
                                         </div>
                                     );
                                 })

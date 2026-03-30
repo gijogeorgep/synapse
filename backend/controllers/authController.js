@@ -51,6 +51,12 @@ export const registerUser = async (req, res) => {
         return res.status(400).json({ message: "Name, email, phone number, password, and OTP are required" });
     }
 
+    // Phone Number Validation - Exactly 10 digits
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(phoneNumber.replace(/\s+/g, ""))) {
+        return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
+    }
+
     try {
         const userExists = await User.findOne({ email });
 
@@ -72,9 +78,6 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: "Invalid or expired OTP" });
         }
 
-        // Auto-generate Unique ID for independent registration
-        const finalUniqueId = await generateUniqueId("student", "Other");
-
         const user = await User.create({
             name,
             email,
@@ -82,7 +85,7 @@ export const registerUser = async (req, res) => {
             phoneNumber,
             role: "student",
             userType: "independent",
-            uniqueId: finalUniqueId,
+            // uniqueId will be generated during first enrollment to match the program prefix
         });
         if (user) {
             // Delete OTP record after successful use
@@ -188,7 +191,15 @@ export const updateUserProfile = async (req, res) => {
     if (user) {
         user.name = req.body.name || user.name;
         user.email = req.body.email || user.email;
-        user.phoneNumber = req.body.phoneNumber || user.phoneNumber;
+        
+        if (req.body.phoneNumber) {
+            const phoneRegex = /^\d{10}$/;
+            if (!phoneRegex.test(req.body.phoneNumber.replace(/\s+/g, ""))) {
+                return res.status(400).json({ message: "Phone number must be exactly 10 digits" });
+            }
+            user.phoneNumber = req.body.phoneNumber;
+        }
+        
         user.avatarUrl = req.body.avatarUrl || user.avatarUrl;
 
         const updatedUser = await user.save();

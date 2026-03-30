@@ -87,7 +87,14 @@ export const getExams = async (req, res) => {
             }
         }
 
-        const exams = await Exam.find(query).populate("teacher", "name");
+        let exams = await Exam.find(query).populate("teacher", "name");
+
+        if (req.user.role === 'student') {
+            const submittedResults = await Result.find({ student: req.user._id }).select("exam");
+            const submittedExamIds = new Set(submittedResults.map((result) => result.exam?.toString()).filter(Boolean));
+            exams = exams.filter((exam) => !submittedExamIds.has(exam._id.toString()));
+        }
+
         res.json(exams);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -108,6 +115,38 @@ export const createExamWithQuestions = async (req, res) => {
         return res.status(400).json({ message: "Date is required for scheduled exams." });
     }
 
+    if (!Array.isArray(questions) || questions.length === 0) {
+        return res.status(400).json({ message: "Add at least one question before publishing the exam." });
+    }
+
+    const normalizedQuestions = questions.map((question) => ({
+        ...question,
+        questionText: question?.questionText?.trim(),
+        options: Array.isArray(question?.options)
+            ? question.options.map((option) => option?.trim?.() ?? option)
+            : [],
+        explanation: question?.explanation?.trim?.() || "",
+        imageUrl: question?.imageUrl || undefined,
+    }));
+
+    const invalidQuestionIndex = normalizedQuestions.findIndex((question) => {
+        const hasValidQuestionText = Boolean(question.questionText);
+        const hasFourOptions = Array.isArray(question.options) && question.options.length === 4;
+        const hasAllOptionsFilled = hasFourOptions && question.options.every((option) => Boolean(option));
+        const hasValidCorrectAnswer =
+            Number.isInteger(question.correctAnswer) &&
+            question.correctAnswer >= 0 &&
+            question.correctAnswer < question.options.length;
+
+        return !hasValidQuestionText || !hasAllOptionsFilled || !hasValidCorrectAnswer;
+    });
+
+    if (invalidQuestionIndex !== -1) {
+        return res.status(400).json({
+            message: `Question ${invalidQuestionIndex + 1} is incomplete. Please fill the question text, all 4 options, and choose the correct answer.`,
+        });
+    }
+
     try {
         // Create Exam
         const exam = await Exam.create({
@@ -126,24 +165,11 @@ export const createExamWithQuestions = async (req, res) => {
             teacher: req.user._id,
         });
 
-        // Create Questions
-        if (questions && questions.length > 0) {
-            // Basic validation for questions
-            const invalidQuestion = questions.find(q => !q.questionText || !q.options || q.options.length < 2);
-            if (invalidQuestion) {
-                // If questions are invalid, we might want to delete the exam we just created
-                // or just return an error. For simplicity, we'll return an error.
-                // Note: In production, consider using transactions.
-                await Exam.findByIdAndDelete(exam._id);
-                return res.status(400).json({ message: "Each question must have text and at least 2 options." });
-            }
-
-            const questionsWithExamId = questions.map((q) => ({
-                ...q,
-                exam: exam._id,
-            }));
-            await Question.insertMany(questionsWithExamId);
-        }
+        const questionsWithExamId = normalizedQuestions.map((question) => ({
+            ...question,
+            exam: exam._id,
+        }));
+        await Question.insertMany(questionsWithExamId);
 
         if (classroom) {
             const classroomData = await Classroom.findById(classroom).populate("students", "email name");
@@ -234,6 +260,11 @@ export const submitExam = async (req, res) => {
     const examId = req.params.id;
 
     try {
+        const existingResult = await Result.findOne({ exam: examId, student: req.user._id });
+        if (existingResult) {
+            return res.status(400).json({ message: "You have already submitted this exam." });
+        }
+
         const exam = await Exam.findById(examId);
         const questions = await Question.find({ exam: examId });
 

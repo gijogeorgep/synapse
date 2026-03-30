@@ -8,9 +8,9 @@ const DashboardLayout = () => {
     if (!user) return null;
 
     return (
-        <div className="flex min-h-[calc(100vh-6rem)] bg-slate-50">
+        <div className="flex h-[calc(100vh-6rem)] items-start overflow-hidden bg-slate-50">
             <Sidebar role={user.role} />
-            <main className="flex-1 p-8 overflow-y-auto">
+            <main className="h-full flex-1 overflow-y-auto p-8">
                 <div className="max-w-6xl mx-auto">
                     <Outlet />
                 </div>

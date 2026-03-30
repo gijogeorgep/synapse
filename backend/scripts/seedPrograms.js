@@ -8,6 +8,7 @@ dotenv.config({ path: "./backend/.env" });
 const programs = [
   {
     title: "PRIME ONE",
+    code: "M",
     tagline: "Personalized Learning, Maximum Focus",
     subtitle: "Individual Tuition Program",
     description: "Comprehensive academic support with 1-on-1 attention for students in classes 4–10.",
@@ -31,6 +32,7 @@ const programs = [
   },
   {
     title: "PLAN B",
+    code: "B",
     tagline: "Smart planning for stress-free success",
     subtitle: "Exclusive Revision Program",
     description: "Intensive exam-oriented revision designed specifically for Class 10+ students.",
@@ -54,6 +56,7 @@ const programs = [
   },
   {
     title: "CLUSTER",
+    code: "C",
     tagline: "Together Towards Excellence",
     subtitle: "Collaborative Learning",
     description: "Compact batch specialized learning that bridges peer interaction and expert guidance.",
@@ -77,6 +80,7 @@ const programs = [
   },
   {
     title: "DEEP ROOTS",
+    code: "D",
     tagline: "Foundation for a brighter future",
     subtitle: "Intensive Bridge Course",
     description: "A transition program designed to strengthen core concepts before the new academic year.",

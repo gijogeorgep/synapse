@@ -26,18 +26,27 @@ const StudentExams = () => {
     useEffect(() => {
         const fetchExams = async () => {
             try {
-                // Fetch all active exams
-                const data = await getExams();
-                setUpcomingExams(data);
-
                 // Fetch real student results
                 const resultsData = await getMyResults();
                 setCompletedExams(resultsData);
 
+                const submittedExamIds = new Set(
+                    (Array.isArray(resultsData) ? resultsData : [])
+                        .map((result) => result.exam?._id)
+                        .filter(Boolean)
+                );
+
+                // Fetch all active exams and hide already submitted ones
+                const data = await getExams();
+                const availableExams = Array.isArray(data)
+                    ? data.filter((exam) => !submittedExamIds.has(exam._id))
+                    : [];
+                setUpcomingExams(availableExams);
+
                 // If we navigated here with a specific exam to start, 
                 // handle it immediately after data is fetched.
                 if (location.state?.startExamId) {
-                    const exam = data.find(e => e._id === location.state.startExamId);
+                    const exam = availableExams.find(e => e._id === location.state.startExamId);
                     if (exam) handleStartExam(exam);
                 }
             } catch (error) {
@@ -128,6 +137,8 @@ const StudentExams = () => {
                 timeTaken: activeExam.duration * 60 - timeLeft,
             });
             setExamResult(res);
+            setUpcomingExams((prev) => prev.filter((exam) => exam._id !== activeExam._id));
+            setCompletedExams((prev) => [{ ...res, exam: activeExam }, ...prev]);
 
             // Re-fetch questions with correct answers & explanations now that result exists
             try {

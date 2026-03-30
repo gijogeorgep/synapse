@@ -6,6 +6,11 @@ const programSchema = mongoose.Schema(
             type: String,
             required: true,
         },
+        code: {
+            type: String,
+            unique: true,
+            sparse: true, // Allow existing programs without codes initially
+        },
         tagline: {
             type: String,
             default: "",

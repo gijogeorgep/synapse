@@ -2,85 +2,97 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 const userSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true,
-        },
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-        },
-        password: {
-            type: String,
-            required: true,
-        },
-        role: {
-            type: String,
-            enum: ["student", "teacher", "admin", "superadmin"],
-            default: "student",
-        },
-        phoneNumber: {
-            type: String,
-        },
-        class: {
-            type: String,
-        },
-        subjects: {
-            type: [String],
-            default: [],
-        },
-        avatarUrl: {
-            type: String,
-            default: "",
-        },
-        userType: {
-            type: String,
-            enum: ["institutional", "independent"],
-            default: "institutional",
-        },
-        uniqueId: {
-            type: String,
-            unique: true,
-            sparse: true, // Allows null/missing for independent users who don't have one yet
-        },
-        isBlocked: {
-            type: Boolean,
-            default: false,
-        },
-        blockReason: {
-            type: String,
-            default: "",
-        },
-        enrolledClassrooms: [
-            {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: "Classroom",
-            },
-        ],
-        createdBy: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
-        },
+  {
+    name: {
+      type: String,
+      required: true,
     },
-    {
-        timestamps: true,
-    }
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    role: {
+      type: String,
+      enum: ["student", "teacher", "admin", "superadmin"],
+      default: "student",
+    },
+    phoneNumber: {
+      type: String,
+    },
+    class: {
+      type: String,
+    },
+    programType: {
+      type: String,
+      enum: [
+        "PrimeOne",
+        "Cluster",
+        "PlanB",
+        "Deep Roots",
+        "NEET",
+        "JEE",
+        "PSC",
+      ],
+    },
+    subjects: {
+      type: [String],
+      default: [],
+    },
+    avatarUrl: {
+      type: String,
+      default: "",
+    },
+    userType: {
+      type: String,
+      enum: ["institutional", "independent"],
+      default: "institutional",
+    },
+    uniqueId: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows null/missing for independent users who don't have one yet
+    },
+    isBlocked: {
+      type: Boolean,
+      default: false,
+    },
+    blockReason: {
+      type: String,
+      default: "",
+    },
+    enrolledClassrooms: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Classroom",
+      },
+    ],
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  },
+  {
+    timestamps: true,
+  },
 );
 
 // Encrypt password before saving
 userSchema.pre("save", async function () {
-    if (!this.isModified("password")) {
-        return;
-    }
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+  if (!this.isModified("password")) {
+    return;
+  }
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // Compare password
 userSchema.methods.matchPassword = async function (enteredPassword) {
-    return await bcrypt.compare(enteredPassword, this.password);
+  return await bcrypt.compare(enteredPassword, this.password);
 };
 
 const User = mongoose.model("User", userSchema);

@@ -107,6 +107,12 @@ export const enrollInClassroom = async (req, res) => {
             return res.status(400).json({ message: "Already enrolled in this classroom" });
         }
 
+        // Phone Number Validation - Must be 10 digits to enroll
+        const phoneRegex = /^\d{10}$/;
+        if (!user.phoneNumber || !phoneRegex.test(user.phoneNumber.replace(/\s+/g, ""))) {
+            return res.status(400).json({ message: "A valid 10-digit phone number is required to enroll. Please update your profile in settings." });
+        }
+
         // Add user to classroom
         classroom.students.push(user._id);
         await classroom.save();
@@ -114,13 +120,18 @@ export const enrollInClassroom = async (req, res) => {
         // Add classroom to user's enrolled list
         user.enrolledClassrooms.push(classroom._id);
 
-        // Generate Unique ID if user doesn't have one or if it's the first classroom
-        // The user ID format depends on the classroom type (N, J, P)
-        // If they enroll in multiple, maybe they keep the first ID? 
-        // Or the user wants "this type of student also have Id... it will be like SSEHX1001"
-        // Let's assume one main classroom ID or generate based on the one they just enrolled in.
-        if (!user.uniqueId) {
-            user.uniqueId = await generateUniqueId('student', classroom.type);
+        // Generate Unique ID if user doesn't have one or if it's a default General ID (SSG)
+        // and they are enrolling in a specific program classroom.
+        // For E-Zone: use className (NEET/JEE/PSC) since that's where exam type is now stored.
+        const programName = classroom.programType === 'E-Zone'
+            ? classroom.className   // NEET, JEE, or PSC
+            : classroom.className;  // Class 10, 11, etc. (falls back to 'G' prefix)
+
+        const isGeneralId = user.uniqueId && user.uniqueId.startsWith("SSG");
+        const isSpecificProgram = ["NEET", "JEE", "PSC"].includes(classroom.className);
+
+        if (!user.uniqueId || (isGeneralId && isSpecificProgram)) {
+            user.uniqueId = await generateUniqueId('student', programName);
         }
 
         await user.save();

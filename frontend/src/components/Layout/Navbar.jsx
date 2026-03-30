@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Menu, X, LogIn, User as UserIcon, LogOut, Layout, ChevronDown, Bell } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Layout, ChevronDown, Bell } from "lucide-react";
 import logo from "../../assets/synapse_logo.png";
 import AuthModal from "../Shared/AuthModal";
 import LogoutConfirmModal from "../Shared/LogoutConfirmModal";
@@ -65,12 +65,16 @@ const Navbar = () => {
 
     return (
         <>
-            <header className="w-full fixed top-0 left-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/70 shadow-sm">
-                <div className="max-w-7xl mx-auto h-20 md:h-24 flex items-center justify-between px-4 md:px-8 gap-4">
+            <header className="fixed top-0 left-0 z-50 w-full">
+                <div className="absolute inset-x-0 top-0 -z-10 h-24 bg-gradient-to-b from-cyan-100/35 via-white/10 to-transparent blur-2xl" />
+                <div className="relative h-20 w-full border-b border-white/35 bg-white/14 px-4 shadow-[0_18px_60px_rgba(14,116,144,0.16)] backdrop-blur-2xl supports-[backdrop-filter]:bg-white/12 md:h-24 md:px-8">
+                    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.5),rgba(255,255,255,0.14)_42%,rgba(14,165,233,0.08)_100%)]" />
+                    <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-white/70" />
+                    <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 overflow-visible">
                     {/* Logo + Brand */}
                     <Link
                         to="/"
-                        className="flex items-center gap-3 flex-shrink-0"
+                        className="relative z-10 flex flex-shrink-0 items-center gap-3"
                     >
                         <img
                             src={logo}
@@ -82,20 +86,20 @@ const Navbar = () => {
 
                     {/* Desktop Navigation – only on public/landing pages */}
                     {!isDashboard && (
-                        <nav className="hidden md:flex items-center gap-2 lg:gap-4 bg-slate-50/80 px-3 py-1.5 rounded-full border border-slate-200/70">
+                        <nav className="relative z-10 hidden items-center gap-2 rounded-full border border-white/35 bg-white/12 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.38)] backdrop-blur-xl md:flex lg:gap-4">
                             {navItems.map((item) => (
                                 item.isDropdown ? (
-                                    <div key={item.name} className="relative group px-4 py-1.5 flex items-center">
-                                        <button className="flex items-center gap-1 text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors duration-200">
+                                    <div key={item.name} className="relative group flex items-center px-2 py-1.5">
+                                        <button className="flex items-center gap-1 rounded-full border border-transparent px-3 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:border-white/45 hover:bg-white/22 hover:text-cyan-800">
                                             {item.name}
-                                            <ChevronDown className="w-4 h-4" />
+                                            <ChevronDown className="h-4 w-4" />
                                         </button>
-                                        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-48 bg-white rounded-xl shadow-lg border border-slate-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 z-50 py-2">
+                                        <div className="absolute left-1/2 top-full z-50 mt-3 w-52 -translate-x-1/2 rounded-2xl border border-white/45 bg-white/48 py-2 shadow-[0_20px_55px_rgba(15,23,42,0.16)] opacity-0 invisible backdrop-blur-2xl transition-all duration-300 translate-y-2 group-hover:visible group-hover:translate-y-0 group-hover:opacity-100">
                                             {item.children.map((child) => (
                                                 <a
                                                     key={child.name}
                                                     href={child.href}
-                                                    className="block px-4 py-2.5 text-sm font-medium text-slate-600 hover:bg-cyan-50 hover:text-cyan-700 transition-colors"
+                                                    className="mx-2 block rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-white/50 hover:text-cyan-800"
                                                 >
                                                     {child.name}
                                                 </a>
@@ -107,19 +111,19 @@ const Navbar = () => {
                                         <a
                                             key={item.name}
                                             href={item.href}
-                                            className="relative px-4 py-1.5 text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors duration-200 rounded-full group"
+                                            className="group relative rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:border-white/45 hover:bg-white/18 hover:text-cyan-800"
                                         >
                                             {item.name}
-                                            <span className="pointer-events-none absolute left-4 right-4 -bottom-1 h-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-200" />
+                                            <span className="pointer-events-none absolute inset-x-4 bottom-1 h-px rounded-full bg-gradient-to-r from-cyan-400/0 via-cyan-500 to-sky-400/0 scale-x-0 origin-center transition-transform duration-300 group-hover:scale-x-100" />
                                         </a>
                                     ) : (
                                         <Link
                                             key={item.name}
                                             to={item.href}
-                                            className="relative px-4 py-1.5 text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors duration-200 rounded-full group"
+                                            className="group relative rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:border-white/45 hover:bg-white/18 hover:text-cyan-800"
                                         >
                                             {item.name}
-                                            <span className="pointer-events-none absolute left-4 right-4 -bottom-1 h-0.5 rounded-full bg-gradient-to-r from-cyan-500 to-sky-500 scale-x-0 group-hover:scale-x-100 origin-center transition-transform duration-200" />
+                                            <span className="pointer-events-none absolute inset-x-4 bottom-1 h-px rounded-full bg-gradient-to-r from-cyan-400/0 via-cyan-500 to-sky-400/0 scale-x-0 origin-center transition-transform duration-300 group-hover:scale-x-100" />
                                         </Link>
                                     )
                                 )
@@ -129,7 +133,7 @@ const Navbar = () => {
 
                     {/* Dashboard indicator - Hide for Admins/Superadmins in portal */}
                     {user && isDashboard && !["admin", "superadmin"].includes(user?.role) && (
-                        <div className="hidden md:flex items-center gap-2 bg-slate-50/90 px-3 py-1.5 rounded-full border border-slate-200">
+                        <div className="relative z-10 hidden items-center gap-2 rounded-full border border-white/40 bg-white/16 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-xl md:flex">
                             <Layout className="w-4 h-4 text-cyan-600" />
                             <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
                                 {user?.role} Portal
@@ -138,7 +142,7 @@ const Navbar = () => {
                     )}
 
                     {/* Desktop Auth Area */}
-                    <div className="hidden md:flex items-center gap-4">
+                    <div className="relative z-10 hidden items-center gap-4 md:flex">
                         {/* Admin Minimal Portal View */}
                         {user && ["admin", "superadmin"].includes(user?.role) && isDashboard ? (
                             <div className="flex items-center gap-6">
@@ -152,25 +156,25 @@ const Navbar = () => {
                                 </div>
                                 <button
                                     onClick={() => setShowLogoutModal(true)}
-                                    className="flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors"
+                                    className="flex items-center gap-2 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-xs font-semibold text-slate-600 transition-all duration-300 hover:border-red-200/70 hover:bg-red-50/60 hover:text-red-600"
                                 >
                                     <LogOut className="w-4 h-4" />
                                     <span>Logout</span>
                                 </button>
-                                <Link to="/notifications" className="relative p-2 text-slate-500 hover:text-cyan-600 transition-colors bg-slate-50 hover:bg-cyan-50 rounded-full border border-slate-200">
+                                <Link to="/notifications" className="relative rounded-full border border-white/35 bg-white/16 p-2.5 text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-200/70 hover:bg-cyan-50/60 hover:text-cyan-700">
                                     <Bell className="w-5 h-5" />
                                     {unreadCount > 0 && (
-                                        <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-white"></span>
+                                        <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 flex items-center justify-center text-[8px] font-bold text-white"></span>
                                     )}
                                 </Link>
                             </div>
                         ) : (
                             <>
                                 {user && (
-                                    <Link to="/notifications" className="relative p-2 text-slate-500 hover:text-cyan-600 transition-colors bg-slate-50 hover:bg-cyan-50 rounded-full border border-slate-200">
+                                    <Link to="/notifications" className="relative rounded-full border border-white/35 bg-white/16 p-2.5 text-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-200/70 hover:bg-cyan-50/60 hover:text-cyan-700">
                                         <Bell className="w-5 h-5" />
                                         {unreadCount > 0 && (
-                                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-[8px] font-bold text-white"></span>
+                                            <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 flex items-center justify-center text-[8px] font-bold text-white"></span>
                                         )}
                                     </Link>
                                 )}
@@ -178,9 +182,9 @@ const Navbar = () => {
                                     <div className="flex items-center gap-3">
                                         <Link
                                             to={!user?.role ? "/" : (["admin", "superadmin"].includes(user.role) ? "/admin/dashboard" : `/${user.role}/dashboard`)}
-                                            className="flex items-center gap-2 pr-4 pl-1.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-100 text-slate-800 font-semibold text-sm hover:bg-cyan-100 hover:border-cyan-200 transition-colors"
+                                            className="flex items-center gap-2 rounded-full border border-white/40 bg-white/18 py-1.5 pl-1.5 pr-4 text-sm font-semibold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-200/70 hover:bg-white/28"
                                         >
-                                            <div className="w-8 h-8 rounded-full overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-[10px] font-bold border-2 border-white">
+                                            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-white/80 bg-gradient-to-br from-cyan-500 to-sky-600 text-[10px] font-bold text-white shadow-lg shadow-cyan-500/20">
                                                 {user?.avatarUrl ? (
                                                     <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                                                 ) : (
@@ -191,7 +195,7 @@ const Navbar = () => {
                                         </Link>
                                         <button
                                             onClick={() => setShowLogoutModal(true)}
-                                            className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 hover:text-red-600 transition-colors"
+                                            className="flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-xs font-semibold text-slate-600 transition-all duration-300 hover:border-red-200/70 hover:bg-red-50/60 hover:text-red-600"
                                             title="Logout"
                                         >
                                             <LogOut className="w-4 h-4" />
@@ -202,13 +206,13 @@ const Navbar = () => {
                                     <div className="flex items-center gap-3">
                                         <button
                                             onClick={() => openAuthModal("login")}
-                                            className="text-sm font-semibold text-slate-700 hover:text-cyan-700 transition-colors"
+                                            className="rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-300 hover:border-cyan-200/70 hover:bg-white/22 hover:text-cyan-800"
                                         >
                                             Login
                                         </button>
                                         <button
                                             onClick={() => openAuthModal("register")}
-                                            className="px-5 py-2.5 rounded-full bg-cyan-600 text-white text-sm font-semibold shadow-md shadow-cyan-600/25 hover:bg-cyan-700 hover:shadow-cyan-600/40 transition-all"
+                                            className="rounded-full border border-cyan-200/60 bg-gradient-to-r from-cyan-500/95 to-sky-500/95 px-5 py-2.5 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(14,165,233,0.28)] transition-all duration-300 hover:from-cyan-600 hover:to-sky-600 hover:shadow-[0_18px_34px_rgba(14,165,233,0.34)]"
                                         >
                                             Enrol now
                                         </button>
@@ -220,167 +224,185 @@ const Navbar = () => {
 
                     {/* Mobile Menu Button */}
                     <button
-                        className="md:hidden p-2 rounded-full bg-white shadow-sm border border-slate-200 text-slate-700 hover:text-cyan-700 hover:bg-cyan-50 transition-colors"
+                        className="relative z-10 rounded-full border border-white/35 bg-white/18 p-2.5 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-xl transition-all duration-300 hover:bg-white/28 hover:text-cyan-800 md:hidden"
                         onClick={() => setIsOpen(!isOpen)}
                     >
                         {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                     </button>
+                    </div>
                 </div>
 
                 {/* Mobile Navigation */}
-                <nav
-                    className={`md:hidden absolute top-full left-0 w-full bg-white/98 border-t border-slate-200 shadow-md px-5 pt-3 pb-6 space-y-3 transition-all duration-200 origin-top ${isOpen ? "scale-y-100 opacity-100" : "scale-y-0 opacity-0 pointer-events-none"
-                        }`}
-                >
-                    {!isDashboard && navItems.map((item) => (
-                        item.isDropdown ? (
-                            <div key={item.name} className="space-y-1">
-                                <span className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700">
-                                    {item.name}
-                                </span>
-                                <div className="pl-4 space-y-1 border-l-2 border-slate-100 ml-3 mt-1">
-                                    {item.children.map((child) => (
-                                        <a
-                                            key={child.name}
-                                            href={child.href}
-                                            onClick={() => setIsOpen(false)}
-                                            className="block px-3 py-2 text-sm font-medium text-slate-600 hover:text-cyan-700 hover:bg-cyan-50 rounded-lg transition-colors"
-                                        >
-                                            {child.name}
-                                        </a>
-                                    ))}
-                                </div>
+                <div className={`fixed inset-0 z-40 md:hidden ${isOpen ? "" : "pointer-events-none"}`}>
+                    <button
+                        aria-label="Close mobile menu"
+                        className={`absolute inset-0 bg-slate-950/30 backdrop-blur-[2px] transition-opacity duration-300 ${isOpen ? "opacity-100" : "opacity-0"}`}
+                        onClick={() => setIsOpen(false)}
+                    />
+                    <nav
+                        className={`absolute left-0 top-0 flex h-screen w-[86vw] max-w-sm flex-col overflow-y-auto border-r border-white/35 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(255,255,255,0.28))] px-5 pb-8 pt-6 shadow-[18px_0_60px_rgba(15,23,42,0.22)] backdrop-blur-2xl transition-transform duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+                    >
+                        <div className="mb-6 flex items-center justify-between">
+                            <div className="rounded-full border border-white/40 bg-white/18 px-4 py-2 text-xs font-bold uppercase tracking-[0.32em] text-cyan-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)]">
+                                Menu
                             </div>
-                        ) : (
-                            isHashLink(item.href) ? (
-                                <a
-                                    key={item.name}
-                                    href={item.href}
-                                    onClick={() => setIsOpen(false)}
-                                    className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 hover:text-cyan-700 transition-colors"
-                                >
-                                    {item.name}
-                                </a>
-                            ) : (
-                                <Link
-                                    key={item.name}
-                                    to={item.href}
-                                    onClick={() => setIsOpen(false)}
-                                    className="block px-3 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 hover:text-cyan-700 transition-colors"
-                                >
-                                    {item.name}
-                                </Link>
-                            )
-                        )
-                    ))}
+                            <button
+                                className="rounded-full border border-white/35 bg-white/18 p-2.5 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] transition-all duration-300 hover:bg-white/28 hover:text-cyan-800"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <X className="h-5 w-5" />
+                            </button>
+                        </div>
 
-                    <div className="pt-3 mt-2 border-t border-slate-200 space-y-3">
-                        {/* Admin Minimal Portal View (Mobile) */}
-                        {user && ["admin", "superadmin"].includes(user?.role) && isDashboard ? (
-                            <>
-                                <div className="px-3 py-2 border-l-4 border-cyan-500 bg-cyan-50/30">
-                                    <div className="text-xs font-black text-slate-800 uppercase tracking-widest">
-                                        {user.role === 'superadmin' ? 'Amith Girish' : user.name}
-                                    </div>
-                                    <div className="text-[9px] font-black text-cyan-600 uppercase tracking-widest mt-0.5">
-                                        {user.role === 'superadmin' ? 'Super Admin' : 'Admin'}
+                        {!isDashboard && navItems.map((item) => (
+                            item.isDropdown ? (
+                                <div key={item.name} className="mb-3 space-y-2">
+                                    <span className="block rounded-2xl border border-white/25 bg-white/14 px-3 py-2.5 text-sm font-semibold text-slate-700">
+                                        {item.name}
+                                    </span>
+                                    <div className="ml-3 space-y-2 border-l-2 border-cyan-200/40 pl-4">
+                                        {item.children.map((child) => (
+                                            <a
+                                                key={child.name}
+                                                href={child.href}
+                                                onClick={() => setIsOpen(false)}
+                                                className="block rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-white/34 hover:text-cyan-800"
+                                            >
+                                                {child.name}
+                                            </a>
+                                        ))}
                                     </div>
                                 </div>
-                                <button
-                                    onClick={() => setShowLogoutModal(true)}
-                                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-red-600 hover:bg-red-50 transition-colors"
-                                >
-                                    <LogOut className="w-5 h-5" />
-                                    <span>Logout</span>
-                                </button>
-                                <Link
-                                    to="/notifications"
-                                    onClick={() => setIsOpen(false)}
-                                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 transition-colors"
-                                >
-                                    <div className="relative">
-                                        <Bell className="w-5 h-5 text-slate-500" />
-                                        {unreadCount > 0 && (
-                                            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
-                                        )}
+                            ) : (
+                                isHashLink(item.href) ? (
+                                    <a
+                                        key={item.name}
+                                        href={item.href}
+                                        onClick={() => setIsOpen(false)}
+                                        className="mb-3 block rounded-2xl border border-transparent px-3 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-white/30 hover:bg-white/26 hover:text-cyan-800"
+                                    >
+                                        {item.name}
+                                    </a>
+                                ) : (
+                                    <Link
+                                        key={item.name}
+                                        to={item.href}
+                                        onClick={() => setIsOpen(false)}
+                                        className="mb-3 block rounded-2xl border border-transparent px-3 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-white/30 hover:bg-white/26 hover:text-cyan-800"
+                                    >
+                                        {item.name}
+                                    </Link>
+                                )
+                            )
+                        ))}
+
+                        <div className="mt-auto space-y-3 border-t border-white/35 pt-5">
+                            {user && ["admin", "superadmin"].includes(user?.role) && isDashboard ? (
+                                <>
+                                    <div className="rounded-2xl border border-white/30 bg-white/16 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
+                                        <div className="text-xs font-black uppercase tracking-widest text-slate-800">
+                                            {user.role === "superadmin" ? "Amith Girish" : user.name}
+                                        </div>
+                                        <div className="mt-0.5 text-[9px] font-black uppercase tracking-widest text-cyan-600">
+                                            {user.role === "superadmin" ? "Super Admin" : "Admin"}
+                                        </div>
                                     </div>
-                                    <span>Notifications</span>
-                                    {unreadCount > 0 && (
-                                        <span className="ml-auto bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
-                                            {unreadCount}
-                                        </span>
-                                    )}
-                                </Link>
-                            </>
-                        ) : (
-                            <>
-                                {user && (
+                                    <button
+                                        onClick={() => setShowLogoutModal(true)}
+                                        className="flex w-full items-center gap-3 rounded-2xl border border-red-200/50 bg-red-50/45 px-3 py-2.5 text-sm font-semibold text-red-600 transition-all duration-200 hover:bg-red-50/70"
+                                    >
+                                        <LogOut className="h-5 w-5" />
+                                        <span>Logout</span>
+                                    </button>
                                     <Link
                                         to="/notifications"
                                         onClick={() => setIsOpen(false)}
-                                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-semibold text-slate-700 hover:bg-cyan-50 transition-colors"
+                                        className="flex items-center gap-3 rounded-2xl border border-white/30 bg-white/16 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-white/26"
                                     >
                                         <div className="relative">
-                                            <Bell className="w-5 h-5 text-slate-500" />
+                                            <Bell className="h-5 w-5 text-slate-500" />
                                             {unreadCount > 0 && (
-                                                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white"></span>
+                                                <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
                                             )}
                                         </div>
                                         <span>Notifications</span>
                                         {unreadCount > 0 && (
-                                            <span className="ml-auto bg-red-100 text-red-600 px-2 py-0.5 rounded-full text-xs font-bold">
-                                                {unreadCount} new
+                                            <span className="ml-auto rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-600">
+                                                {unreadCount}
                                             </span>
                                         )}
                                     </Link>
-                                )}
-                                {user ? (
-                                    <>
+                                </>
+                            ) : (
+                                <>
+                                    {user && (
                                         <Link
-                                            to={!user?.role ? "/" : (["admin", "superadmin"].includes(user.role) ? "/admin/dashboard" : `/${user.role}/dashboard`)}
+                                            to="/notifications"
                                             onClick={() => setIsOpen(false)}
-                                            className="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-cyan-50 border border-cyan-100"
+                                            className="flex items-center gap-3 rounded-2xl border border-white/30 bg-white/16 px-3 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:bg-white/26"
                                         >
-                                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-cyan-600 flex items-center justify-center text-white text-xs font-bold border-2 border-white shadow-sm">
-                                                {user?.avatarUrl ? (
-                                                    <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    (user?.name || "U")[0].toUpperCase()
+                                            <div className="relative">
+                                                <Bell className="h-5 w-5 text-slate-500" />
+                                                {unreadCount > 0 && (
+                                                    <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500"></span>
                                                 )}
                                             </div>
-                                            <span className="font-semibold text-slate-800 text-sm">
-                                                {user.name}
-                                            </span>
+                                            <span>Notifications</span>
+                                            {unreadCount > 0 && (
+                                                <span className="ml-auto rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-red-600">
+                                                    {unreadCount} new
+                                                </span>
+                                            )}
                                         </Link>
-                                        <button
-                                            onClick={() => setShowLogoutModal(true)}
-                                            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-red-600 border border-red-100 rounded-lg hover:bg-red-50 transition-colors"
-                                        >
-                                            <LogOut className="w-4 h-4" />
-                                            <span>Logout</span>
-                                        </button>
-                                    </>
-                                ) : (
-                                    <>
-                                        <button
-                                            onClick={() => openAuthModal("login")}
-                                            className="w-full flex items-center justify-center gap-2 py-3 text-sm font-semibold text-slate-700 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                                        >
-                                            <LogIn className="w-4 h-4" />
-                                            <span>Login</span>
-                                        </button>
-                                        <button
-                                            onClick={() => openAuthModal("register")}
-                                            className="w-full py-3 rounded-lg bg-cyan-600 text-white text-sm font-semibold shadow-md shadow-cyan-600/25 hover:bg-cyan-700 transition-colors"
-                                        >
-                                            Enrol now
-                                        </button>
-                                    </>
-                                )}
-                            </>
-                        )}
-                    </div>
-                </nav>
+                                    )}
+                                    {user ? (
+                                        <>
+                                            <Link
+                                                to={!user?.role ? "/" : (["admin", "superadmin"].includes(user.role) ? "/admin/dashboard" : `/${user.role}/dashboard`)}
+                                                onClick={() => setIsOpen(false)}
+                                                className="flex items-center gap-3 rounded-2xl border border-white/35 bg-white/18 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                                            >
+                                                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border-2 border-white/80 bg-gradient-to-br from-cyan-500 to-sky-600 text-xs font-bold text-white shadow-lg shadow-cyan-500/20">
+                                                    {user?.avatarUrl ? (
+                                                        <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+                                                    ) : (
+                                                        (user?.name || "U")[0].toUpperCase()
+                                                    )}
+                                                </div>
+                                                <span className="text-sm font-semibold text-slate-800">
+                                                    {user.name}
+                                                </span>
+                                            </Link>
+                                            <button
+                                                onClick={() => setShowLogoutModal(true)}
+                                                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200/50 bg-red-50/45 py-3 text-sm font-semibold text-red-600 transition-all duration-200 hover:bg-red-50/70"
+                                            >
+                                                <LogOut className="h-4 w-4" />
+                                                <span>Logout</span>
+                                            </button>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <button
+                                                onClick={() => openAuthModal("login")}
+                                                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/35 bg-white/18 py-3 text-sm font-semibold text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)] transition-all duration-200 hover:bg-white/26"
+                                            >
+                                                <LogIn className="h-4 w-4" />
+                                                <span>Login</span>
+                                            </button>
+                                            <button
+                                                onClick={() => openAuthModal("register")}
+                                                className="w-full rounded-2xl border border-cyan-200/60 bg-gradient-to-r from-cyan-500/95 to-sky-500/95 py-3 text-sm font-semibold text-white shadow-[0_14px_30px_rgba(14,165,233,0.28)] transition-all duration-300 hover:from-cyan-600 hover:to-sky-600"
+                                            >
+                                                Enrol now
+                                            </button>
+                                        </>
+                                    )}
+                                </>
+                            )}
+                        </div>
+                    </nav>
+                </div>
 
             </header>
 

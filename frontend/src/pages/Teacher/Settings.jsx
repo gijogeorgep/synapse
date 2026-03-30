@@ -50,7 +50,13 @@ const TeacherSettings = () => {
 
     const handleProfileChange = (e) => {
         const { name, value } = e.target;
-        setProfile((prev) => ({ ...prev, [name]: value }));
+        if (name === "phoneNumber") {
+            // Only allow numbers and max 10 digits
+            const numericValue = value.replace(/\D/g, "").slice(0, 10);
+            setProfile((prev) => ({ ...prev, [name]: numericValue }));
+        } else {
+            setProfile((prev) => ({ ...prev, [name]: value }));
+        }
     };
 
     const handlePasswordChange = (e) => {
@@ -90,11 +96,22 @@ const TeacherSettings = () => {
 
     const handleSaveProfile = async (e) => {
         e.preventDefault();
+
+        // Phone Number Validation - 10 digits
+        const phoneRegex = /^\d{10}$/;
+        if (profile.phoneNumber && !phoneRegex.test(profile.phoneNumber.replace(/\s+/g, ""))) {
+            alert("Phone number must be exactly 10 digits");
+            return;
+        }
+
         setSaving(true);
         try {
-            // Only send name for update as per instructions
-            await updateProfile({ name: profile.name });
-            updateUser({ ...user, name: profile.name });
+            // Updated to send both name and phoneNumber
+            await updateProfile({ 
+                name: profile.name,
+                phoneNumber: profile.phoneNumber
+            });
+            updateUser({ ...user, name: profile.name, phoneNumber: profile.phoneNumber });
             alert("Profile updated successfully!");
             setIsEditingProfile(false);
         } catch (error) {
@@ -254,9 +271,16 @@ const TeacherSettings = () => {
                                         <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                                         <input
                                             type="tel"
-                                            readOnly
+                                            name="phoneNumber"
                                             value={profile.phoneNumber}
-                                            className="w-full pl-11 pr-4 py-3 rounded-2xl border border-slate-100 bg-slate-50 text-slate-500 text-sm font-medium cursor-not-allowed"
+                                            onChange={handleProfileChange}
+                                            readOnly={!isEditingProfile}
+                                            maxLength={10}
+                                            className={`w-full pl-11 pr-4 py-3 rounded-2xl border transition-all text-sm font-medium focus:outline-none ${
+                                                isEditingProfile 
+                                                    ? "border-cyan-200 bg-white focus:ring-4 focus:ring-cyan-500/10 focus:border-cyan-500" 
+                                                    : "border-slate-100 bg-slate-50 text-slate-500 cursor-not-allowed"
+                                            }`}
                                         />
                                     </div>
                                 </div>

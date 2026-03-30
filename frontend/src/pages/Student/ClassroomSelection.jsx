@@ -29,6 +29,15 @@ const ClassroomSelection = () => {
     }, []);
 
     const handleEnroll = async (classroomId) => {
+        // Phone Number Validation - Must be 10 digits to enroll
+        const phoneRegex = /^\d{10}$/;
+        if (!user?.phoneNumber || !phoneRegex.test(user.phoneNumber.replace(/\s+/g, ""))) {
+            setError("A valid 10-digit phone number is required to enroll. Please update your profile in settings.");
+            // Scroll to error
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+        }
+
         setEnrolling(classroomId);
         setError("");
         try {

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { BookCopy, PlusCircle, Search, Filter, FileText, Video, Link, Trash2, CheckCircle2, AlertCircle, X, ExternalLink, Eye, Download } from 'lucide-react';
+import { BookCopy, PlusCircle, FileText, Video, Link, Trash2, CheckCircle2, AlertCircle, X, Eye, Download } from 'lucide-react';
 
 const LibraryManagement = () => {
     const [resources, setResources] = useState([]);
@@ -17,7 +17,6 @@ const LibraryManagement = () => {
         fileType: 'pdf',
         fileUrl: '',
         subject: '',
-        board: 'CBSE',
         classroom: '',
         category: 'study_material',
         year: ''
@@ -58,7 +57,7 @@ const LibraryManagement = () => {
             await axios.post('/api/admin/resources', formData, config);
             setStatus({ type: 'success', message: 'Resource added to library!' });
             setIsModalOpen(false);
-            setFormData({ title: '', description: '', fileType: 'pdf', fileUrl: '', subject: '', board: 'CBSE', classroom: classrooms[0]?._id || '', category: 'study_material', year: '' });
+            setFormData({ title: '', description: '', fileType: 'pdf', fileUrl: '', subject: '', classroom: classrooms[0]?._id || '', category: 'study_material', year: '' });
             setUploadMethod('file');
             fetchData();
         } catch (error) {
@@ -101,10 +100,6 @@ const LibraryManagement = () => {
             default: return <Link className="w-5 h-5" />;
         }
     };
-
-    const selectedClassObj = classrooms.find(c => c._id === formData.classroom);
-    const showBoard = !selectedClassObj || selectedClassObj.type === 'Other';
-
     return (
         <div className="p-4 md:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto">
             <div className="flex justify-between items-center">
@@ -149,7 +144,6 @@ const LibraryManagement = () => {
                                 <div className="text-right">
                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{res.subject}</span>
                                     <p className="text-[10px] font-black text-slate-300 uppercase mt-1 tracking-tighter">{res.category === 'question_paper' ? `Paper ${res.year ? `(${res.year})` : ''}` : 'Study Material'}</p>
-                                    <p className="text-[10px] font-black text-slate-300 uppercase mt-1 tracking-tighter">{res.board}</p>
                                 </div>
                             </div>
                             <h3 className="text-lg font-bold text-slate-800 mb-2 truncate">{res.title}</h3>
@@ -249,17 +243,6 @@ const LibraryManagement = () => {
                                     <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Subject</label>
                                     <input name="subject" value={formData.subject} onChange={(e) => setFormData({ ...formData, subject: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" required placeholder="Computer Science" />
                                 </div>
-                                {showBoard && (
-                                    <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Board</label>
-                                        <select name="board" value={formData.board} onChange={(e) => setFormData({ ...formData, board: e.target.value })} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none">
-                                            <option value="CBSE">CBSE</option>
-                                            <option value="State">State</option>
-                                            <option value="ICSE">ICSE</option>
-                                            <option value="Other">Other</option>
-                                        </select>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="pt-2">

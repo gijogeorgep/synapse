@@ -60,6 +60,59 @@ const AdminClassroomDetails = () => {
         setTimeout(() => setStatus({ type: '', message: '' }), 4000);
     };
 
+    const validateExamBuilder = () => {
+        if (!examMeta.title.trim()) {
+            showStatus('error', 'Exam title is required.');
+            return false;
+        }
+
+        if (!examMeta.subject.trim()) {
+            showStatus('error', 'Subject is required.');
+            return false;
+        }
+
+        if (!examMeta.duration || Number(examMeta.duration) < 5) {
+            showStatus('error', 'Duration must be at least 5 minutes.');
+            return false;
+        }
+
+        if (!examMeta.marksPerQuestion || Number(examMeta.marksPerQuestion) < 1) {
+            showStatus('error', 'Marks per question must be at least 1.');
+            return false;
+        }
+
+        if (examMeta.negativeMarks < 0) {
+            showStatus('error', 'Negative mark cannot be less than 0.');
+            return false;
+        }
+
+        if (!Array.isArray(questions) || questions.length === 0) {
+            showStatus('error', 'Add at least one question before publishing.');
+            return false;
+        }
+
+        for (let i = 0; i < questions.length; i++) {
+            const q = questions[i];
+            if (!q.questionText.trim()) {
+                showStatus('error', `Question ${i + 1} is missing text.`);
+                setExpandedQ(i);
+                return false;
+            }
+            if (q.options.some(o => !o.trim())) {
+                showStatus('error', `All 4 options in question ${i + 1} must be filled.`);
+                setExpandedQ(i);
+                return false;
+            }
+            if (q.correctAnswer < 0 || q.correctAnswer > 3) {
+                showStatus('error', `Question ${i + 1} needs one correct answer selected.`);
+                setExpandedQ(i);
+                return false;
+            }
+        }
+
+        return true;
+    };
+
     // ─── Question Helpers ─────────────────────────────────────────
     const updateQuestion = (idx, field, value) => {
         setQuestions(prev => prev.map((q, i) => i === idx ? { ...q, [field]: value } : q));
@@ -105,11 +158,8 @@ const AdminClassroomDetails = () => {
     // ─── Submit Exam ──────────────────────────────────────────────
     const handleCreateExam = async (e) => {
         e.preventDefault();
-        // Validate
-        for (let i = 0; i < questions.length; i++) {
-            const q = questions[i];
-            if (!q.questionText.trim()) { showStatus('error', `Question ${i + 1} is missing text.`); return; }
-            if (q.options.some(o => !o.trim())) { showStatus('error', `All 4 options in question ${i + 1} must be filled.`); return; }
+        if (!validateExamBuilder()) {
+            return;
         }
 
         setIsCreatingExam(true);
@@ -136,10 +186,11 @@ const AdminClassroomDetails = () => {
                 })),
             }, { headers: { ...config.headers, 'Content-Type': 'application/json' } });
 
-            showStatus('success', `Exam "${examMeta.title}" created with ${questions.length} question(s)!`);
-            setExamMeta({ title: '', description: '', duration: 60, subject: '' });
+            showStatus('success', 'Exam has been created successfully.');
+            setExamMeta({ title: '', description: '', duration: 60, subject: '', marksPerQuestion: 1, negativeMarks: 0, examType: 'subject-wise' });
             setQuestions([EMPTY_QUESTION()]);
             setExpandedQ(0);
+            setShowPreview(false);
         } catch (err) {
             showStatus('error', err.response?.data?.message || 'Failed to create exam.');
         } finally {
@@ -228,12 +279,14 @@ const AdminClassroomDetails = () => {
                 </div>
             </div>
 
-            {/* Status Banner */}
+            {/* Status Toast */}
             {status.message && (
-                <div className={`p-4 rounded-2xl flex items-center gap-3 animate-in fade-in duration-200 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                    {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0" /> : <AlertCircle className="w-5 h-5 shrink-0" />}
-                    <p className="font-medium text-sm">{status.message}</p>
-                    <button onClick={() => setStatus({ type: '', message: '' })} className="ml-auto"><X className="w-4 h-4" /></button>
+                <div className="fixed top-6 right-6 z-[140] max-w-md animate-in slide-in-from-top-3 fade-in duration-200">
+                    <div className={`p-4 rounded-2xl flex items-start gap-3 shadow-2xl border backdrop-blur-sm ${status.type === 'success' ? 'bg-emerald-50/95 text-emerald-700 border-emerald-100' : 'bg-rose-50/95 text-rose-700 border-rose-100'}`}>
+                        {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" /> : <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" />}
+                        <p className="font-medium text-sm pr-2">{status.message}</p>
+                        <button type="button" onClick={() => setStatus({ type: '', message: '' })} className="ml-auto"><X className="w-4 h-4" /></button>
+                    </div>
                 </div>
             )}
 
@@ -349,7 +402,7 @@ const AdminClassroomDetails = () => {
 
             {/* ── CREATE EXAM TAB ── */}
             {activeTab === 'exams' && (
-                <form onSubmit={handleCreateExam} className="space-y-6 max-w-3xl">
+                <form onSubmit={handleCreateExam} noValidate className="space-y-6 max-w-3xl">
                     {/* Exam Meta */}
                     <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100 space-y-4">
                         <div className="flex items-center gap-3 mb-2">
@@ -361,20 +414,20 @@ const AdminClassroomDetails = () => {
                         </div>
                         <div>
                             <label className="block text-sm font-semibold text-slate-700 mb-1">Exam Title <span className="text-rose-500">*</span></label>
-                            <input required value={examMeta.title} onChange={e => setExamMeta({ ...examMeta, title: e.target.value })}
+                            <input value={examMeta.title} onChange={e => setExamMeta({ ...examMeta, title: e.target.value })}
                                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none"
                                 placeholder="e.g. NEET Full Mock Test 1" />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1">Subject <span className="text-rose-500">*</span></label>
-                                <input required value={examMeta.subject} onChange={e => setExamMeta({ ...examMeta, subject: e.target.value })}
+                                <input value={examMeta.subject} onChange={e => setExamMeta({ ...examMeta, subject: e.target.value })}
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none"
                                     placeholder="e.g. Biology, Physics, All Subjects" />
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1">Exam Category <span className="text-rose-500">*</span></label>
-                                <select required value={examMeta.examType} onChange={e => setExamMeta({ ...examMeta, examType: e.target.value, subject: e.target.value === 'mock' ? 'Full Course Mock' : examMeta.subject })}
+                                <select value={examMeta.examType} onChange={e => setExamMeta({ ...examMeta, examType: e.target.value, subject: e.target.value === 'mock' ? 'Full Course Mock' : examMeta.subject })}
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none font-bold text-slate-700">
                                     <option value="subject-wise">Subject-wise Test</option>
                                     <option value="mock">Full Mock Test</option>
@@ -384,7 +437,7 @@ const AdminClassroomDetails = () => {
                         <div className="grid grid-cols-1 gap-4">
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1">Duration (mins) <span className="text-rose-500">*</span></label>
-                                <input required type="number" min={5} value={examMeta.duration} onChange={e => setExamMeta({ ...examMeta, duration: Number(e.target.value) })}
+                                <input type="number" min={5} value={examMeta.duration} onChange={e => setExamMeta({ ...examMeta, duration: Number(e.target.value) })}
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" />
                             </div>
                         </div>
@@ -401,12 +454,12 @@ const AdminClassroomDetails = () => {
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1">Marks for Correct <span className="text-rose-500">*</span></label>
-                                    <input required type="number" min={1} value={examMeta.marksPerQuestion} onChange={e => setExamMeta({ ...examMeta, marksPerQuestion: Number(e.target.value) })}
+                                    <input type="number" min={1} value={examMeta.marksPerQuestion} onChange={e => setExamMeta({ ...examMeta, marksPerQuestion: Number(e.target.value) })}
                                         className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" />
                                 </div>
                                 <div>
                                     <label className="block text-sm font-semibold text-slate-700 mb-1">Negative Mark (per wrong) <span className="text-rose-500">*</span></label>
-                                    <input required type="number" step="0.01" min={0} value={examMeta.negativeMarks} onChange={e => setExamMeta({ ...examMeta, negativeMarks: Number(e.target.value) })}
+                                    <input type="number" step="0.01" min={0} value={examMeta.negativeMarks} onChange={e => setExamMeta({ ...examMeta, negativeMarks: Number(e.target.value) })}
                                         className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" />
                                 </div>
                             </div>
@@ -453,7 +506,7 @@ const AdminClassroomDetails = () => {
                                         {/* Question Text */}
                                         <div>
                                             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Question Text <span className="text-rose-500">*</span></label>
-                                            <textarea rows={2} required value={q.questionText} onChange={e => updateQuestion(qIdx, 'questionText', e.target.value)}
+                                            <textarea rows={2} value={q.questionText} onChange={e => updateQuestion(qIdx, 'questionText', e.target.value)}
                                                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none resize-none text-sm"
                                                 placeholder="Enter your question here..." />
                                         </div>
@@ -511,7 +564,7 @@ const AdminClassroomDetails = () => {
                                                         >
                                                             {String.fromCharCode(65 + oIdx)}
                                                         </button>
-                                                        <input required value={opt} onChange={e => updateOption(qIdx, oIdx, e.target.value)}
+                                                        <input value={opt} onChange={e => updateOption(qIdx, oIdx, e.target.value)}
                                                             className="flex-1 bg-transparent outline-none text-sm font-medium text-slate-700 placeholder-slate-400"
                                                             placeholder={`Option ${String.fromCharCode(65 + oIdx)}`} />
                                                         {q.correctAnswer === oIdx && (
@@ -576,7 +629,7 @@ const AdminClassroomDetails = () => {
                                             <span className="text-xs font-bold text-emerald-600">+{examMeta.marksPerQuestion} / -{examMeta.negativeMarks} Scheme</span>
                                         </div>
                                     </div>
-                                    <button onClick={() => setShowPreview(false)} className="p-3 hover:bg-white rounded-full transition-all group">
+                                    <button type="button" onClick={() => setShowPreview(false)} className="p-3 hover:bg-white rounded-full transition-all group">
                                         <X className="w-6 h-6 text-slate-400 group-hover:rotate-90 duration-300" />
                                     </button>
                                 </div>
@@ -615,7 +668,7 @@ const AdminClassroomDetails = () => {
                                     ))}
                                 </div>
                                 <div className="p-6 bg-slate-50 border-t border-slate-100 flex justify-center">
-                                    <button onClick={() => setShowPreview(false)} className="px-12 py-3 bg-slate-900 text-white rounded-full font-black hover:scale-105 transition-all shadow-xl">
+                                    <button type="button" onClick={() => setShowPreview(false)} className="px-12 py-3 bg-slate-900 text-white rounded-full font-black hover:scale-105 transition-all shadow-xl">
                                         Back to Editor
                                     </button>
                                 </div>
