@@ -1,10 +1,12 @@
 import React from "react";
 import { ArrowRight, PlayCircle, Star, Users, CheckCircle, BookOpen, Lightbulb } from "lucide-react";
 import heroimg from "../assets/heroimg.png";
+import useGsapReveal from "../hooks/useGsapReveal";
 
 const Hero = () => {
+    const scopeRef = useGsapReveal();
     return (
-        <section className="relative w-full bg-slate-50 pt-4 sm:pt-8 md:pt-12 pb-8 overflow-hidden">
+        <section ref={scopeRef} className="relative w-full bg-slate-50 pt-4 sm:pt-8 md:pt-12 pb-8 overflow-hidden">
             {/* Background Decorative Elements - NOW CLIPPED BY overflow-hidden */}
             <div className="absolute top-[0%] left-[-10%] w-[60%] h-[60%] bg-cyan-500 rounded-full mix-blend-multiply filter blur-[80px] md:blur-[120px] opacity-20 animate-pulse duration-[3000ms] pointer-events-none"></div>
             <div className="absolute bottom-[0%] right-[-10%] w-[60%] h-[60%] bg-sky-400 rounded-full mix-blend-multiply filter blur-[80px] md:blur-[120px] opacity-20 animate-pulse duration-[4000ms] pointer-events-none"></div>
@@ -15,7 +17,7 @@ const Hero = () => {
                 <div className="flex flex-col lg:flex-row items-center lg:items-end justify-between gap-10 lg:gap-16 relative z-10">
 
                     {/* Left Content Area */}
-                    <div className="w-full lg:w-[55%] flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 sm:space-y-8 z-10 pb-6 sm:pb-16 lg:pb-24">
+                    <div data-gsap="reveal" data-y="28" className="w-full lg:w-[55%] flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 sm:space-y-8 z-10 pb-6 sm:pb-16 lg:pb-24">
 
 
                         <div className="space-y-4 sm:space-y-5 w-full">
@@ -63,7 +65,7 @@ const Hero = () => {
                     </div>
 
                     {/* Right Image Area */}
-                    <div className="w-full lg:w-[45%] relative flex justify-center lg:justify-end mt-6 sm:mt-8 lg:mt-0">
+                    <div data-gsap="reveal" data-y="40" data-scale="0.97" data-delay="0.12" className="w-full lg:w-[45%] relative flex justify-center lg:justify-end mt-6 sm:mt-8 lg:mt-0">
                         <div className="relative w-full max-w-[18rem] sm:max-w-[26rem] md:max-w-[34rem] lg:max-w-2xl xl:max-w-4xl">
 
                             {/* Image specific background blob */}
@@ -108,4 +110,3 @@ const Hero = () => {
 };
 
 export default Hero;
-

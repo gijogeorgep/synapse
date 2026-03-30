@@ -2,10 +2,13 @@ import React from "react";
 import synapse_y_logo from "../assets/synapse y logo.png"; // background logo
 import amith from "../assets/amith.jpeg"; // founder photo
 import { Facebook, Phone, Instagram, Send, Star, Users, GraduationCap, Quote, Zap } from "lucide-react";
+import useGsapReveal from "../hooks/useGsapReveal";
 
 const About = () => {
+  const scopeRef = useGsapReveal();
+
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center px-6 py-24 bg-[#f8fafc] font-['Plus_Jakarta_Sans',sans-serif] overflow-hidden">
+    <section ref={scopeRef} className="relative w-full min-h-screen flex items-center justify-center px-6 py-24 bg-[#f8fafc] font-['Plus_Jakarta_Sans',sans-serif] overflow-hidden">
       {/* Premium Background Architecture */}
       <div className="absolute inset-0 z-0">
         {/* The requested background logo */}
@@ -23,7 +26,7 @@ const About = () => {
       <div className="w-full max-w-7xl flex flex-col lg:flex-row items-center gap-12 lg:gap-20 relative z-10">
 
         {/* Founder Portrait Section - Optimized Standard Approach */}
-        <div className="flex-1 w-full max-w-[340px] lg:max-w-[360px]">
+        <div data-gsap="reveal" data-y="36" className="flex-1 w-full max-w-[340px] lg:max-w-[360px]">
           <div className="relative group p-4 lg:p-0">
             {/* Elegant Background Glow */}
             <div className="absolute -inset-1 bg-gradient-to-tr from-cyan-100 to-blue-50/50 rounded-[2rem] blur-2xl opacity-50 transition-opacity duration-500" />
@@ -88,7 +91,7 @@ const About = () => {
         </div>
 
         {/* Narrative & Highlights Section */}
-        <div className="flex-1 space-y-10">
+        <div data-gsap="reveal" data-y="36" data-delay="0.12" className="flex-1 space-y-10">
           <div className="space-y-6">
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-cyan-50 border border-cyan-100/50">
               <span className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
@@ -118,7 +121,13 @@ const About = () => {
               { icon: Star, title: "Excellence Driven", desc: "Focused on academic mastery", color: "bg-emerald-50 text-emerald-600" },
               { icon: Zap, title: "Modern Tools", desc: "Innovative learning methodologies", color: "bg-amber-50 text-amber-600" }
             ].map((item, i) => (
-              <div key={i} className="group p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl hover:border-cyan-100 transition-all duration-300">
+              <div
+                key={i}
+                data-gsap="reveal"
+                data-y="24"
+                data-delay={String(0.22 + i * 0.08)}
+                className="group p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl hover:border-cyan-100 transition-all duration-300"
+              >
                 <div className="flex items-center gap-4">
                   <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${item.color} group-hover:scale-110 transition-transform`}>
                     <item.icon className="w-5 h-5" />
@@ -133,7 +142,7 @@ const About = () => {
           </div>
 
           {/* Bottom Branding Mark */}
-          <div className="flex items-center gap-4 pt-6 opacity-30">
+          <div data-gsap="reveal" data-y="18" data-delay="0.58" className="flex items-center gap-4 pt-6 opacity-30">
             <div className="h-px bg-slate-200 flex-1" />
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-[.4em]">Synapse Hub</span>
             <div className="h-px bg-slate-200 flex-1" />

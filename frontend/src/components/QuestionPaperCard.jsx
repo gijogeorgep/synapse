@@ -5,8 +5,9 @@ import q_cloud_synapse2 from "../assets/q cloud synapse 2.png";
 import brainmap1 from "../assets/brainmap1.png";
 import brainmap2 from "../assets/brainmap2.png";
 import brainmap3 from "../assets/brainmap3.png";
+import useGsapReveal from "../hooks/useGsapReveal";
 
-const SampleDisplay = ({ title, subTitle, images, category, icon: Icon, colorClass }) => {
+const SampleDisplay = ({ title, subTitle, images, category, icon: Icon, colorClass, delay = 0 }) => {
   const [index, setIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -14,7 +15,12 @@ const SampleDisplay = ({ title, subTitle, images, category, icon: Icon, colorCla
   const prev = () => setIndex((prev) => (prev - 1 + images.length) % images.length);
 
   return (
-    <div className="relative group/section flex flex-col h-full">
+    <div
+      data-gsap="reveal"
+      data-y="36"
+      data-delay={String(delay / 1000)}
+      className="relative group/section flex flex-col h-full"
+    >
       {/* Category Header */}
       <div className="flex items-center gap-4 mb-8">
         <div className={`p-3 rounded-2xl bg-white border border-slate-100 shadow-sm ${colorClass}`}>
@@ -75,14 +81,15 @@ const SampleDisplay = ({ title, subTitle, images, category, icon: Icon, colorCla
 };
 
 const QuestionPaperCard = () => {
+  const sectionRef = useGsapReveal();
   const questionPapers = [q_cloud_synapse, q_cloud_synapse2];
   const brainmaps = [brainmap1, brainmap2, brainmap3];
 
   return (
-    <div className="w-full py-12 font-['Plus_Jakarta_Sans',sans-serif]">
+    <div ref={sectionRef} className="w-full py-12 font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Integrated Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-        <div className="space-y-4">
+        <div data-gsap="reveal" data-y="28" className="space-y-4">
           <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-cyan-50 border border-cyan-100">
             <Sparkles className="w-3.5 h-3.5 text-cyan-500" />
             <span className="text-[10px] font-black text-cyan-700 uppercase tracking-[.2em]">Q-Cloud Research Portal</span>
@@ -91,7 +98,7 @@ const QuestionPaperCard = () => {
             Premium <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600">Learning Blueprints</span>
           </h2>
         </div>
-        <p className="text-slate-500 font-medium text-sm max-w-sm leading-relaxed">
+        <p data-gsap="reveal" data-y="24" data-delay="0.12" className="text-slate-500 font-medium text-sm max-w-sm leading-relaxed">
           Proprietary question papers and brain-mapping insights designed to accelerate academic performance and cognitive clarity.
         </p>
       </div>
@@ -105,6 +112,7 @@ const QuestionPaperCard = () => {
           category="papers"
           icon={FileText}
           colorClass="text-blue-600 border-blue-100"
+          delay={250}
         />
         <SampleDisplay 
           title="Brain Mapping" 
@@ -113,20 +121,21 @@ const QuestionPaperCard = () => {
           category="brain"
           icon={Brain}
           colorClass="text-indigo-600 border-indigo-100"
+          delay={420}
         />
       </div>
 
       {/* Trust Indicator Footer */}
       <div className="mt-20 pt-10 border-t border-slate-200/60 flex flex-wrap items-center justify-center gap-x-12 gap-y-6">
-          <div className="flex items-center gap-3 opacity-40">
+          <div data-gsap="reveal" data-y="18" data-delay="0.56" className="flex items-center gap-3 opacity-40">
               <div className="w-2 h-2 rounded-full bg-emerald-500" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-800">Verified Content</span>
           </div>
-          <div className="flex items-center gap-3 opacity-40">
+          <div data-gsap="reveal" data-y="18" data-delay="0.68" className="flex items-center gap-3 opacity-40">
               <div className="w-2 h-2 rounded-full bg-blue-500" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-800">Expert Curated</span>
           </div>
-          <div className="flex items-center gap-3 opacity-40">
+          <div data-gsap="reveal" data-y="18" data-delay="0.8" className="flex items-center gap-3 opacity-40">
               <div className="w-2 h-2 rounded-full bg-cyan-500" />
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-800">Exclusive Portal</span>
           </div>

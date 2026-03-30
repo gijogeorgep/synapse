@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown, HelpCircle } from "lucide-react";
+import useGsapReveal from "../hooks/useGsapReveal";
 
 const FAQItem = ({ question, answer, isOpen, onClick }) => {
   return (
@@ -30,6 +31,7 @@ const FAQItem = ({ question, answer, isOpen, onClick }) => {
 };
 
 const FAQ = () => {
+  const scopeRef = useGsapReveal();
   const [openIndex, setOpenIndex] = useState(0);
 
   const faqs = [
@@ -56,9 +58,9 @@ const FAQ = () => {
   ];
 
   return (
-    <div className="w-full py-24 bg-slate-50/50 font-['Plus_Jakarta_Sans',sans-serif]">
+    <div ref={scopeRef} className="w-full py-24 bg-slate-50/50 font-['Plus_Jakarta_Sans',sans-serif]">
       <div className="max-w-4xl mx-auto px-6">
-        <div className="text-center mb-16 space-y-4">
+        <div data-gsap="reveal" data-y="28" className="text-center mb-16 space-y-4">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-100 border border-cyan-200">
             <HelpCircle className="w-3.5 h-3.5 text-cyan-600" />
             <span className="text-[10px] font-black text-cyan-700 uppercase tracking-[0.2em]">Got Questions?</span>
@@ -71,7 +73,7 @@ const FAQ = () => {
           </p>
         </div>
 
-        <div className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
+        <div data-gsap="reveal" data-y="34" data-delay="0.1" className="bg-white rounded-[2.5rem] border border-slate-200/60 shadow-[0_20px_50px_rgba(0,0,0,0.04)] overflow-hidden">
           {faqs.map((faq, index) => (
             <FAQItem
               key={index}
@@ -83,7 +85,7 @@ const FAQ = () => {
           ))}
         </div>
 
-        <div className="mt-12 p-8 rounded-[2rem] bg-gradient-to-br from-cyan-600 to-indigo-700 text-white text-center shadow-xl shadow-cyan-900/10">
+        <div data-gsap="reveal" data-y="28" data-delay="0.18" className="mt-12 p-8 rounded-[2rem] bg-gradient-to-br from-cyan-600 to-indigo-700 text-white text-center shadow-xl shadow-cyan-900/10">
           <p className="font-bold mb-2">Still have more questions?</p>
           <p className="text-cyan-50 opacity-80 text-sm mb-6">Our academic counselors are ready to help you navigate your journey.</p>
           <a

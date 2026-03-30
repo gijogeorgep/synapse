@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Play, Sparkles, Youtube, Clock, Star, X, Zap } from "lucide-react";
 import english from "../assets/english_shorts.png";
 import hindi from "../assets/hindi_shorts.png";
 import tamil from "../assets/tamil_shorts.png";
 import QuestionPaperCard from "./QuestionPaperCard";
+import useGsapReveal from "../hooks/useGsapReveal";
 
 const VideoCard = () => {
+  const sectionRef = useGsapReveal();
   const [activeShortId, setActiveShortId] = useState(null);
   const [inlinePlayingId, setInlinePlayingId] = useState(null);
 
@@ -37,7 +39,7 @@ const VideoCard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 relative font-['Plus_Jakarta_Sans',sans-serif]">
+    <div ref={sectionRef} className="min-h-screen bg-slate-50 relative font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Premium Background Architecture */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-5%] right-[-5%] w-[40%] h-[40%] bg-cyan-200/30 blur-[100px] rounded-full animate-pulse" />
@@ -49,7 +51,7 @@ const VideoCard = () => {
         <div className="max-w-6xl mx-auto">
 
           {/* Section Intelligence Header */}
-          <div className="text-center mb-16 space-y-4">
+          <div data-gsap="reveal" data-y="30" className="text-center mb-16 space-y-4">
             <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-sm">
               <Sparkles className="w-3.5 h-3.5 text-cyan-500 animate-pulse" />
               <span className="text-[9px] font-black text-slate-800 uppercase tracking-widest">Digital Learning Hub</span>
@@ -64,7 +66,7 @@ const VideoCard = () => {
 
           <div className="space-y-16">
             {/* Main Cinema Module - Reduced for Standard Approach */}
-            <div className="group max-w-5xl mx-auto w-full">
+            <div data-gsap="reveal" data-y="36" data-delay="0.1" className="group max-w-5xl mx-auto w-full">
               <div className="relative bg-white rounded-[2rem] p-2.5 shadow-[0_15px_50px_-15px_rgba(0,0,0,0.06)] border border-slate-100 transition-all duration-500 hover:shadow-[0_30px_60px_-20px_rgba(0,0,0,0.1)]">
                 <div className="relative overflow-hidden rounded-[1.5rem] bg-slate-900 aspect-video group-hover:shadow-2xl transition-all duration-700">
                   <iframe
@@ -111,7 +113,7 @@ const VideoCard = () => {
 
             {/* Language Ecosystem - Shorts Grid */}
             <div className="space-y-8">
-              <div className="flex items-center gap-4">
+              <div data-gsap="reveal" data-y="24" data-delay="0.2" className="flex items-center gap-4">
                 <h3 className="text-2xl font-black text-slate-800 tracking-tight font-['Outfit']">Language Ecosystem</h3>
                 <div className="h-px bg-slate-200 flex-1" />
               </div>
@@ -120,6 +122,9 @@ const VideoCard = () => {
                 {shortsData.map((short, i) => (
                   <div
                     key={i}
+                    data-gsap="reveal"
+                    data-y="34"
+                    data-delay={String(0.28 + i * 0.08)}
                     className="group relative bg-white rounded-[2.5rem] p-3 shadow-[0_15px_40px_-10px_rgba(0,0,0,0.05)] border border-slate-100 flex flex-col cursor-pointer hover:shadow-[0_30px_60px_-15px_rgba(0,0,0,0.08)] transition-all duration-500 hover:-translate-y-2"
                   >
                     <div className="relative h-[480px] overflow-hidden rounded-[1.8rem] bg-slate-900 shadow-inner">
@@ -201,7 +206,7 @@ const VideoCard = () => {
             </div>
           </div>
 
-          <div className="mt-32">
+          <div data-gsap="reveal" data-y="36" data-delay="0.44" className="mt-32">
             <QuestionPaperCard />
           </div>
 

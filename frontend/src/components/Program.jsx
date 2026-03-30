@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
@@ -11,6 +11,7 @@ import {
   BarChart3
 } from "lucide-react";
 import { getPrograms } from "../api/services";
+import useGsapReveal from "../hooks/useGsapReveal";
 
 const iconMap = {
   Zap,
@@ -22,31 +23,14 @@ const iconMap = {
 };
 
 const ProgramCard = ({ program, index }) => {
-  const cardRef = useRef(null);
   const navigate = useNavigate();
-  const [visible, setVisible] = useState(false);
   const features = Array.isArray(program.features) ? program.features : [];
-
-  useEffect(() => {
-    const el = cardRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setTimeout(() => setVisible(true), index * 80);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [index]);
 
   return (
     <div
-      ref={cardRef}
-      className={`${visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"} transition-all duration-700 ease-out`}
+      data-gsap="reveal"
+      data-y="34"
+      data-delay={String(index * 0.07)}
     >
       <div className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden hover:shadow-xl transition-all group h-full flex flex-col">
         {/* Image */}
@@ -106,8 +90,7 @@ const ProgramCard = ({ program, index }) => {
 
 
 const Program = () => {
-  const headerRef = useRef(null);
-  const [headerVisible, setHeaderVisible] = useState(false);
+  const scopeRef = useGsapReveal();
   const [programs, setPrograms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -128,20 +111,6 @@ const Program = () => {
     };
 
     fetchProgramsData();
-
-    const el = headerRef.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setHeaderVisible(true);
-          observer.unobserve(el);
-        }
-      },
-      { threshold: 0.1 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
   }, []);
 
   return (
@@ -214,20 +183,20 @@ const Program = () => {
         }
       `}</style>
 
-      <section className="programs-section">
+      <section ref={scopeRef} className="programs-section">
         <div className="ambient-orb orb-1" />
         <div className="ambient-orb orb-2" />
 
-        <div ref={headerRef} className="text-center mb-20 relative z-10">
-          <div className={`header-anim ${headerVisible ? "visible" : ""}`}>
+        <div className="text-center mb-20 relative z-10">
+          <div data-gsap="reveal" data-y="20">
             <span className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-[0.2em] text-cyan-600 bg-cyan-50 border border-cyan-100 rounded-full uppercase">
               Curated Opportunities
             </span>
           </div>
-          <h1 className={`header-anim ${headerVisible ? "visible" : ""} text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight font-['Outfit']`} style={{ transitionDelay: '100ms' }}>
+          <h1 data-gsap="reveal" data-y="30" data-delay="0.08" className="text-4xl md:text-6xl font-black text-slate-900 mb-6 tracking-tight font-['Outfit']">
             Elevate Your <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-indigo-600">Learning Journey</span>
           </h1>
-          <p className={`header-anim ${headerVisible ? "visible" : ""} text-lg text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed`} style={{ transitionDelay: '200ms' }}>
+          <p data-gsap="reveal" data-y="26" data-delay="0.16" className="text-lg text-slate-500 max-w-2xl mx-auto font-medium leading-relaxed">
             Explore academic programs tailored specifically for diverse educational goals, providing a clear path to excellence and personal growth.
           </p>
         </div>

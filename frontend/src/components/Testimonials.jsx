@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { Quote, Star, Sparkles } from "lucide-react";
+import useGsapReveal from "../hooks/useGsapReveal";
 
 const facultyReviews = [
   {
@@ -42,10 +43,13 @@ const studentReviews = [
   },
 ];
 
-const ReviewCard = ({ item, accent, featured = false, isVisible = false, delay = 0 }) => (
+const ReviewCard = ({ item, accent, featured = false, delay = 0 }) => (
   <article
-    className={`group relative overflow-hidden rounded-[1.75rem] border border-white/45 bg-white/28 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-2xl transition-all duration-700 ease-out hover:-translate-y-1 hover:border-cyan-200/60 hover:bg-white/36 hover:shadow-[0_24px_50px_rgba(14,116,144,0.14)] ${featured ? "md:p-7" : ""} ${isVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-10 scale-[0.98] opacity-0"}`}
-    style={{ transitionDelay: `${delay}ms` }}
+    data-gsap="reveal"
+    data-y="28"
+    data-scale="0.98"
+    data-delay={String(delay / 1000)}
+    className={`group relative overflow-hidden rounded-[1.75rem] border border-white/45 bg-white/28 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-2xl transition-all duration-700 ease-out hover:-translate-y-1 hover:border-cyan-200/60 hover:bg-white/36 hover:shadow-[0_24px_50px_rgba(14,116,144,0.14)] ${featured ? "md:p-7" : ""}`}
   >
     <div className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent}`} />
     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),rgba(255,255,255,0.14)_45%,rgba(14,165,233,0.08)_100%)] opacity-90" />
@@ -84,26 +88,7 @@ const ReviewCard = ({ item, accent, featured = false, isVisible = false, delay =
 );
 
 const Testimonials = () => {
-  const sectionRef = useRef(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { threshold: 0.18 }
-    );
-
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, []);
+  const sectionRef = useGsapReveal();
 
   return (
     <section ref={sectionRef} className="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.16),transparent_30%),linear-gradient(180deg,#f8fafc_0%,#ecfeff_42%,#f8fafc_100%)] px-6 py-24 md:px-10">
@@ -115,7 +100,7 @@ const Testimonials = () => {
 
       <div className="relative mx-auto max-w-7xl">
         <div className="grid gap-8 lg:grid-cols-[0.92fr_1.08fr] lg:items-start">
-          <div className={`transition-all duration-700 ease-out lg:sticky lg:top-32 ${isVisible ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"}`}>
+          <div data-gsap="reveal" data-y="34" className="lg:sticky lg:top-32">
             <div className="relative overflow-hidden rounded-[2.25rem] border border-white/50 bg-white/42 p-7 shadow-[0_22px_70px_rgba(15,23,42,0.09)] backdrop-blur-2xl md:p-10">
               <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.52),rgba(255,255,255,0.18)_48%,rgba(14,165,233,0.08)_100%)]" />
               <div className="relative z-10">
@@ -158,11 +143,11 @@ const Testimonials = () => {
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
               </div>
-              <ReviewCard item={studentReviews[0]} accent="from-cyan-500 via-sky-500 to-blue-500" featured isVisible={isVisible} delay={120} />
+              <ReviewCard item={studentReviews[0]} accent="from-cyan-500 via-sky-500 to-blue-500" featured delay={120} />
             </div>
 
-            <ReviewCard item={studentReviews[1]} accent="from-sky-500 via-cyan-500 to-blue-500" isVisible={isVisible} delay={220} />
-            <ReviewCard item={studentReviews[2]} accent="from-cyan-500 via-teal-500 to-sky-500" isVisible={isVisible} delay={320} />
+            <ReviewCard item={studentReviews[1]} accent="from-sky-500 via-cyan-500 to-blue-500" delay={220} />
+            <ReviewCard item={studentReviews[2]} accent="from-cyan-500 via-teal-500 to-sky-500" delay={320} />
 
             <div className="md:col-span-2 pt-2">
               <div className="mb-3 flex items-center gap-3">
@@ -174,8 +159,8 @@ const Testimonials = () => {
               </div>
             </div>
 
-            <ReviewCard item={facultyReviews[0]} accent="from-slate-900 via-cyan-700 to-cyan-500" isVisible={isVisible} delay={420} />
-            <ReviewCard item={facultyReviews[1]} accent="from-cyan-700 via-slate-700 to-slate-900" isVisible={isVisible} delay={520} />
+            <ReviewCard item={facultyReviews[0]} accent="from-slate-900 via-cyan-700 to-cyan-500" delay={420} />
+            <ReviewCard item={facultyReviews[1]} accent="from-cyan-700 via-slate-700 to-slate-900" delay={520} />
           </div>
         </div>
       </div>

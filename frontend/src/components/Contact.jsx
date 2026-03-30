@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { Mail, Phone, MapPin, Send, Instagram, Facebook, Linkedin, MessageCircle } from "lucide-react";
 import { submitContactForm } from "../api/services";
+import useGsapReveal from "../hooks/useGsapReveal";
 
 const Contact = () => {
+  const scopeRef = useGsapReveal();
   const [status, setStatus] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +34,7 @@ const Contact = () => {
   };
 
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center px-6 py-24 bg-slate-50 overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
+    <section ref={scopeRef} className="relative w-full min-h-screen flex items-center justify-center px-6 py-24 bg-slate-50 overflow-hidden font-['Plus_Jakarta_Sans',sans-serif]">
       {/* Dynamic Aurora Background (Light Version) */}
       <div className="absolute inset-0 z-0">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-400/10 blur-[120px] rounded-full animate-pulse" />
@@ -45,7 +47,7 @@ const Contact = () => {
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-stretch">
 
           {/* Details Column */}
-          <div className="w-full lg:w-[40%] flex flex-col justify-center space-y-12">
+          <div data-gsap="reveal" data-x="-36" data-y="0" className="w-full lg:w-[40%] flex flex-col justify-center space-y-12">
             <div className="space-y-6">
               <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-cyan-100 border border-cyan-200">
                 <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 animate-pulse" />
@@ -97,7 +99,7 @@ const Contact = () => {
           </div>
 
           {/* Form Column */}
-          <div className="w-full lg:w-[60%] flex flex-col justify-center">
+          <div data-gsap="reveal" data-x="36" data-y="0" data-delay="0.12" className="w-full lg:w-[60%] flex flex-col justify-center">
             <div className="relative group">
               <div className="absolute -inset-2 bg-gradient-to-r from-cyan-500/10 to-indigo-500/10 rounded-[3rem] blur-2xl opacity-50 group-hover:opacity-100 transition-opacity" />
               <div className="relative bg-white border border-slate-200/60 p-8 lg:p-14 rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
