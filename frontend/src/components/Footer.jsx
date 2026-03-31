@@ -1,5 +1,6 @@
 
 import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Facebook,
   Instagram,
@@ -12,11 +13,22 @@ import {
   ArrowUp
 } from "lucide-react";
 import ylogo from "../assets/synapse y logo.png";
+import { scrollToHomeSection } from "../utils/scrollToHomeSection";
 
 const Footer = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const quickLinks = [
+    { label: "Home", sectionId: "home" },
+    { label: "Programs", sectionId: "programs" },
+    { label: "About", sectionId: "about" },
+    { label: "Contact", sectionId: "contact" },
+    { label: "Blog", href: "/blogs" }
+  ];
 
   return (
     <footer className="w-full bg-[#0f172a] text-slate-300 pt-10 pb-4 mt-8 relative overflow-hidden">
@@ -71,15 +83,29 @@ const Footer = () => {
               Explore
             </h3>
             <ul className="space-y-3">
-              {['Home', 'Programs', 'About Us', 'Contact', 'Blog'].map((item) => (
-                <li key={item}>
-                  <a
-                    href={`#${item.toLowerCase().replace(' ', '')}`}
-                    className="text-slate-400 hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-2 group"
-                  >
-                    <span className="w-0 group-hover:w-2 h-0.5 bg-cyan-500 transition-all"></span>
-                    {item}
-                  </a>
+              {quickLinks.map((item) => (
+                <li key={item.label}>
+                  {item.sectionId ? (
+                    <a
+                      href="/"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        scrollToHomeSection(item.sectionId, navigate, location.pathname);
+                      }}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-2 group"
+                    >
+                      <span className="w-0 group-hover:w-2 h-0.5 bg-cyan-500 transition-all"></span>
+                      {item.label}
+                    </a>
+                  ) : (
+                    <a
+                      href={item.href}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-2 group"
+                    >
+                      <span className="w-0 group-hover:w-2 h-0.5 bg-cyan-500 transition-all"></span>
+                      {item.label}
+                    </a>
+                  )}
                 </li>
               ))}
             </ul>

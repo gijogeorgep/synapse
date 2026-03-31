@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
     ArrowLeft,
     CheckCircle2,
@@ -17,6 +17,7 @@ import {
     Video
 } from "lucide-react";
 import { getProgramById } from "../../api/services";
+import { scrollToHomeSection } from "../../utils/scrollToHomeSection";
 
 const iconMap = {
     Zap,
@@ -47,6 +48,7 @@ const defaultTheme = { bg: "from-slate-50 to-slate-100", border: "border-slate-1
 const ProgramDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const location = useLocation();
     const [program, setProgram] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -244,15 +246,18 @@ const ProgramDetail = () => {
                                     Take the first step toward academic excellence. Enroll now or reach out to learn more.
                                 </p>
                                 <a
-                                    href="#contact"
-                                    onClick={(e) => { e.preventDefault(); navigate("/#contact"); }}
+                                    href="/"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        scrollToHomeSection("contact", navigate, location.pathname);
+                                    }}
                                     className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-black text-white text-sm uppercase tracking-widest shadow-lg hover:opacity-90 active:scale-95 transition-all mb-3"
                                     style={{ background: gradient }}
                                 >
                                     Enroll Now <ChevronRight className="w-4 h-4" />
                                 </a>
                                 <button
-                                    onClick={() => navigate("/#contact")}
+                                    onClick={() => scrollToHomeSection("contact", navigate, location.pathname)}
                                     className="flex items-center justify-center gap-2 w-full py-4 rounded-2xl font-bold text-slate-600 text-sm border-2 border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-all"
                                 >
                                     <PhoneCall className="w-4 h-4" />

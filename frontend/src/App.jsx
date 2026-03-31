@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Link } from "react-router-dom";
+import { useEffect } from "react";
 import { ArrowRight } from "lucide-react";
 import "./App.css";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
@@ -55,8 +56,22 @@ import Blogs from "./pages/Blogs/Blogs";
 import BlogPost from "./pages/Blogs/BlogPost";
 import ProgramDetail from "./pages/Programs/ProgramDetail";
 import Notifications from "./pages/Notifications/Notifications";
+import { HOME_SCROLL_KEY } from "./utils/scrollToHomeSection";
 
 function LandingPage() {
+  useEffect(() => {
+    const target = sessionStorage.getItem(HOME_SCROLL_KEY);
+    if (!target) return;
+
+    sessionStorage.removeItem(HOME_SCROLL_KEY);
+    requestAnimationFrame(() => {
+      const section = document.getElementById(target);
+      if (section) {
+        section.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    });
+  }, []);
+
   return (
     <>
       <section id="home" className="scroll-mt-20 md:scroll-mt-24">
@@ -96,11 +111,13 @@ function LandingPage() {
 function AppContent() {
   const location = useLocation();
   const isAdminAuth = location.pathname === "/admin-portal-auth";
+  const isAdminRoute = location.pathname.startsWith("/admin");
   const isDashboardRoute =
     location.pathname.startsWith("/student") ||
     location.pathname.startsWith("/teacher") ||
-    location.pathname.startsWith("/admin");
+    isAdminRoute;
   const showFloatingWhatsApp = !isAdminAuth && !isDashboardRoute;
+  const showFooter = !isAdminAuth && !isAdminRoute;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -126,7 +143,7 @@ function AppContent() {
           </Route>
 
           {/* Student Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["student", "admin", "superadmin"]} />}>
+          <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/student/dashboard" element={<StudentDashboard />} />
               <Route path="/student/classrooms" element={<StudentClassrooms />} />
@@ -140,7 +157,7 @@ function AppContent() {
           </Route>
 
           {/* Teacher Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["teacher", "admin", "superadmin"]} />}>
+          <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
             <Route element={<DashboardLayout />}>
               <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
               <Route path="/teacher/classrooms" element={<TeacherClassrooms />} />
@@ -178,7 +195,7 @@ function AppContent() {
           <Route path="*" element={<NotFound />} />
         </Routes>
       </div>
-      {!isAdminAuth && <Footer />}
+      {showFooter && <Footer />}
     </div>
   );
 }

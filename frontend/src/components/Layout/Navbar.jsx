@@ -4,16 +4,21 @@ import logo from "../../assets/synapse_logo.png";
 import AuthModal from "../Shared/AuthModal";
 import LogoutConfirmModal from "../Shared/LogoutConfirmModal";
 import { useAuth } from "../../context/AuthContext";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { scrollToHomeSection } from "../../utils/scrollToHomeSection";
 
 const Navbar = () => {
     const { user, logout } = useAuth();
     const location = useLocation();
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [authMode, setAuthMode] = useState("login");
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const isAdminUser = ["admin", "superadmin"].includes(user?.role);
+    const isAdminRoute = location.pathname.startsWith("/admin");
+    const logoTarget = isAdminUser && isAdminRoute ? "/admin/dashboard" : "/";
 
     useEffect(() => {
         if (user) {
@@ -41,22 +46,20 @@ const Navbar = () => {
     };
 
     const navItems = [
-        { name: "Home", href: "/#home" },
-        { name: "About Us", href: "/about" },
-        { name: "Programs", href: "/#programs" },
+        { name: "Home", sectionId: "home" },
+        { name: "About Us", sectionId: "about" },
+        { name: "Programs", sectionId: "programs" },
         {
             name: "Resources",
             isDropdown: true,
             children: [
-                { name: "Study material", href: "/#materials" },
-                { name: "Online test", href: "/#tests" }
+                { name: "Study material", sectionId: "materials" },
+                { name: "Online test", sectionId: "tests" }
             ]
         },
-        { name: "Contact", href: "/#contact" },
+        { name: "Contact", sectionId: "contact" },
         { name: "Blog", href: "/blogs" }
     ];
-
-    const isHashLink = (href) => typeof href === "string" && href.startsWith("/#");
 
     const isDashboard = location.pathname.includes("/dashboard") ||
         location.pathname.includes("/student") ||
@@ -73,7 +76,8 @@ const Navbar = () => {
                     <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-4 overflow-visible">
                     {/* Logo + Brand */}
                     <Link
-                        to="/"
+                        to={logoTarget}
+                        onClick={() => setIsOpen(false)}
                         className="relative z-10 flex flex-shrink-0 items-center gap-3"
                     >
                         <img
@@ -98,7 +102,11 @@ const Navbar = () => {
                                             {item.children.map((child) => (
                                                 <a
                                                     key={child.name}
-                                                    href={child.href}
+                                                    href="/"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        scrollToHomeSection(child.sectionId, navigate, location.pathname);
+                                                    }}
                                                     className="mx-2 block rounded-xl px-4 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-white/50 hover:text-cyan-800"
                                                 >
                                                     {child.name}
@@ -107,10 +115,14 @@ const Navbar = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    isHashLink(item.href) ? (
+                                    item.sectionId ? (
                                         <a
                                             key={item.name}
-                                            href={item.href}
+                                            href="/"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                scrollToHomeSection(item.sectionId, navigate, location.pathname);
+                                            }}
                                             className="group relative rounded-full border border-transparent px-4 py-2 text-sm font-semibold text-slate-700 transition-all duration-300 hover:border-white/45 hover:bg-white/18 hover:text-cyan-800"
                                         >
                                             {item.name}
@@ -132,7 +144,7 @@ const Navbar = () => {
                     )}
 
                     {/* Dashboard indicator - Hide for Admins/Superadmins in portal */}
-                    {user && isDashboard && !["admin", "superadmin"].includes(user?.role) && (
+                    {user && isDashboard && !isAdminUser && (
                         <div className="relative z-10 hidden items-center gap-2 rounded-full border border-white/40 bg-white/16 px-3 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-xl md:flex">
                             <Layout className="w-4 h-4 text-cyan-600" />
                             <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">
@@ -144,7 +156,7 @@ const Navbar = () => {
                     {/* Desktop Auth Area */}
                     <div className="relative z-10 hidden items-center gap-4 md:flex">
                         {/* Admin Minimal Portal View */}
-                        {user && ["admin", "superadmin"].includes(user?.role) && isDashboard ? (
+                        {user && isAdminUser && isDashboard ? (
                             <div className="flex items-center gap-6">
                                 <div className="flex flex-col items-end">
                                     <span className="text-sm font-black text-slate-800 tracking-tight leading-none uppercase">
@@ -180,19 +192,28 @@ const Navbar = () => {
                                 )}
                                 {user ? (
                                     <div className="flex items-center gap-3">
-                                        <Link
-                                            to={!user?.role ? "/" : (["admin", "superadmin"].includes(user.role) ? "/admin/dashboard" : `/${user.role}/dashboard`)}
-                                            className="flex items-center gap-2 rounded-full border border-white/40 bg-white/18 py-1.5 pl-1.5 pr-4 text-sm font-semibold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-200/70 hover:bg-white/28"
-                                        >
-                                            <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-white/80 bg-gradient-to-br from-cyan-500 to-sky-600 text-[10px] font-bold text-white shadow-lg shadow-cyan-500/20">
-                                                {user?.avatarUrl ? (
-                                                    <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
-                                                ) : (
-                                                    (user?.name || "U")[0].toUpperCase()
-                                                )}
-                                            </div>
-                                            <span>{user.name}</span>
-                                        </Link>
+                                        {isAdminUser ? (
+                                            <Link
+                                                to="/admin/dashboard"
+                                                className="rounded-full border border-cyan-200/60 bg-white/20 px-4 py-2 text-sm font-semibold text-cyan-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-300 hover:bg-white/30"
+                                            >
+                                                Admin Portal
+                                            </Link>
+                                        ) : (
+                                            <Link
+                                                to={!user?.role ? "/" : `/${user.role}/dashboard`}
+                                                className="flex items-center gap-2 rounded-full border border-white/40 bg-white/18 py-1.5 pl-1.5 pr-4 text-sm font-semibold text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.42)] backdrop-blur-xl transition-all duration-300 hover:border-cyan-200/70 hover:bg-white/28"
+                                            >
+                                                <div className="flex h-8 w-8 items-center justify-center overflow-hidden rounded-full border-2 border-white/80 bg-gradient-to-br from-cyan-500 to-sky-600 text-[10px] font-bold text-white shadow-lg shadow-cyan-500/20">
+                                                    {user?.avatarUrl ? (
+                                                        <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
+                                                    ) : (
+                                                        (user?.name || "U")[0].toUpperCase()
+                                                    )}
+                                                </div>
+                                                <span>{user.name}</span>
+                                            </Link>
+                                        )}
                                         <button
                                             onClick={() => setShowLogoutModal(true)}
                                             className="flex items-center gap-1.5 rounded-full border border-white/30 bg-white/10 px-3 py-2 text-xs font-semibold text-slate-600 transition-all duration-300 hover:border-red-200/70 hover:bg-red-50/60 hover:text-red-600"
@@ -264,8 +285,12 @@ const Navbar = () => {
                                         {item.children.map((child) => (
                                             <a
                                                 key={child.name}
-                                                href={child.href}
-                                                onClick={() => setIsOpen(false)}
+                                                href="/"
+                                                onClick={(e) => {
+                                                    e.preventDefault();
+                                                    setIsOpen(false);
+                                                    scrollToHomeSection(child.sectionId, navigate, location.pathname);
+                                                }}
                                                 className="block rounded-2xl px-3 py-2.5 text-sm font-medium text-slate-700 transition-all duration-200 hover:bg-white/34 hover:text-cyan-800"
                                             >
                                                 {child.name}
@@ -274,11 +299,15 @@ const Navbar = () => {
                                     </div>
                                 </div>
                             ) : (
-                                isHashLink(item.href) ? (
+                                item.sectionId ? (
                                     <a
                                         key={item.name}
-                                        href={item.href}
-                                        onClick={() => setIsOpen(false)}
+                                        href="/"
+                                        onClick={(e) => {
+                                            e.preventDefault();
+                                            setIsOpen(false);
+                                            scrollToHomeSection(item.sectionId, navigate, location.pathname);
+                                        }}
                                         className="mb-3 block rounded-2xl border border-transparent px-3 py-2.5 text-sm font-semibold text-slate-700 transition-all duration-200 hover:border-white/30 hover:bg-white/26 hover:text-cyan-800"
                                     >
                                         {item.name}
@@ -297,7 +326,7 @@ const Navbar = () => {
                         ))}
 
                         <div className="mt-auto space-y-3 border-t border-white/35 pt-5">
-                            {user && ["admin", "superadmin"].includes(user?.role) && isDashboard ? (
+                            {user && isAdminUser && isDashboard ? (
                                 <>
                                     <div className="rounded-2xl border border-white/30 bg-white/16 px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]">
                                         <div className="text-xs font-black uppercase tracking-widest text-slate-800">
@@ -357,22 +386,32 @@ const Navbar = () => {
                                     )}
                                     {user ? (
                                         <>
-                                            <Link
-                                                to={!user?.role ? "/" : (["admin", "superadmin"].includes(user.role) ? "/admin/dashboard" : `/${user.role}/dashboard`)}
-                                                onClick={() => setIsOpen(false)}
-                                                className="flex items-center gap-3 rounded-2xl border border-white/35 bg-white/18 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
-                                            >
-                                                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border-2 border-white/80 bg-gradient-to-br from-cyan-500 to-sky-600 text-xs font-bold text-white shadow-lg shadow-cyan-500/20">
-                                                    {user?.avatarUrl ? (
-                                                        <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
-                                                    ) : (
-                                                        (user?.name || "U")[0].toUpperCase()
-                                                    )}
-                                                </div>
-                                                <span className="text-sm font-semibold text-slate-800">
-                                                    {user.name}
-                                                </span>
-                                            </Link>
+                                            {isAdminUser ? (
+                                                <Link
+                                                    to="/admin/dashboard"
+                                                    onClick={() => setIsOpen(false)}
+                                                    className="flex items-center justify-center rounded-2xl border border-cyan-200/60 bg-white/18 px-3 py-3 text-sm font-semibold text-cyan-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                                                >
+                                                    Admin Portal
+                                                </Link>
+                                            ) : (
+                                                <Link
+                                                    to={!user?.role ? "/" : `/${user.role}/dashboard`}
+                                                    onClick={() => setIsOpen(false)}
+                                                    className="flex items-center gap-3 rounded-2xl border border-white/35 bg-white/18 px-3 py-2.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]"
+                                                >
+                                                    <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-xl border-2 border-white/80 bg-gradient-to-br from-cyan-500 to-sky-600 text-xs font-bold text-white shadow-lg shadow-cyan-500/20">
+                                                        {user?.avatarUrl ? (
+                                                            <img src={user.avatarUrl} alt={user.name} className="h-full w-full object-cover" />
+                                                        ) : (
+                                                            (user?.name || "U")[0].toUpperCase()
+                                                        )}
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-slate-800">
+                                                        {user.name}
+                                                    </span>
+                                                </Link>
+                                            )}
                                             <button
                                                 onClick={() => setShowLogoutModal(true)}
                                                 className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-200/50 bg-red-50/45 py-3 text-sm font-semibold text-red-600 transition-all duration-200 hover:bg-red-50/70"

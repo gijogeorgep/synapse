@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   X,
   Mail,
@@ -27,6 +27,12 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
     phoneNumber: "",
     otp: "",
   });
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setMode(initialMode);
+    setError("");
+  }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
 
