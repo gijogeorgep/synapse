@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
 import blogService from "../../api/blogService";
+import SEO from "../../components/Shared/SEO";
 
 const BlogPost = () => {
   const { idOrSlug } = useParams();
@@ -53,6 +54,11 @@ const BlogPost = () => {
   if (notFound || error) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center px-4">
+        <SEO
+          title="Blog Not Found"
+          description="The requested Synapse Edu Hub blog article could not be found."
+          noindex
+        />
         <div className="max-w-md w-full bg-white rounded-3xl shadow-xl border border-slate-100 p-8 text-center space-y-6">
           <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center mx-auto">
             <Bookmark className="w-10 h-10 text-rose-500" />
@@ -73,8 +79,54 @@ const BlogPost = () => {
     );
   }
 
+  const canonicalBlogPath = blog?.slug ? `/blogs/${blog.slug}` : `/blogs/${idOrSlug}`;
+  const blogDescription =
+    blog?.excerpt ||
+    (blog?.title
+      ? `Read ${blog.title} and more student success insights from Synapse Edu Hub.`
+      : "Explore practical study strategies and learning resources from Synapse Edu Hub.");
+  const siteUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const blogSchema = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: blog.title,
+    description: blogDescription,
+    image: blog.featuredImage ? [blog.featuredImage] : undefined,
+    datePublished: blog.createdAt,
+    dateModified: blog.updatedAt || blog.createdAt,
+    author: {
+      "@type": "Person",
+      name: blog.author?.name || "Synapse Expert",
+    },
+    publisher: {
+      "@type": "Organization",
+      name: "Synapse Edu Hub",
+      logo: {
+        "@type": "ImageObject",
+        url: siteUrl ? `${siteUrl}/synapse%20favicon.png` : undefined,
+      },
+    },
+    mainEntityOfPage: siteUrl ? `${siteUrl}${canonicalBlogPath}` : canonicalBlogPath,
+  };
+
   return (
     <div className="bg-slate-50/50 min-h-screen pb-20">
+      <SEO
+        title={blog.title}
+        description={blogDescription}
+        keywords={
+          Array.isArray(blog.tags) && blog.tags.length > 0
+            ? `${blog.tags.join(", ")}, Synapse Edu Hub blog, study tips`
+            : "Synapse Edu Hub blog, study tips, exam preparation"
+        }
+        image={blog.featuredImage || "/synapse favicon.png"}
+        canonicalPath={canonicalBlogPath}
+        type="article"
+        author={blog.author?.name || "Synapse Expert"}
+        publishedTime={blog.createdAt}
+        modifiedTime={blog.updatedAt || blog.createdAt}
+        structuredData={blogSchema}
+      />
       {/* Dynamic Header / Hero */}
       <div className="relative w-full h-[50vh] md:h-[65vh] overflow-hidden">
         {blog.featuredImage ? (

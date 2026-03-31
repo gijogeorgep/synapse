@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { getProgramById } from "../../api/services";
 import { scrollToHomeSection } from "../../utils/scrollToHomeSection";
+import SEO from "../../components/Shared/SEO";
 
 const iconMap = {
     Zap,
@@ -82,6 +83,11 @@ const ProgramDetail = () => {
     if (error || !program) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <SEO
+                    title="Program Not Found"
+                    description="The requested academic program could not be found on Synapse Edu Hub."
+                    noindex
+                />
                 <div className="text-center">
                     <p className="text-2xl font-bold text-slate-400 mb-4">Program not found</p>
                     <button onClick={() => navigate("/")} className="px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold">
@@ -97,9 +103,35 @@ const ProgramDetail = () => {
     const accentColor = program.accentColor || "#06b6d4";
     const heroImage = program.detailImageUrl || program.imageUrl || null;
     const offerings = program.offerings || [];
+    const programDescription =
+        program.tagline ||
+        program.description ||
+        "Explore this academic program, key highlights, and enrollment details from Synapse Edu Hub.";
+    const canonicalProgramPath = `/programs/${id}`;
+    const courseSchema = {
+        "@context": "https://schema.org",
+        "@type": "Course",
+        name: program.title,
+        description: programDescription,
+        image: heroImage || undefined,
+        provider: {
+            "@type": "EducationalOrganization",
+            name: "Synapse Edu Hub",
+            sameAs: typeof window !== "undefined" ? window.location.origin : undefined,
+        },
+        url: typeof window !== "undefined" ? `${window.location.origin}${canonicalProgramPath}` : canonicalProgramPath,
+    };
 
     return (
         <div className="min-h-screen bg-slate-50">
+            <SEO
+                title={program.title}
+                description={programDescription}
+                keywords={`${program.title}, ${program.subtitle || "academic program"}, Synapse Edu Hub, coaching Kerala`}
+                image={heroImage || "/synapse favicon.png"}
+                canonicalPath={canonicalProgramPath}
+                structuredData={courseSchema}
+            />
             {/* Hero Section */}
             <div className="relative h-[65vh] min-h-[480px] overflow-hidden">
                 {heroImage ? (

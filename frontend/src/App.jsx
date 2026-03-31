@@ -6,6 +6,7 @@ import FloatingWhatsApp from "./components/FloatingWhatsApp";
 import Navbar from "./components/Layout/Navbar";
 import Footer from "./components/Footer";
 import ProtectedRoute from "./components/Shared/ProtectedRoute";
+import SEO from "./components/Shared/SEO";
 import DashboardLayout from "./components/Layout/DashboardLayout";
 
 // Landing Page Sections (Still in root components for now, can move later)
@@ -108,6 +109,119 @@ function LandingPage() {
   );
 }
 
+function RouteSeo() {
+  const location = useLocation();
+  const pathname = location.pathname;
+  const siteUrl = (
+    import.meta.env.VITE_SITE_URL && !import.meta.env.VITE_SITE_URL.includes("your-domain.com")
+      ? import.meta.env.VITE_SITE_URL
+      : typeof window !== "undefined"
+        ? window.location.origin
+        : ""
+  ).replace(/\/$/, "");
+
+  const isPrivateRoute =
+    pathname.startsWith("/student") ||
+    pathname.startsWith("/teacher") ||
+    pathname.startsWith("/admin") ||
+    pathname === "/notifications";
+
+  if (isPrivateRoute) {
+    return <SEO title="Secure Portal" description="Secure Synapse Edu Hub portal area." noindex />;
+  }
+
+  if (pathname.startsWith("/blogs/") || pathname.startsWith("/programs/")) {
+    return null;
+  }
+
+  const websiteSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Synapse Edu Hub",
+    url: siteUrl || undefined,
+    potentialAction: {
+      "@type": "SearchAction",
+      target: siteUrl ? `${siteUrl}/blogs?search={search_term_string}` : "/blogs?search={search_term_string}",
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const organizationSchema = {
+    "@context": "https://schema.org",
+    "@type": "EducationalOrganization",
+    name: "Synapse Edu Hub",
+    url: siteUrl || undefined,
+    email: "synapseeduhub@gmail.com",
+    telephone: "+91 81579 30567",
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: "Mavoor",
+      addressRegion: "Kerala",
+      postalCode: "673661",
+      addressCountry: "IN",
+    },
+    sameAs: [
+      "https://www.instagram.com/synapse_edu.hub",
+      "https://www.facebook.com/share/1KBy2iguoK/",
+      "https://www.linkedin.com/in/synapse-edu-hub-9b788b371",
+      "https://youtube.com/@synapseeduhub",
+    ],
+  };
+
+  const seoByPath = {
+    "/": {
+      title: "Synapse Edu Hub | Personalized Coaching, Study Materials & Online Exams",
+      description:
+        "Achieve academic success with Synapse Edu Hub through expert mentors, multilingual learning support, mock tests, study materials, and performance tracking.",
+      keywords:
+        "Synapse Edu Hub, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition",
+      structuredData: [websiteSchema, organizationSchema],
+    },
+    "/about": {
+      title: "About Synapse Edu Hub | Student-first academic coaching",
+      description:
+        "Learn about Synapse Edu Hub, our mission, mentors, and multilingual learning approach for students across Kerala and India.",
+      keywords:
+        "about Synapse Edu Hub, education company Kerala, student mentoring, academic coaching",
+    },
+    "/blogs": {
+      title: "Education Blog & Study Resources | Synapse Edu Hub",
+      description:
+        "Explore exam tips, study strategies, and practical learning resources from Synapse Edu Hub experts.",
+      keywords:
+        "study tips blog, exam preparation articles, student resources, Synapse Edu Hub blog",
+    },
+    "/privacy-policy": {
+      title: "Privacy Policy | Synapse Edu Hub",
+      description: "Read how Synapse Edu Hub collects, uses, and protects your personal information.",
+      keywords: "privacy policy, Synapse Edu Hub privacy",
+    },
+    "/terms-conditions": {
+      title: "Terms & Conditions | Synapse Edu Hub",
+      description: "Review the terms and conditions for using Synapse Edu Hub services and platforms.",
+      keywords: "terms and conditions, Synapse Edu Hub terms",
+    },
+    "/maintenance": {
+      title: "Maintenance Update | Synapse Edu Hub",
+      description: "Synapse Edu Hub is temporarily under maintenance. Please check back shortly.",
+      noindex: true,
+    },
+    "/admin-portal-auth": {
+      title: "Admin Portal Login | Synapse Edu Hub",
+      description: "Secure admin login for Synapse Edu Hub.",
+      noindex: true,
+    },
+  };
+
+  const pageSeo = seoByPath[pathname] ?? {
+    title: "Page Not Found | Synapse Edu Hub",
+    description: "The page you are looking for does not exist.",
+    noindex: true,
+  };
+
+  return <SEO {...pageSeo} />;
+}
+
 function AppContent() {
   const location = useLocation();
   const isAdminAuth = location.pathname === "/admin-portal-auth";
@@ -121,6 +235,7 @@ function AppContent() {
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
+      <RouteSeo />
       {!isAdminAuth && <Navbar />}
       {showFloatingWhatsApp && <FloatingWhatsApp />}
       <div className={`flex-1 ${!isAdminAuth ? "mt-20 md:mt-24" : ""}`}>
