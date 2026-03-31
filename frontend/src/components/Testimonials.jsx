@@ -2,6 +2,7 @@ import { Quote, Star, Sparkles } from "lucide-react";
 import useGsapReveal from "../hooks/useGsapReveal";
 import sree_nandana_review from "../assets/sree_nandana.jpeg";
 import fidha from "../assets/fidha.jpeg";
+import liya from "../assets/liya.jpeg"
 const facultyReviews = [
   {
     name: "Fidha ",
@@ -30,11 +31,11 @@ What made the biggest difference for me, though, was the exam preparation. We sp
 I was able to go into my final exams feeling calm and prepared. I didn't have the usual stress or last-minute panic because I knew exactly what to expect.`,
   },
   {
-    name: "Adarsh Krishna",
-    role: "Plus One Student",
-    image: "https://randomuser.me/api/portraits/men/75.jpg",
+    name: "Liya",
+    role: "Student",
+    image: liya,
     review:
-      "The teachers explain concepts in a simple way and the study support is very consistent. It helped me feel more confident about exams.",
+      `I joined Synapse for Plus One tuition, and it has been a great experience. The one-to-one classes helped me understand Physics, Chemistry, Biology, and Maths much better. The tutors explain things clearly and are always ready to help with doubts. The exam preparation sessions, especially the Previous Year Questions and paper discussions, made me feel very confident for my final exams. I no longer feel stressed about exams because I know what to expect and how to prepare.`
   },
   {
     name: "Ananya S",

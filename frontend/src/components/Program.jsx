@@ -202,10 +202,22 @@ const Program = () => {
         </div>
 
         {loading ? (
-          <div className="max-w-5xl mx-auto relative z-10">
-            <div className="rounded-[2rem] border border-slate-200 bg-white/80 px-6 py-8 text-center text-slate-500 shadow-sm">
-              Loading programs...
-            </div>
+          <div className="programs-grid relative z-10">
+            {[1, 2, 3].map((item) => (
+              <div key={item} className="bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden h-full flex flex-col animate-pulse">
+                <div className="relative h-48 bg-slate-200" />
+                <div className="p-6 flex-1 flex flex-col">
+                  <div className="h-6 bg-slate-200 rounded w-1/2 mb-4" />
+                  <div className="h-4 bg-slate-200 rounded w-full mb-2" />
+                  <div className="h-4 bg-slate-200 rounded w-3/4 mb-6" />
+                  <div className="flex gap-2 mb-6">
+                    <div className="h-6 bg-slate-200 rounded-lg w-20" />
+                    <div className="h-6 bg-slate-200 rounded-lg w-24" />
+                  </div>
+                  <div className="mt-auto w-full h-12 bg-slate-200 rounded-xl" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : error ? (
           <div className="max-w-5xl mx-auto relative z-10">
