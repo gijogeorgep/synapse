@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, Award } from "lucide-react";
-import { getExams, getExamsBySpecificClassroom, getMyResults } from "../../api/services";
+import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, Award, Download } from "lucide-react";
+import { getExams, getExamsBySpecificClassroom, getMyResults, getMaterials } from "../../api/services";
+import ClassroomAIChat from "../../components/ClassroomAIChat";
 
 const StudentClassroom = () => {
     const { user } = useAuth();
@@ -10,6 +11,8 @@ const StudentClassroom = () => {
     const [loadingExams, setLoadingExams] = useState(true);
     const [results, setResults] = useState([]);
     const [loadingResults, setLoadingResults] = useState(true);
+    const [materials, setMaterials] = useState([]);
+    const [materialsLoading, setMaterialsLoading] = useState(true);
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -30,6 +33,21 @@ const StudentClassroom = () => {
     const fallbackSubject = classroom?.subjects?.[0] || classroom?.name || "Subject";
     const fallbackClass = classroom?.className || user?.class || "10";
     const availableExams = exams.filter((exam) => !results.some((result) => result.exam?._id === exam._id));
+    const classroomId = classroom?._id?.toString?.() || "";
+    const classroomMaterials = useMemo(() => {
+        if (!classroomId) return [];
+        return materials.filter((material) => {
+            if (!material?.classroom) return false;
+            if (typeof material.classroom === "string") {
+                return material.classroom === classroomId;
+            }
+            const idValue =
+                material.classroom?._id?.toString?.() ||
+                material.classroom?.toString?.() ||
+                "";
+            return idValue === classroomId;
+        });
+    }, [materials, classroomId]);
 
     useEffect(() => {
         const fetchExams = async () => {
@@ -87,6 +105,36 @@ const StudentClassroom = () => {
         fetchExams();
         fetchResults();
     }, [fallbackSubject, fallbackClass, classroom?._id]);
+
+    useEffect(() => {
+        if (!classroom?._id) {
+            setMaterials([]);
+            setMaterialsLoading(false);
+            return;
+        }
+
+        let isMounted = true;
+        const fetchClassMaterials = async () => {
+            setMaterialsLoading(true);
+            try {
+                const data = await getMaterials();
+                if (isMounted) {
+                    setMaterials(Array.isArray(data) ? data : []);
+                }
+            } catch (error) {
+                console.error("Error fetching classroom materials:", error);
+            } finally {
+                if (isMounted) {
+                    setMaterialsLoading(false);
+                }
+            }
+        };
+
+        fetchClassMaterials();
+        return () => {
+            isMounted = false;
+        };
+    }, [classroom?._id]);
 
     const link =
         classroom?.onlineClassLink ||
@@ -209,7 +257,72 @@ const StudentClassroom = () => {
                     </p>
 
                     <div className="space-y-3">
-                        {lectures && lectures.length > 0 ? (
+                        {materialsLoading ? (
+                            <div className="flex justify-center py-10">
+                                <div className="w-10 h-10 border-4 border-slate-200 border-t-cyan-500 rounded-full animate-spin"></div>
+                            </div>
+                        ) : classroomMaterials.length > 0 ? (
+                            classroomMaterials.map((material) => {
+                                const isPdf =
+                                    material.fileType?.toLowerCase() === "pdf" ||
+                                    (material.fileUrl || "").toLowerCase().includes(".pdf");
+                                const previewUrl =
+                                    isPdf && material._id
+                                        ? `/api/materials/view/${material._id}/preview.pdf`
+                                        : material.fileUrl || "#";
+                                const downloadUrl =
+                                    isPdf && material._id
+                                        ? `/api/materials/view/${material._id}?download=true`
+                                        : material.fileUrl
+                                            ? material.fileUrl.replace("/upload/", "/upload/fl_attachment/")
+                                            : "#";
+
+                                return (
+                                    <div
+                                        key={material._id}
+                                        className="flex items-center justify-between gap-4 p-3 rounded-2xl bg-slate-50 hover:bg-cyan-50/70 border border-slate-100 hover:border-cyan-100 transition-colors"
+                                    >
+                                        <div className="space-y-2 max-w-[65%]">
+                                            <p className="text-sm font-semibold text-slate-900 truncate">
+                                                {material.title}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {(material.subject || fallbackSubject)} •{" "}
+                                                {(material.fileType || "Resource").toUpperCase()}
+                                                {material.createdAt
+                                                    ? ` • Uploaded ${new Date(material.createdAt).toLocaleDateString()}`
+                                                    : ""}
+                                            </p>
+                                            {material.description && (
+                                                <p className="text-xs text-slate-400 truncate">
+                                                    {material.description}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className="flex flex-col items-end gap-2 shrink-0">
+                                            <a
+                                                href={previewUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full bg-white text-xs font-semibold text-slate-700 border border-slate-200 hover:border-cyan-300 transition-colors"
+                                            >
+                                                <ExternalLink className="w-3 h-3" />
+                                                <span>Preview</span>
+                                            </a>
+                                            <a
+                                                href={downloadUrl}
+                                                download
+                                                rel="noreferrer"
+                                                className="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full bg-cyan-600 text-white text-xs font-semibold shadow-sm hover:bg-cyan-500 transition-colors"
+                                            >
+                                                <Download className="w-3 h-3" />
+                                                <span>Download</span>
+                                            </a>
+                                        </div>
+                                    </div>
+                                );
+                            })
+                        ) : lectures && lectures.length > 0 ? (
                             lectures.map((lecture, index) => (
                                 <div
                                     key={lecture._id || index}
@@ -220,7 +333,7 @@ const StudentClassroom = () => {
                                             {lecture.title}
                                         </p>
                                         <p className="text-xs text-slate-500">
-                                            {lecture.createdAt ? new Date(lecture.createdAt).toLocaleDateString() : 'Recent'}
+                                            {lecture.createdAt ? new Date(lecture.createdAt).toLocaleDateString() : "Recent"}
                                         </p>
                                     </div>
                                     <a
@@ -235,7 +348,9 @@ const StudentClassroom = () => {
                                 </div>
                             ))
                         ) : (
-                            <div className="text-center py-4 text-slate-400 text-sm">No lecture notes available.</div>
+                            <div className="text-center py-4 text-slate-400 text-sm">
+                                No classroom materials yet. Check the Student Library tab or ask your tutor to upload resources.
+                            </div>
                         )}
                     </div>
 
@@ -468,6 +583,7 @@ const StudentClassroom = () => {
                     )}
                 </aside>
             </div>
+            <ClassroomAIChat />
         </div>
     );
 };

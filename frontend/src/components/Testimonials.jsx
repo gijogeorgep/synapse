@@ -2,7 +2,9 @@ import { Quote, Star, Sparkles } from "lucide-react";
 import useGsapReveal from "../hooks/useGsapReveal";
 import sree_nandana_review from "../assets/sree_nandana.jpeg";
 import fidha from "../assets/fidha.jpeg";
-import liya from "../assets/liya.jpeg"
+import liya from "../assets/liya.jpeg";
+import karthik from "../assets/karthik.jpeg";
+import aysha from "../assets/aysha.jpeg";
 const facultyReviews = [
   {
     name: "Fidha ",
@@ -34,15 +36,25 @@ I was able to go into my final exams feeling calm and prepared. I didn't have th
     name: "Liya",
     role: "Student",
     image: liya,
-    review:
-      `I joined Synapse for Plus One tuition, and it has been a great experience. The one-to-one classes helped me understand Physics, Chemistry, Biology, and Maths much better. The tutors explain things clearly and are always ready to help with doubts. The exam preparation sessions, especially the Previous Year Questions and paper discussions, made me feel very confident for my final exams. I no longer feel stressed about exams because I know what to expect and how to prepare.`
+    review: `I joined Synapse for Plus One tuition, and it has been a great experience. The one-to-one classes helped me understand Physics, Chemistry, Biology, and Maths much better. The tutors explain things clearly and are always ready to help with doubts. The exam preparation sessions, especially the Previous Year Questions and paper discussions, made me feel very confident for my final exams. I no longer feel stressed about exams because I know what to expect and how to prepare.`,
+  },
+];
+
+const parentReviews = [
+  {
+    name: "Karthik",
+    role: "Parent (Karthik - PRIME-ONE Student, Class 5)",
+    image: karthik,
+    review: `Karthik joined lately the online class hoping to cover a lot of material quickly. We were all surprised by how well the classes were run and how dedicated the tutors were helping us finish everything. Honestly it's one of the best online tutorials we've experienced`,
   },
   {
-    name: "Ananya S",
-    role: "Foundation Program Student",
-    image: "https://randomuser.me/api/portraits/women/65.jpg",
-    review:
-      "I like how everything feels planned out. The sessions, doubt clearing, and tests together made my preparation much stronger.",
+    name: "Infa Aysha",
+    role: "Parent (INFA AYSHA PRIME-ONE STUDENT class 4)",
+    image: aysha,
+    review: `We are very happy that our daughter joined SYNAPSE EDU HUB. It has made a big positive change in her studies.
+Her exam marks have improved after joining the tuition. Especially in Science, which was difficult for her before, she is now doing much better and scoring good marks.
+The classes are clear and easy to understand, and the teacher is very helpful.
+We are satisfied with her progress and would like her to continue with SYNAPSE EDU HU`,
   },
 ];
 
@@ -167,27 +179,45 @@ const Testimonials = () => {
               <div className="mb-3 flex items-center gap-3">
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
                 <span className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
+                  Parent Reviews
+                </span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+              </div>
+            </div>
+
+            <ReviewCard
+              item={parentReviews[0]}
+              accent="from-cyan-500 via-sky-500 to-blue-500"
+              featured
+              delay={120}
+            />
+
+            <ReviewCard
+              item={parentReviews[1]}
+              accent="from-sky-500 via-cyan-500 to-blue-500"
+              delay={220}
+            />
+
+            <div className="md:col-span-2 pt-2">
+              <div className="mb-3 flex items-center gap-3">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
+                <span className="text-[10px] font-black uppercase tracking-[0.35em] text-slate-500">
                   Student Reviews
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
               </div>
               <ReviewCard
                 item={studentReviews[0]}
-                accent="from-cyan-500 via-sky-500 to-blue-500"
+                accent="from-cyan-500 via-teal-500 to-sky-500"
                 featured
-                delay={120}
+                delay={320}
               />
             </div>
 
             <ReviewCard
               item={studentReviews[1]}
-              accent="from-sky-500 via-cyan-500 to-blue-500"
-              delay={220}
-            />
-            <ReviewCard
-              item={studentReviews[2]}
-              accent="from-cyan-500 via-teal-500 to-sky-500"
-              delay={320}
+              accent="from-sky-500 via-slate-500 to-cyan-500"
+              delay={420}
             />
 
             <div className="md:col-span-2 pt-2">
@@ -203,12 +233,12 @@ const Testimonials = () => {
             <ReviewCard
               item={facultyReviews[0]}
               accent="from-slate-900 via-cyan-700 to-cyan-500"
-              delay={420}
+              delay={520}
             />
             <ReviewCard
               item={facultyReviews[1]}
               accent="from-cyan-700 via-slate-700 to-slate-900"
-              delay={520}
+              delay={620}
             />
           </div>
         </div>

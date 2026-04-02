@@ -23,6 +23,9 @@ const StudentExams = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [examResult, setExamResult] = useState(null);
 
+    // NEET Player State
+    const [activeSubject, setActiveSubject] = useState("Physics");
+
     useEffect(() => {
         const fetchExams = async () => {
             try {
@@ -85,6 +88,11 @@ const StudentExams = () => {
             setCurrentQuestionIndex(0);
             setSelectedAnswers({});
             setExamResult(null);
+
+            // Set initial NEET focus if applicable
+            if (exam.isNeetPattern) {
+                setActiveSubject("Physics");
+            }
         } catch (error) {
             alert("Error starting exam: " + error);
         } finally {
@@ -119,6 +127,24 @@ const StudentExams = () => {
     }, [activeExam, timeLeft, examResult]);
 
     const handleAnswerSelect = (questionId, optionIndex) => {
+        // NEET Section B logic: prevent more than 10 attempts
+        if (activeExam?.isNeetPattern) {
+            const question = questions.find(q => q._id === questionId);
+            if (question && selectedAnswers[questionId] === undefined) {
+                const sub = question.subject;
+                const subjectAnswersCount = Object.keys(selectedAnswers).filter(qId => {
+                    const q = questions.find(qu => qu._id === qId);
+                    return q && q.subject === sub;
+                }).length;
+
+                const limit = sub === 'Biology' ? 90 : 45;
+                if (subjectAnswersCount >= limit) {
+                    alert(`In NEET, you can only attempt ${limit} questions for ${sub}.`);
+                    return;
+                }
+            }
+        }
+
         setSelectedAnswers({
             ...selectedAnswers,
             [questionId]: optionIndex,
@@ -159,6 +185,13 @@ const StudentExams = () => {
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
+
+    // Filter questions based on NEET subject and section
+    const displayQuestions = activeExam?.isNeetPattern 
+        ? questions.filter(q => q.subject === activeSubject)
+        : questions;
+
+    const subjects = ["Physics", "Chemistry", "Biology"];
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -325,15 +358,20 @@ const StudentExams = () => {
             {/* Exam Player Modal */}
             {activeExam && questions.length > 0 && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+                    <div className="bg-white w-full max-w-5xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
                         {/* Player Header */}
-                        <div className="px-8 py-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                            <div>
-                                <h2 className="text-xl font-black text-slate-900">{activeExam.title}</h2>
-                                <p className="text-slate-500 text-sm font-semibold uppercase tracking-wider">{activeExam.subject}</p>
+                        <div className="px-8 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                            <div className="flex items-center gap-4">
+                                <div className="p-3 bg-cyan-600 text-white rounded-2xl shadow-lg shadow-cyan-600/20">
+                                    <FileText className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-lg font-black text-slate-900">{activeExam.title}</h2>
+                                    <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest">{activeExam.subject}</p>
+                                </div>
                             </div>
                             <div className="flex items-center gap-6">
-                                <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-black ${timeLeft < 60 ? 'bg-rose-50 text-rose-600 animate-pulse' : 'bg-cyan-50 text-cyan-600'}`}>
+                                <div className={`flex items-center gap-2 px-4 py-2 rounded-2xl font-black ${timeLeft < 300 ? 'bg-rose-50 text-rose-600 animate-pulse' : 'bg-cyan-50 text-cyan-600'}`}>
                                     <Clock className="w-5 h-5" />
                                     <span className="text-lg">{formatTime(timeLeft)}</span>
                                 </div>
@@ -347,6 +385,36 @@ const StudentExams = () => {
                                 )}
                             </div>
                         </div>
+
+                        {activeExam.isNeetPattern && !examResult && (
+                            <div className="px-8 py-4 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center gap-4">
+                                {subjects.map((sub) => {
+                                    const attemptedCount = Object.keys(selectedAnswers).filter(qId => {
+                                        const q = questions.find(qu => qu._id === qId);
+                                        return q && q.subject === sub;
+                                    }).length;
+                                    const limit = sub === 'Biology' ? 90 : 45;
+                                    const totalQs = sub === 'Biology' ? 100 : 50;
+
+                                    return (
+                                        <button
+                                            key={sub}
+                                            onClick={() => {
+                                                setActiveSubject(sub);
+                                                const firstQIndex = questions.findIndex(q => q.subject === sub);
+                                                if (firstQIndex !== -1) setCurrentQuestionIndex(firstQIndex);
+                                            }}
+                                            className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-xs font-black transition-all ${activeSubject === sub ? 'bg-cyan-600 text-white shadow-xl shadow-cyan-100 scale-105' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                                        >
+                                            <span>{sub}</span>
+                                            <span className={`px-2 py-0.5 rounded-lg text-[10px] ${activeSubject === sub ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                                {attemptedCount}/{limit}
+                                            </span>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
 
                         {/* Player Body */}
                         <div className="flex-1 overflow-y-auto p-8">
@@ -374,7 +442,14 @@ const StudentExams = () => {
                                                             {idx + 1}
                                                         </span>
                                                         <div className="flex-1 space-y-2">
-                                                            <p className="font-bold text-slate-900 underline decoration-slate-200 decoration-2 underline-offset-4">{q.questionText}</p>
+                                                            <div>
+                                                                {activeExam.isNeetPattern && (
+                                                                    <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-1 block">
+                                                                        {q.subject}
+                                                                    </span>
+                                                                )}
+                                                                <p className="font-bold text-slate-900 underline decoration-slate-200 decoration-2 underline-offset-4">{q.questionText}</p>
+                                                            </div>
                                                             {q.imageUrl && (
                                                                 <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 bg-white">
                                                                     <img src={q.imageUrl} alt="Context" className="max-h-[200px] w-auto object-contain p-2" />
@@ -421,66 +496,118 @@ const StudentExams = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-8">
-                                    {/* Question navigation dots */}
+                                    {/* Question navigation dots - Filtered by Subject/Section if NEET */}
                                     <div className="flex flex-wrap gap-2">
-                                        {questions.map((_, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => setCurrentQuestionIndex(idx)}
-                                                className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${currentQuestionIndex === idx
-                                                    ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
-                                                    : selectedAnswers[questions[idx]._id] !== undefined
-                                                        ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-100'
-                                                        : 'bg-slate-50 text-slate-400 border-2 border-transparent hover:border-slate-200'
-                                                    }`}
-                                            >
-                                                {idx + 1}
-                                            </button>
-                                        ))}
+                                        {activeExam.isNeetPattern && (
+                                            <div className="w-full flex items-center gap-2 mb-2">
+                                                <button 
+                                                    onClick={() => setActiveSection("A")}
+                                                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all ${activeSection === 'A' ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-400'}`}
+                                                >
+                                                    Section A
+                                                </button>
+                                                <button 
+                                                    onClick={() => setActiveSection("B")}
+                                                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all ${activeSection === 'B' ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-400'}`}
+                                                >
+                                                    Section B
+                                                </button>
+                                                {activeSection === 'B' && (
+                                                    <span className="ml-auto text-[10px] font-black text-cyan-600 bg-cyan-50 px-3 py-1 rounded-full">
+                                                        Attempted: {Object.keys(selectedAnswers).filter(qId => {
+                                                            const q = questions.find(qu => qu._id === qId);
+                                                            return q && q.subject === activeSubject && q.section === 'B';
+                                                        }).length} / 10
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        {questions.map((q, idx) => {
+                                            // Only show dots for current focused subject/section if NEET
+                                            if (activeExam.isNeetPattern && (q.subject !== activeSubject || q.section !== activeSection)) return null;
+                                            
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => setCurrentQuestionIndex(idx)}
+                                                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${currentQuestionIndex === idx
+                                                        ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
+                                                        : selectedAnswers[questions[idx]._id] !== undefined
+                                                            ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-100'
+                                                            : 'bg-slate-50 text-slate-400 border-2 border-transparent hover:border-slate-200'
+                                                        }`}
+                                                >
+                                                    {idx + 1}
+                                                </button>
+                                            );
+                                        })}
                                     </div>
 
                                     {/* Current Question */}
-                                    <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
-                                        <h3 className="text-2xl font-bold text-slate-900 leading-tight">
-                                            {questions[currentQuestionIndex].questionText}
-                                        </h3>
-                                        {questions[currentQuestionIndex]?.imageUrl && (
-                                            <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200">
-                                                <img 
-                                                    src={questions[currentQuestionIndex].imageUrl} 
-                                                    alt="Question Illustration" 
-                                                    className="max-h-[300px] w-auto mx-auto object-contain"
-                                                />
+                                    {questions[currentQuestionIndex] && (
+                                        <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
+                                            <div className="flex items-center gap-2">
+                                                {activeExam.isNeetPattern && (
+                                                    <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full uppercase tracking-widest">
+                                                        {questions[currentQuestionIndex].subject} • Section {questions[currentQuestionIndex].section}
+                                                    </span>
+                                                )}
+                                                <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Question {currentQuestionIndex + 1}</span>
                                             </div>
-                                        )}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {questions[currentQuestionIndex].options.map((option, oIdx) => (
-                                                <button
-                                                    key={oIdx}
-                                                    onClick={() => handleAnswerSelect(questions[currentQuestionIndex]._id, oIdx)}
-                                                    className={`p-6 rounded-3xl border-2 text-left transition-all ${selectedAnswers[questions[currentQuestionIndex]._id] === oIdx
-                                                        ? 'bg-cyan-50 border-cyan-500 shadow-sm'
-                                                        : 'bg-slate-50 border-transparent hover:border-slate-200'
-                                                        }`}
+                                            <h3 className="text-2xl font-bold text-slate-900 leading-tight">
+                                                {questions[currentQuestionIndex].questionText}
+                                            </h3>
+                                            {questions[currentQuestionIndex]?.imageUrl && (
+                                                <div className="mb-6 rounded-2xl overflow-hidden border border-slate-200 max-w-2xl mx-auto bg-slate-50">
+                                                    <img 
+                                                        src={questions[currentQuestionIndex].imageUrl} 
+                                                        alt="Question Illustration" 
+                                                        className="max-h-[400px] w-auto mx-auto object-contain p-4"
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {questions[currentQuestionIndex].options.map((option, oIdx) => (
+                                                    <button
+                                                        key={oIdx}
+                                                        onClick={() => handleAnswerSelect(questions[currentQuestionIndex]._id, oIdx)}
+                                                        className={`p-6 rounded-3xl border-2 text-left transition-all group ${selectedAnswers[questions[currentQuestionIndex]._id] === oIdx
+                                                            ? 'bg-cyan-50 border-cyan-500 shadow-sm'
+                                                            : 'bg-white border-slate-100 hover:border-cyan-200 shadow-sm'
+                                                            }`}
+                                                    >
+                                                        <div className="flex items-center gap-4">
+                                                            <span className={`w-10 h-10 rounded-2xl flex items-center justify-center font-black transition-all ${selectedAnswers[questions[currentQuestionIndex]._id] === oIdx
+                                                                ? 'bg-cyan-600 text-white shadow-lg'
+                                                                : 'bg-slate-50 text-slate-400 group-hover:bg-cyan-50 group-hover:text-cyan-600'
+                                                                }`}>
+                                                                {String.fromCharCode(65 + oIdx)}
+                                                            </span>
+                                                            <span className={`font-bold ${selectedAnswers[questions[currentQuestionIndex]._id] === oIdx
+                                                                ? 'text-cyan-900'
+                                                                : 'text-slate-600'
+                                                                }`}>
+                                                                {option}
+                                                            </span>
+                                                        </div>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            {/* Deselect button if needed */}
+                                            {selectedAnswers[questions[currentQuestionIndex]._id] !== undefined && (
+                                                <button 
+                                                    onClick={() => {
+                                                        const newAnswers = {...selectedAnswers};
+                                                        delete newAnswers[questions[currentQuestionIndex]._id];
+                                                        setSelectedAnswers(newAnswers);
+                                                    }}
+                                                    className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline"
                                                 >
-                                                    <div className="flex items-center gap-4">
-                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center font-black ${selectedAnswers[questions[currentQuestionIndex]._id] === oIdx
-                                                            ? 'bg-cyan-500 text-white'
-                                                            : 'bg-white text-slate-400'
-                                                            }`}>
-                                                            {String.fromCharCode(65 + oIdx)}
-                                                        </span>
-                                                        <span className={`font-bold ${selectedAnswers[questions[currentQuestionIndex]._id] === oIdx
-                                                            ? 'text-cyan-900'
-                                                            : 'text-slate-600'
-                                                            }`}>
-                                                            {option}
-                                                        </span>
-                                                    </div>
+                                                    Clear selection
                                                 </button>
-                                            ))}
+                                            )}
                                         </div>
-                                    </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -488,32 +615,57 @@ const StudentExams = () => {
                         {/* Player Footer */}
                         {!examResult && (
                             <div className="px-8 py-6 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-                                <button
-                                    disabled={currentQuestionIndex === 0}
-                                    onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
-                                    className="flex items-center gap-2 px-6 py-3 rounded-full font-black text-slate-400 hover:text-cyan-600 disabled:opacity-30 transition-all"
-                                >
-                                    <ChevronLeft className="w-5 h-5" />
-                                    Previous
-                                </button>
+                                <div className="flex gap-4">
+                                    <button
+                                        disabled={currentQuestionIndex === 0}
+                                        onClick={() => setCurrentQuestionIndex(prev => prev - 1)}
+                                        className="flex items-center gap-2 px-6 py-3 rounded-full font-black text-slate-400 hover:text-cyan-600 disabled:opacity-30 transition-all"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" />
+                                        Previous
+                                    </button>
+                                    
+                                    <button
+                                        onClick={() => {
+                                            const newAnswers = {...selectedAnswers};
+                                            delete newAnswers[questions[currentQuestionIndex]._id];
+                                            setSelectedAnswers(newAnswers);
+                                        }}
+                                        disabled={selectedAnswers[questions[currentQuestionIndex]._id] === undefined}
+                                        className="px-6 py-3 rounded-full font-black text-xs text-rose-500 hover:bg-rose-50 disabled:opacity-0 transition-all"
+                                    >
+                                        Clear Choice
+                                    </button>
+                                </div>
 
-                                {currentQuestionIndex === questions.length - 1 ? (
-                                    <button
-                                        onClick={handleSubmitExam}
-                                        disabled={isSubmitting}
-                                        className="px-10 py-3 rounded-full bg-emerald-600 text-white font-black shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 hover:scale-105 transition-all disabled:opacity-50"
-                                    >
-                                        {isSubmitting ? 'Submitting...' : 'Finish & Submit'}
-                                    </button>
-                                ) : (
-                                    <button
-                                        onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
-                                        className="flex items-center gap-2 px-8 py-3 rounded-full bg-slate-900 text-white font-black hover:bg-cyan-600 transition-all shadow-xl"
-                                    >
-                                        Next Question
-                                        <ChevronRight className="w-5 h-5" />
-                                    </button>
-                                )}
+                                <div className="flex gap-4">
+                                    {currentQuestionIndex < questions.length - 1 && (
+                                        <button
+                                            onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                                            className="px-8 py-3 rounded-full border-2 border-slate-200 text-slate-500 font-black hover:bg-slate-100 transition-all text-xs"
+                                        >
+                                            Skip & Next
+                                        </button>
+                                    )}
+
+                                    {currentQuestionIndex === questions.length - 1 ? (
+                                        <button
+                                            onClick={handleSubmitExam}
+                                            disabled={isSubmitting}
+                                            className="px-10 py-3 rounded-full bg-emerald-600 text-white font-black shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 hover:scale-105 transition-all disabled:opacity-50"
+                                        >
+                                            {isSubmitting ? 'Submitting...' : 'Finish & Submit Exam'}
+                                        </button>
+                                    ) : (
+                                        <button
+                                            onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                                            className="flex items-center gap-2 px-8 py-3 rounded-full bg-slate-900 text-white font-black hover:bg-cyan-600 transition-all shadow-xl"
+                                        >
+                                            Next Question
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -524,4 +676,3 @@ const StudentExams = () => {
 };
 
 export default StudentExams;
-

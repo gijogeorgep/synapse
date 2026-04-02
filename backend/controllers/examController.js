@@ -54,6 +54,9 @@ export const getExams = async (req, res) => {
     const { subject, classLevel, examType, classroomId } = req.query;
     try {
         let query = { isActive: true };
+        if (req.user.role === 'student') {
+            query.status = 'published';
+        }
         if (subject) query.subject = subject;
         if (classLevel) query.classLevel = classLevel;
         if (examType) query.examType = examType;
@@ -105,7 +108,7 @@ export const getExams = async (req, res) => {
 // @route   POST /api/exams/bulk
 // @access  Private (Teacher/Admin)
 export const createExamWithQuestions = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks } = req.body;
+    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks, isNeetPattern, status } = req.body;
 
     if (!title || !duration || !subject || !classroom) {
         return res.status(400).json({ message: "Please provide all required fields: title, duration, subject, and classroom." });
@@ -127,6 +130,8 @@ export const createExamWithQuestions = async (req, res) => {
             : [],
         explanation: question?.explanation?.trim?.() || "",
         imageUrl: question?.imageUrl || undefined,
+        subject: question?.subject,
+        section: question?.section,
     }));
 
     const invalidQuestionIndex = normalizedQuestions.findIndex((question) => {
@@ -162,12 +167,16 @@ export const createExamWithQuestions = async (req, res) => {
             examType: examType || "subject-wise",
             marksPerQuestion: marksPerQuestion ?? 1,
             negativeMarks: negativeMarks ?? 0,
+            isNeetPattern: isNeetPattern || false,
+            status: status || 'draft',
             teacher: req.user._id,
         });
 
         const questionsWithExamId = normalizedQuestions.map((question) => ({
             ...question,
             exam: exam._id,
+            status: 'published',
+            createdBy: req.user._id,
         }));
         await Question.insertMany(questionsWithExamId);
 
@@ -200,7 +209,7 @@ export const createExamWithQuestions = async (req, res) => {
 // @route   POST /api/exams/:id/questions
 // @access  Private (Teacher/Admin)
 export const addQuestion = async (req, res) => {
-    const { questionText, options, correctAnswer, explanation } = req.body;
+    const { questionText, options, correctAnswer, explanation, status } = req.body;
     const examId = req.params.id;
 
     try {
@@ -216,9 +225,138 @@ export const addQuestion = async (req, res) => {
             options,
             correctAnswer,
             explanation,
+            status: status === "published" ? "published" : "draft",
+            createdBy: req.user._id,
         });
 
         res.status(201).json(question);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// @desc    Delete a question (draft or published)
+// @route   DELETE /api/exams/questions/:id
+// @access  Private (Teacher/Admin)
+export const deleteQuestion = async (req, res) => {
+    try {
+        const question = await Question.findById(req.params.id);
+        if (!question) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+
+        if (question.createdBy.toString() !== req.user._id.toString() && !["admin", "superadmin"].includes(req.user.role)) {
+            return res.status(403).json({ message: "Not authorized to delete this question." });
+        }
+
+        await question.deleteOne();
+        res.json({ message: "Question deleted" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+// @desc    Save or update draft question
+// @route   POST /api/exams/questions/draft
+// @access  Private (Teacher/Admin)
+export const saveDraftQuestion = async (req, res) => {
+    const { exam, classroom, questionText, options, correctAnswer, explanation } = req.body;
+
+    if (!questionText || !Array.isArray(options) || options.length !== 4) {
+        return res.status(400).json({ message: "Question text and 4 options are required." });
+    }
+
+    try {
+        const question = await Question.create({
+            exam: exam || null,
+            classroom: classroom || null,
+            questionText,
+            options,
+            correctAnswer,
+            explanation,
+            status: "draft",
+            createdBy: req.user._id,
+        });
+
+        res.status(201).json(question);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get draft questions for current user
+// @route   GET /api/exams/questions/drafts
+// @access  Private (Teacher/Admin)
+export const getDraftQuestions = async (req, res) => {
+    const { exam, classroom } = req.query;
+
+    try {
+        const query = {
+            createdBy: req.user._id,
+            status: "draft",
+        };
+
+        if (exam) query.exam = exam;
+        if (classroom) query.classroom = classroom;
+
+        const questions = await Question.find(query);
+        res.json(questions);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update a question (draft or published)
+// @route   PUT /api/exams/questions/:id
+// @access  Private (Teacher/Admin)
+export const updateQuestion = async (req, res) => {
+    const questionId = req.params.id;
+    const { questionText, options, correctAnswer, explanation, status, classroom, exam } = req.body;
+
+    try {
+        const question = await Question.findById(questionId);
+        if (!question) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+
+        if (question.createdBy.toString() !== req.user._id.toString() && !["admin", "superadmin"].includes(req.user.role)) {
+            return res.status(403).json({ message: "Not authorized to edit this question." });
+        }
+
+        question.questionText = questionText || question.questionText;
+        question.options = options || question.options;
+        question.correctAnswer = correctAnswer !== undefined ? correctAnswer : question.correctAnswer;
+        question.explanation = explanation || question.explanation;
+        question.status = status === "published" ? "published" : status === "draft" ? "draft" : question.status;
+        question.classroom = classroom || question.classroom;
+        question.exam = exam || question.exam;
+
+        await question.save();
+
+        res.json(question);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Publish a draft question
+// @route   POST /api/exams/questions/:id/publish
+// @access  Private (Teacher/Admin)
+export const publishQuestion = async (req, res) => {
+    const questionId = req.params.id;
+
+    try {
+        const question = await Question.findById(questionId);
+        if (!question) {
+            return res.status(404).json({ message: "Question not found" });
+        }
+
+        if (question.createdBy.toString() !== req.user._id.toString() && !["admin", "superadmin"].includes(req.user.role)) {
+            return res.status(403).json({ message: "Not authorized to publish this question." });
+        }
+
+        question.status = "published";
+        await question.save();
+
+        res.json(question);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
@@ -229,8 +367,15 @@ export const addQuestion = async (req, res) => {
 // @access  Private (All)
 export const getExamQuestions = async (req, res) => {
     try {
-        const questions = await Question.find({ exam: req.params.id });
-        
+        const includeDrafts = req.query.includeDrafts === 'true';
+        const query = { exam: req.params.id };
+
+        if (req.user.role === 'student' || !includeDrafts) {
+            query.status = 'published';
+        }
+
+        const questions = await Question.find(query);
+
         // Security: If student, check if they have submitted or if exam is over
         if (req.user.role === 'student') {
             const hasSubmitted = await Result.findOne({ exam: req.params.id, student: req.user._id });
@@ -245,7 +390,7 @@ export const getExamQuestions = async (req, res) => {
                 return res.json(strippedQuestions);
             }
         }
-        
+
         res.json(questions);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -272,27 +417,53 @@ export const submitExam = async (req, res) => {
             return res.status(404).json({ message: "Exam or questions not found" });
         }
 
-        const marksPerQ = exam.marksPerQuestion ?? 1;
-        const negMarks  = exam.negativeMarks   ?? 0;
+        const marksPerQ = exam.marksPerQuestion ?? (exam.isNeetPattern ? 4 : 1);
+        const negMarks  = exam.negativeMarks   ?? (exam.isNeetPattern ? 1 : 0);
 
         let score = 0;
+        
+        // Tracking for NEET attempts per subject (max 45 for Phy/Chem, 90 for Biology)
+        const neetAttemptCounts = {
+            "Physics": 0,
+            "Chemistry": 0,
+            "Biology": 0
+        };
+
         const processedAnswers = answers.map((ans) => {
             const question = questions.find((q) => q._id.toString() === ans.questionId);
-            const isCorrect = question && question.correctAnswer === ans.selectedOption;
-            const isAttempted = ans.selectedOption !== null && ans.selectedOption !== undefined;
+            if (!question) return null;
 
-            if (isCorrect) {
-                score += marksPerQ;
-            } else if (isAttempted) {
-                score -= negMarks; // subtract negative marks only if answered wrongly
+            const isCorrect = question.correctAnswer === ans.selectedOption;
+            const isAttempted = ans.selectedOption !== null && ans.selectedOption !== undefined;
+            
+            let countsForScore = true;
+
+            // Apply Simplified NEET logic (Flat per-subject limits)
+            if (exam.isNeetPattern && isAttempted) {
+                const sub = question.subject;
+                const limit = sub === 'Biology' ? 90 : 45;
+                if (neetAttemptCounts[sub] >= limit) {
+                    countsForScore = false; // Ignore beyond first X attempted per subject
+                } else {
+                    neetAttemptCounts[sub]++;
+                }
+            }
+
+            if (countsForScore) {
+                if (isCorrect) {
+                    score += marksPerQ;
+                } else if (isAttempted) {
+                    score -= negMarks;
+                }
             }
 
             return {
                 questionId: ans.questionId,
                 selectedOption: ans.selectedOption,
                 isCorrect,
+                ignoredByNeetRule: !countsForScore
             };
-        });
+        }).filter(Boolean);
 
         score = Math.max(0, parseFloat(score.toFixed(2))); // floor at 0, round to 2 decimal places
 
@@ -341,7 +512,7 @@ export const deleteExam = async (req, res) => {
 // @access  Private (Teacher/Admin)
 export const updateExam = async (req, res) => {
     try {
-        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType } = req.body;
+        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType, status } = req.body;
         const exam = await Exam.findById(req.params.id);
 
         if (!exam) {
@@ -361,6 +532,7 @@ export const updateExam = async (req, res) => {
         exam.classroom = classroom || exam.classroom;
         exam.examCategory = examCategory || exam.examCategory;
         exam.examType = examType || exam.examType;
+        if (status) exam.status = status;
 
         const updatedExam = await exam.save();
 

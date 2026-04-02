@@ -7,7 +7,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: process.env.EMAIL_HOST || 'smtp.zoho.com',
+    port: process.env.EMAIL_PORT || 587,
+    secure: false,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
@@ -167,7 +169,7 @@ const escapeHtml = (value = '') =>
 export const sendRegistrationEmail = async (userEmail, userName) => {
     try {
         const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_USER || 'synapseeduhub@gmail.com'}>`,
+            from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
             to: userEmail,
             subject: 'Welcome to Synapse EduHub - Registration Successful',
             html: emailLayout(
@@ -193,7 +195,7 @@ export const sendRegistrationEmail = async (userEmail, userName) => {
 export const sendOTPEmail = async (email, otp) => {
     try {
         const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_USER || 'synapseeduhub@gmail.com'}>`,
+            from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
             to: email,
             subject: 'Synapse EduHub - Your Email Verification Code',
             html: emailLayout(
@@ -225,7 +227,7 @@ export const sendStudyMaterialEmail = async (studentEmails, materialTitle, class
         const typeDisplay = isQuestionPaper ? 'New Question Paper' : 'New Study Material';
         
         const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_USER || 'synapseeduhub@gmail.com'}>`,
+            from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
             bcc: studentEmails,
             subject: `Synapse Hub - ${typeDisplay} Available`,
             html: emailLayout(
@@ -270,7 +272,7 @@ export const sendExamScheduledEmail = async (studentEmails, examTitle, date, cla
         });
 
         const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_USER || 'synapseeduhub@gmail.com'}>`,
+            from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
             bcc: studentEmails,
             subject: 'Synapse Hub - New Exam Scheduled',
             html: emailLayout(
@@ -317,7 +319,7 @@ export const sendContactInquiryEmail = async ({ recipientEmails, name, email, pr
         const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
         const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_USER || 'synapseeduhub@gmail.com'}>`,
+            from: `"Synapse EduHub" <${process.env.EMAIL_SUPPORT || 'support@synapseeduhub.com'}>`,
             to: recipientEmails,
             replyTo: email,
             subject: `New Contact Form Message from ${name}`,

@@ -18,6 +18,20 @@ export const getMyResults = () => apiClient("/exams/my-results");
 export const deleteExam = (examId) =>
     apiClient(`/exams/${examId}`, { method: "DELETE" });
 
+export const saveDraftQuestion = (questionData) =>
+    apiClient(`/exams/questions/draft`, { method: "POST", body: questionData });
+
+export const getDraftQuestions = (params) => {
+    const query = new URLSearchParams(params).toString();
+    return apiClient(`/exams/questions/drafts?${query}`);
+};
+
+export const updateQuestion = (questionId, questionData) =>
+    apiClient(`/exams/questions/${questionId}`, { method: "PUT", body: questionData });
+
+export const publishQuestion = (questionId) =>
+    apiClient(`/exams/questions/${questionId}/publish`, { method: "POST" });
+
 // Report Services
 export const getOverallStats = () => apiClient("/reports/overall");
 export const getClassroomReports = () => apiClient("/reports/classrooms");

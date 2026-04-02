@@ -58,16 +58,24 @@ export const getMaterials = async (req, res) => {
         
         // Filtering for Students
         if (req.user && req.user.role === 'student' && req.user.userType === 'institutional') {
-            const studentClassrooms = await Classroom.find({ students: req.user._id });
-            const classroomIds = studentClassrooms.map(c => c._id);
-            
-            // Show materials assigned to their specific classrooms, or global materials
-            query.$or = [
-                { classroom: { $in: classroomIds } },
+            const studentClassrooms = await Classroom.find({ students: req.user._id }).select("_id");
+            const classroomIdsFromStudents = studentClassrooms.map((c) => c._id?.toString()).filter(Boolean);
+            const enrolledClassrooms = Array.isArray(req.user.enrolledClassrooms)
+                ? req.user.enrolledClassrooms.map((id) => id?.toString()).filter(Boolean)
+                : [];
+            const classroomIdSet = new Set([...classroomIdsFromStudents, ...enrolledClassrooms]);
+            const classroomIds = Array.from(classroomIdSet);
+
+            const orClauses = [
                 { classroom: null },
                 { classroom: "" },
                 { classroom: { $exists: false } }
             ];
+            if (classroomIds.length > 0) {
+                orClauses.unshift({ classroom: { $in: classroomIds } });
+            }
+
+            query.$or = orClauses;
         }
 
         const materials = await StudyMaterial.find(query);

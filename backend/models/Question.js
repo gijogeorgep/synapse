@@ -5,7 +5,19 @@ const questionSchema = new mongoose.Schema(
         exam: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Exam",
-            required: true,
+        },
+        classroom: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Classroom",
+        },
+        status: {
+            type: String,
+            enum: ["draft", "published"],
+            default: "draft",
+        },
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
         },
         questionText: {
             type: String,
@@ -26,6 +38,14 @@ const questionSchema = new mongoose.Schema(
         },
         imageUrl: {
             type: String,
+        },
+        subject: {
+            type: String,
+            enum: ["Physics", "Chemistry", "Botany", "Zoology", "Biology"],
+        },
+        section: {
+            type: String,
+            enum: ["A", "B"],
         },
     },
     {

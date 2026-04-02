@@ -31,6 +31,9 @@ const AdminClassroomDetails = () => {
     const [isCreatingExam, setIsCreatingExam] = useState(false);
     const [expandedQ, setExpandedQ] = useState(0);
     const [uploadingImg, setUploadingImg] = useState({}); // { [qIdx]: true|false }
+    const [draftQuestions, setDraftQuestions] = useState([]);
+    const [isLoadingDrafts, setIsLoadingDrafts] = useState(false);
+    const [isSavingDraft, setIsSavingDraft] = useState(false);
 
     // Study material form
     const [materialForm, setMaterialForm] = useState({ title: '', url: '' });
@@ -39,7 +42,10 @@ const AdminClassroomDetails = () => {
     const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
 
-    useEffect(() => { fetchClassroomDetails(); }, [id]);
+    useEffect(() => {
+        fetchClassroomDetails();
+        fetchDraftQuestions();
+    }, [id]);
 
     const fetchClassroomDetails = async () => {
         try {
@@ -58,6 +64,79 @@ const AdminClassroomDetails = () => {
     const showStatus = (type, message) => {
         setStatus({ type, message });
         setTimeout(() => setStatus({ type: '', message: '' }), 4000);
+    };
+
+    const fetchDraftQuestions = async () => {
+        setIsLoadingDrafts(true);
+        try {
+            const { data } = await axios.get(`/api/exams/questions/drafts?classroom=${id}`, config);
+            setDraftQuestions(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Failed to load draft questions', err);
+        } finally {
+            setIsLoadingDrafts(false);
+        }
+    };
+
+    const handleSaveDrafts = async () => {
+        if (!Array.isArray(questions) || questions.length === 0) {
+            showStatus('error', 'No questions to save.');
+            return;
+        }
+
+        setIsSavingDraft(true);
+        try {
+            const savePromises = questions.map((q) => {
+                const payload = {
+                    exam: null,
+                    classroom: id,
+                    questionText: q.questionText,
+                    options: q.options,
+                    correctAnswer: q.correctAnswer,
+                    explanation: q.explanation,
+                    imageUrl: q.imageUrl,
+                    status: 'draft'
+                };
+
+                if (q._id) {
+                    return axios.put(`/api/exams/questions/${q._id}`, payload, { headers: config.headers });
+                }
+
+                return axios.post('/api/exams/questions/draft', payload, { headers: config.headers });
+            });
+
+            await Promise.all(savePromises);
+            await fetchDraftQuestions();
+            showStatus('success', 'Draft saved successfully. You can continue editing or publish later.');
+        } catch (err) {
+            console.error('Draft save failed', err);
+            showStatus('error', err.response?.data?.message || 'Failed to save drafts.');
+        } finally {
+            setIsSavingDraft(false);
+        }
+    };
+
+    const handleLoadDraft = (draft) => {
+        setQuestions([{
+            ...EMPTY_QUESTION(),
+            ...draft,
+            options: Array.isArray(draft.options) ? draft.options : ['', '', '', ''],
+        }]);
+        setExpandedQ(0);
+        showStatus('success', 'Draft loaded. You can now edit and publish.');
+    };
+
+    const handleDeleteDraft = async (draftId) => {
+        if (!window.confirm('Delete this draft question?')) return;
+
+        try {
+            await axios.delete(`/api/exams/questions/${draftId}`, { headers: config.headers });
+            await fetchDraftQuestions();
+            showStatus('success', 'Draft removed.');
+        } catch (err) {
+            console.error('Failed deleting draft', err);
+            showStatus('error', 'Could not delete draft question.');
+        }
     };
 
     const validateExamBuilder = () => {
@@ -476,6 +555,45 @@ const AdminClassroomDetails = () => {
                         </div>
                     </div>
 
+                    {/* Draft Controls */}
+                    <div className="bg-white rounded-3xl p-4 shadow-sm border border-slate-100">
+                        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                            <h3 className="text-sm font-bold text-slate-800">Draft Question Manager</h3>
+                            <div className="flex gap-2">
+                                <button type="button" onClick={handleSaveDrafts} disabled={isSavingDraft}
+                                    className="px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-600 disabled:opacity-50">
+                                    {isSavingDraft ? 'Saving...' : 'Save All as Draft'}
+                                </button>
+                                <button type="button" onClick={fetchDraftQuestions} disabled={isLoadingDrafts}
+                                    className="px-4 py-2 bg-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-300 disabled:opacity-50">
+                                    {isLoadingDrafts ? 'Refreshing...' : 'Refresh Drafts'}
+                                </button>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            {draftQuestions.length === 0 ? (
+                                <p className="text-xs text-slate-500">No saved drafts yet. Save current questions to continue later.</p>
+                            ) : (
+                                <ul className="space-y-2">
+                                    {draftQuestions.map((draft) => (
+                                        <li key={draft._id} className="border border-slate-200 rounded-xl p-3 flex items-start justify-between gap-3">
+                                            <div className="flex-1">
+                                                <p className="text-xs font-bold text-slate-700 truncate">{draft.questionText || 'Untitled question'}</p>
+                                                <p className="text-[10px] text-slate-500 mt-1">{draft.status} · {new Date(draft.createdAt).toLocaleString()}</p>
+                                            </div>
+                                            <div className="flex items-center gap-1">
+                                                <button type="button" onClick={() => handleLoadDraft(draft)}
+                                                    className="px-2 py-1 text-xs font-semibold bg-cyan-50 text-cyan-700 rounded-lg">Edit</button>
+                                                <button type="button" onClick={() => handleDeleteDraft(draft._id)}
+                                                    className="px-2 py-1 text-xs font-semibold bg-rose-50 text-rose-700 rounded-lg">Delete</button>
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            )}
+                        </div>
+                    </div>
+
                     {/* Questions */}
                     <div className="space-y-4">
                         {questions.map((q, qIdx) => (
@@ -596,6 +714,14 @@ const AdminClassroomDetails = () => {
 
                     {/* Submit */}
                     <div className="mt-8 flex items-center justify-between gap-4 sticky bottom-0 bg-white p-4 border-t border-slate-100 shadow-[0_-10px_20px_rgba(0,0,0,0.02)] rounded-t-3xl">
+                        <button
+                            type="button"
+                            onClick={handleSaveDrafts}
+                            disabled={isSavingDraft}
+                            className="px-4 py-3 bg-amber-500 text-white rounded-2xl font-black hover:bg-amber-600 transition-all disabled:opacity-50"
+                        >
+                            {isSavingDraft ? 'Saving Draft...' : 'Save Draft'}
+                        </button>
                         <button
                             type="button"
                             onClick={() => setShowPreview(true)}

@@ -186,121 +186,82 @@ const BlogPost = () => {
       </div>
 
       {/* Content Area */}
-      <div className="max-w-6xl mx-auto px-4 -mt-10 lg:-mt-24 relative z-10 grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
-          <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
-            {/* Action Bar */}
-            <div className="px-6 md:px-12 py-6 border-b border-slate-50 flex items-center justify-between">
-               <div className="flex gap-2">
-                  <button className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all">
-                    <Facebook className="w-5 h-5" />
-                  </button>
-                  <button className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-cyan-500 hover:bg-cyan-50 transition-all">
-                    <Twitter className="w-5 h-5" />
-                  </button>
-                  <button className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all">
-                    <Linkedin className="w-5 h-5" />
-                  </button>
-               </div>
-               <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-50 text-cyan-700 font-bold text-sm hover:bg-cyan-100 transition-all">
-                 <Share2 className="w-4 h-4" />
-                 Share Insight
-               </button>
-            </div>
+      <div className="max-w-4xl mx-auto px-4 -mt-10 relative z-10">
+        <div className="bg-white rounded-[2.5rem] shadow-2xl shadow-slate-200/60 border border-slate-100 overflow-hidden">
+          {/* Action Bar */}
+          <div className="px-6 md:px-12 py-6 border-b border-slate-50 flex items-center justify-between">
+             <div className="flex gap-2">
+                <button className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 transition-all">
+                  <Facebook className="w-5 h-5" />
+                </button>
+                <button className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-cyan-500 hover:bg-cyan-50 transition-all">
+                  <Twitter className="w-5 h-5" />
+                </button>
+                <button className="p-2.5 rounded-xl bg-slate-50 text-slate-500 hover:text-blue-600 hover:bg-blue-50 transition-all">
+                  <Linkedin className="w-5 h-5" />
+                </button>
+             </div>
+             <button className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-cyan-50 text-cyan-700 font-bold text-sm hover:bg-cyan-100 transition-all">
+               <Share2 className="w-4 h-4" />
+               Share Insight
+             </button>
+          </div>
 
-            {/* Markdown Content */}
-            <article className="px-6 md:px-16 py-10 md:py-16 prose-markdown max-w-none">
-              {blog.excerpt && (
-                <p className="text-xl md:text-2xl text-slate-500 font-medium italic leading-relaxed border-l-4 border-cyan-100 pl-6 mb-12">
-                  {blog.excerpt}
-                </p>
-              )}
-              
-              <ReactMarkdown 
-                rehypePlugins={[rehypeRaw]} 
-                remarkPlugins={[remarkGfm]}
-              >
-                {blog.content}
-              </ReactMarkdown>
-            </article>
-
-            {/* Footer Tags */}
-            {Array.isArray(blog.tags) && blog.tags.length > 0 && (
-              <div className="px-6 md:px-16 pb-12">
-                 <div className="flex flex-wrap gap-2 pt-8 border-t border-slate-50">
-                  {blog.tags.map((t) => (
-                    <span
-                      key={t}
-                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-slate-600 text-xs font-bold rounded-xl border border-slate-100 hover:bg-cyan-50 hover:text-cyan-700 hover:border-cyan-100 transition-all cursor-default"
-                    >
-                      <Tag className="w-3.5 h-3.5" />
-                      {t}
-                    </span>
-                  ))}
-                </div>
-              </div>
+          {/* Markdown Content */}
+          <article className="px-6 md:px-16 py-10 md:py-16 prose-markdown max-w-none">
+            {blog.excerpt && (
+              <p className="text-xl md:text-2xl text-slate-500 font-medium italic leading-relaxed border-l-4 border-cyan-100 pl-6 mb-12">
+                {blog.excerpt}
+              </p>
             )}
-          </div>
+            
+            <ReactMarkdown 
+              rehypePlugins={[rehypeRaw]} 
+              remarkPlugins={[remarkGfm]}
+            >
+              {blog.content}
+            </ReactMarkdown>
+          </article>
 
-          {/* Author Card */}
-          <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-8">
-             <div className="w-24 h-24 shrink-0 rounded-2xl bg-indigo-50 flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
-                {blog.author?.avatarUrl ? (
-                  <img src={blog.author.avatarUrl} alt={blog.author.name} className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-12 h-12 text-indigo-300" />
-                )}
-             </div>
-             <div className="space-y-3 text-center md:text-left">
-                <h4 className="text-xl font-bold text-slate-900">About {blog.author?.name || "Synapse Expert"}</h4>
-                <p className="text-slate-500 text-sm leading-relaxed max-w-2xl">
-                  Dedicated educator and subject matter expert at Synapse Edu Hub. Committed to helping students 
-                  unlock their potential through evidence-based study strategies and comprehensive learning materials.
-                </p>
-                <div className="pt-2 flex justify-center md:justify-start gap-4">
-                   <Link to="/blogs" className="text-sm font-bold text-cyan-600 hover:text-cyan-700 transition-colors">View all posts</Link>
-                   <span className="text-slate-300">|</span>
-                   <Link to="/" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors">Visit Portal</Link>
-                </div>
-             </div>
-          </div>
+          {/* Footer Tags */}
+          {Array.isArray(blog.tags) && blog.tags.length > 0 && (
+            <div className="px-6 md:px-16 pb-12">
+               <div className="flex flex-wrap gap-2 pt-8 border-t border-slate-50">
+                {blog.tags.map((t) => (
+                  <span
+                    key={t}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-50 text-slate-600 text-xs font-bold rounded-xl border border-slate-100 hover:bg-cyan-50 hover:text-cyan-700 hover:border-cyan-100 transition-all cursor-default"
+                  >
+                    <Tag className="w-3.5 h-3.5" />
+                    {t}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Sidebar Ad Container */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-24 space-y-6">
-            {/* Premium Ad Card */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-indigo-900 to-cyan-900 shadow-2xl border border-indigo-500/30 p-8 text-white">
-               <div className="absolute -top-20 -right-20 p-40 bg-cyan-500/30 blur-[80px] rounded-full mix-blend-screen pointer-events-none" />
-               <div className="relative z-10">
-                 <span className="inline-block px-3 py-1 bg-cyan-500/20 text-cyan-300 font-bold text-[10px] uppercase tracking-widest rounded-full mb-6 border border-cyan-400/20">
-                   Premium Coaching
-                 </span>
-                 <h3 className="text-2xl font-black leading-tight mb-4">
-                   Ready to Ace Your Upcoming Exams?
-                 </h3>
-                 <p className="text-indigo-100 text-sm leading-relaxed mb-8 opacity-90">
-                   Join Synapse Edu Hub's intensive coaching programs. Get expert guidance, exclusive study materials, and unmatched results for NEET, JEE & PSC.
-                 </p>
-                 
-                 <Link 
-                   to="/" 
-                   className="flex items-center justify-center gap-2 w-full py-4 bg-white text-indigo-900 rounded-xl font-black text-sm uppercase tracking-widest hover:bg-cyan-50 hover:scale-[1.02] active:scale-95 transition-all shadow-lg shadow-black/20"
-                 >
-                   Explore Programs
-                 </Link>
-               </div>
-            </div>
-
-            {/* Secondary Contact Box */}
-            <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm text-center">
-               <h4 className="font-bold text-slate-800 mb-2">Need guidance?</h4>
-               <p className="text-xs text-slate-500 mb-4">Talk to our academic counselors today to find the right path.</p>
-               <Link to="/" className="text-sm font-bold text-cyan-600 hover:text-cyan-700 underline decoration-cyan-600/30 underline-offset-4">
-                 Visit Home Page
-               </Link>
-            </div>
-          </div>
+        {/* Author Card */}
+        <div className="mt-12 bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col md:flex-row items-center gap-8">
+           <div className="w-24 h-24 shrink-0 rounded-2xl bg-indigo-50 flex items-center justify-center overflow-hidden border-4 border-white shadow-md">
+              {blog.author?.avatarUrl ? (
+                <img src={blog.author.avatarUrl} alt={blog.author.name} className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-12 h-12 text-indigo-300" />
+              )}
+           </div>
+           <div className="space-y-3 text-center md:text-left">
+              <h4 className="text-xl font-bold text-slate-900">About {blog.author?.name || "Synapse Expert"}</h4>
+              <p className="text-slate-500 text-sm leading-relaxed max-w-2xl">
+                Dedicated educator and subject matter expert at Synapse Edu Hub. Committed to helping students 
+                unlock their potential through evidence-based study strategies and comprehensive learning materials.
+              </p>
+              <div className="pt-2 flex justify-center md:justify-start gap-4">
+                 <Link to="/blogs" className="text-sm font-bold text-cyan-600 hover:text-cyan-700 transition-colors">View all posts</Link>
+                 <span className="text-slate-300">|</span>
+                 <Link to="/" className="text-sm font-bold text-indigo-600 hover:text-indigo-700 transition-colors">Visit Portal</Link>
+              </div>
+           </div>
         </div>
       </div>
     </div>
