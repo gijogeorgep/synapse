@@ -170,9 +170,9 @@ function RouteSeo() {
 
   const seoByPath = {
     "/": {
-      title: "Synapse Edu Hub| Indias most focused learning ecosystem",
+      title: "Synapse Edu Hub| Indiasmost focused learning ecosystem",
       description:
-        "Achieve academic excellence with Synapse Edu Hub, India's most focused learning ecosystem. We offer personalized coaching, expert mentorship, and comprehensive study materials for competitive exams.",
+        "Synapse Edu Hub is India's most focused learning ecosystem and best e-learning platform in Kerala. We offer expert coaching for NEET, JEE, KEAM, CUET, and school excellence with personalized mentorship and high-tier study materials.",
       keywords:
         "India's most focused learning ecosystem, Synapse Edu Hub, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition, NEET coaching, JEE coaching",
       structuredData: [websiteSchema, organizationSchema],
@@ -181,7 +181,7 @@ function RouteSeo() {
     "/indias-most-focused-learning-ecosystem": {
       title: "Synapse Edu Hub| Indiasmost focused learning ecosystem",
       description:
-        "Welcome to India's most focused learning ecosystem. Synapse Edu Hub provides top-tier educational resources, expert guidance, and a personalized approach to help students succeed in their academic journeys.",
+        "Explore India's most focused learning ecosystem. Synapse Edu Hub provides top-tier educational resources, expert guidance, and a personalized approach to help students succeed in competitive exams like NEET and JEE.",
       keywords:
         "India's most focused learning ecosystem, Synapse Edu Hub, educational success, expert mentors, focused learning India",
       canonicalPath: "/",
