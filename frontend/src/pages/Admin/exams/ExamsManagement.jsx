@@ -27,20 +27,7 @@ const ExamsManagement = () => {
         classroom: '',
         examCategory: 'scheduled',
         examType: 'subject-wise',
-        isNeetPattern: false,
-        neetMode: 'official', // 'official' or 'manual'
-        marksPerQuestion: 4,
-        negativeMarks: 1,
-        status: 'draft',
-        questions: [{ 
-            questionText: '', 
-            options: ['', '', '', ''], 
-            correctAnswer: 0, 
-            explanation: '', 
-            imageUrl: '',
-            subject: 'Physics',
-            section: 'A'
-        }]
+        questions: [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
     });
 
     // Form for results
@@ -57,7 +44,6 @@ const ExamsManagement = () => {
     const [draftQuestions, setDraftQuestions] = useState([]);
     const [isLoadingDrafts, setIsLoadingDrafts] = useState(false);
     const [isSavingDraft, setIsSavingDraft] = useState(false);
-    const [activeCreationSubject, setActiveCreationSubject] = useState("Physics");
 
     const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
@@ -126,8 +112,6 @@ const ExamsManagement = () => {
                     correctAnswer: q.correctAnswer,
                     explanation: q.explanation,
                     imageUrl: q.imageUrl || '',
-                    subject: q.subject,
-                    section: q.section,
                     status: 'draft',
                 })
             ));
@@ -145,14 +129,12 @@ const ExamsManagement = () => {
         setCurrentStep(2);
         setFormData(prev => ({
             ...prev,
-            questions: [...prev.questions, {
+            questions: [{
                 questionText: draft.questionText,
                 options: draft.options,
                 correctAnswer: draft.correctAnswer,
                 explanation: draft.explanation,
                 imageUrl: draft.imageUrl || '',
-                subject: draft.subject || 'Physics',
-                section: draft.section || 'A',
                 _id: draft._id,
             }],
         }));
@@ -172,44 +154,15 @@ const ExamsManagement = () => {
     };
 
 
-    const handleCreateExam = async (e, forceStatus) => {
-        if (e && e.preventDefault) e.preventDefault();
-        
-        const targetStatus = forceStatus || formData.status || 'draft';
-
-        // Validation only for Publishing NEET exams
-        if (targetStatus === 'published' && formData.isNeetPattern && formData.neetMode === 'official') {
-            const counts = {
-                'Physics': 0,
-                'Chemistry': 0,
-                'Biology': 0
-            };
-
-            formData.questions.forEach(q => {
-                if (counts.hasOwnProperty(q.subject)) counts[q.subject]++;
-            });
-
-            const missing = [];
-            if (counts['Physics'] !== 50) missing.push(`Physics: ${counts['Physics']}/50`);
-            if (counts['Chemistry'] !== 50) missing.push(`Chemistry: ${counts['Chemistry']}/50`);
-            if (counts['Biology'] !== 100) missing.push(`Biology: ${counts['Biology']}/100`);
-
-            if (missing.length > 0) {
-                alert("NEET Structure Error:\n\n" + missing.join("\n") + "\n\nPlease correct the question counts before publishing. You can save as a Draft for now.");
-                return;
-            }
-        }
-
-        const dataToSend = { ...formData, status: targetStatus };
-
-        setStatus({ type: 'loading', message: isEditing ? 'Updating exam...' : 'Creating exam...' });
+    const handleCreateExam = async (e) => {
+        e.preventDefault();
         try {
             if (isEditing) {
-                await updateBulkExam(editingExamId, dataToSend);
-                setStatus({ type: 'success', message: targetStatus === 'published' ? 'Exam published successfully!' : 'Draft saved successfully!' });
+                await updateBulkExam(editingExamId, formData);
+                setStatus({ type: 'success', message: 'Exam updated successfully!' });
             } else {
-                await createBulkExam(dataToSend);
-                setStatus({ type: 'success', message: targetStatus === 'published' ? 'Exam published successfully!' : 'Draft saved successfully!' });
+                await createBulkExam(formData);
+                setStatus({ type: 'success', message: 'Exam created successfully with questions!' });
             }
             setIsModalOpen(false);
             resetForm();
@@ -232,17 +185,7 @@ const ExamsManagement = () => {
             classroom: classrooms[0]?._id || '',
             examCategory: 'scheduled',
             examType: 'subject-wise',
-            isNeetPattern: false,
-            status: 'draft',
-            questions: [{ 
-                questionText: '', 
-                options: ['', '', '', ''], 
-                correctAnswer: 0, 
-                explanation: '', 
-                imageUrl: '',
-                subject: 'Physics',
-                section: 'A'
-            }]
+            questions: [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
         });
         setIsEditing(false);
         setEditingExamId(null);
@@ -262,13 +205,7 @@ const ExamsManagement = () => {
                 classroom: exam.classroom._id,
                 examCategory: exam.examCategory || 'scheduled',
                 examType: exam.examType || 'subject-wise',
-                isNeetPattern: exam.isNeetPattern || false,
-                status: exam.status || 'draft',
-                questions: questRes.data.length > 0 ? questRes.data.map(q => ({
-                    ...q,
-                    subject: q.subject || 'Physics',
-                    section: q.section || 'A'
-                })) : [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '', subject: 'Physics', section: 'A' }]
+                questions: questRes.data.length > 0 ? questRes.data : [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
             });
             setIsEditing(true);
             setEditingExamId(exam._id);
@@ -295,26 +232,9 @@ const ExamsManagement = () => {
     };
 
     const addQuestion = () => {
-        if (formData.isNeetPattern && formData.neetMode === 'official') {
-            const currentSubCount = formData.questions.filter(q => q.subject === activeCreationSubject).length;
-            const limit = activeCreationSubject === 'Biology' ? 100 : 50;
-            if (currentSubCount >= limit) {
-                alert(`${activeCreationSubject} limit reached! (Max ${limit})`);
-                return;
-            }
-        }
-        
         setFormData({
             ...formData,
-            questions: [...formData.questions, { 
-                questionText: '', 
-                options: ['', '', '', ''], 
-                correctAnswer: 0, 
-                explanation: '', 
-                imageUrl: '',
-                subject: formData.isNeetPattern ? activeCreationSubject : 'Physics',
-                section: 'A'
-            }],
+            questions: [...formData.questions, { questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
         });
     };
 
@@ -434,17 +354,10 @@ const ExamsManagement = () => {
                                  <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl">
                                      <Award className="w-6 h-6" />
                                  </div>
-                                 <div className="flex gap-1 items-start">
-                                    <div className="text-right mr-2 space-y-1">
-                                        <div className="flex items-center gap-2 justify-end">
-                                            {exam.status === 'draft' ? (
-                                                <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-[9px] font-black rounded-full uppercase border border-slate-200">Draft</span>
-                                            ) : (
-                                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[9px] font-black rounded-full uppercase border border-emerald-100">Live</span>
-                                            )}
-                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{exam.subject}</span>
-                                        </div>
-                                        <p className="text-sm font-bold text-indigo-600 leading-none">Class {exam.classLevel}</p>
+                                 <div className="flex gap-1">
+                                    <div className="text-right mr-2">
+                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{exam.subject}</span>
+                                        <p className="text-sm font-bold text-indigo-600">Class {exam.classLevel}</p>
                                     </div>
                                     <div className="relative">
                                         <button 
@@ -691,101 +604,10 @@ const ExamsManagement = () => {
                                         <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Exam Title</label>
                                         <input name="title" value={formData.title} onChange={(e)=>setFormData({...formData, title:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required placeholder="Unit Test 1" />
                                     </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-sm font-bold text-slate-700 mb-3 uppercase tracking-wider">Exam Format</label>
-                                        <div className="grid grid-cols-2 gap-4">
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, isNeetPattern: false, duration: 90, totalMarks: 100, subject: '' })}
-                                                className={`p-4 rounded-2xl border-2 text-left transition-all ${!formData.isNeetPattern ? 'border-indigo-600 bg-indigo-50 shadow-md' : 'border-slate-100 hover:border-slate-200'}`}
-                                            >
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${!formData.isNeetPattern ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                                                    <BookOpen className="w-4 h-4" />
-                                                </div>
-                                                <p className="font-bold text-slate-800">Standard Exam</p>
-                                                <p className="text-[10px] text-slate-500 font-medium">Custom duration, marks & subjects</p>
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, isNeetPattern: true, duration: 200, totalMarks: 720, subject: 'NEET Mock', examType: 'mock', neetMode: 'official' })}
-                                                className={`p-4 rounded-2xl border-2 text-left transition-all ${formData.isNeetPattern ? 'border-indigo-600 bg-indigo-50 shadow-md' : 'border-slate-100 hover:border-slate-200'}`}
-                                            >
-                                                <div className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 ${formData.isNeetPattern ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                                                    <Award className="w-4 h-4" />
-                                                </div>
-                                                <p className="font-bold text-slate-800">NEET Pattern</p>
-                                                <p className="text-[10px] text-slate-500 font-medium">Subject grouping + Section A/B logic</p>
-                                            </button>
-                                        </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Subject</label>
+                                        <input name="subject" value={formData.subject} onChange={(e)=>setFormData({...formData, subject:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required placeholder="Mathematics" />
                                     </div>
-
-                                    {formData.isNeetPattern && (
-                                        <div className="col-span-2 bg-slate-50 p-6 rounded-[2rem] border border-slate-200 space-y-4 animate-in slide-in-from-top-4">
-                                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest">NEET Configuration Mode</label>
-                                            <div className="flex gap-4">
-                                                <label className={`flex-1 p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${formData.neetMode === 'official' ? 'bg-white border-indigo-500 text-indigo-700' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
-                                                    <input 
-                                                        type="radio" 
-                                                        name="neetMode" 
-                                                        value="official" 
-                                                        checked={formData.neetMode === 'official'} 
-                                                        onChange={() => setFormData({ ...formData, neetMode: 'official', duration: 180, totalMarks: 720 })}
-                                                        className="accent-indigo-600"
-                                                    />
-                                                    <span className="text-xs font-bold">Real NEET (Auto-fill)</span>
-                                                </label>
-                                                <label className={`flex-1 p-3 rounded-xl border-2 cursor-pointer transition-all flex items-center gap-3 ${formData.neetMode === 'manual' ? 'bg-white border-indigo-500 text-indigo-700' : 'bg-transparent border-transparent text-slate-400 hover:text-slate-600'}`}>
-                                                    <input 
-                                                        type="radio" 
-                                                        name="neetMode" 
-                                                        value="manual" 
-                                                        checked={formData.neetMode === 'manual'} 
-                                                        onChange={() => setFormData({ ...formData, neetMode: 'manual' })}
-                                                        className="accent-indigo-600"
-                                                    />
-                                                    <span className="text-xs font-bold">Manual NEET (Custom)</span>
-                                                </label>
-                                            </div>
-                                            {formData.neetMode === 'official' && (
-                                                <div className="flex items-center gap-4 text-[10px] font-bold text-indigo-500 bg-white/50 p-2 rounded-lg border border-indigo-100">
-                                                    <span>• 180 Minutes</span>
-                                                    <span>• 720 Marks (+4/-1)</span>
-                                                    <span>• Physics, Chemistry, Biology</span>
-                                                </div>
-                                            )}
-                                            {formData.neetMode === 'manual' && (
-                                                <div className="grid grid-cols-2 gap-4 pt-2 animate-in fade-in slide-in-from-top-2">
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Correct Mark</label>
-                                                        <input 
-                                                            type="number" 
-                                                            value={formData.marksPerQuestion} 
-                                                            onChange={(e) => setFormData({...formData, marksPerQuestion: parseFloat(e.target.value) || 0})}
-                                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                            placeholder="4"
-                                                        />
-                                                    </div>
-                                                    <div>
-                                                        <label className="block text-[10px] font-black text-slate-400 uppercase tracking-wider mb-1">Negative Mark</label>
-                                                        <input 
-                                                            type="number" 
-                                                            value={formData.negativeMarks} 
-                                                            onChange={(e) => setFormData({...formData, negativeMarks: parseFloat(e.target.value) || 0})}
-                                                            className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold focus:ring-2 focus:ring-indigo-500 outline-none"
-                                                            placeholder="1"
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
-                                    )}
-
-                                    {!formData.isNeetPattern && (
-                                        <div>
-                                            <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Subject</label>
-                                            <input name="subject" value={formData.subject} onChange={(e)=>setFormData({...formData, subject:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required placeholder="Mathematics" />
-                                        </div>
-                                    )}
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Classroom</label>
                                         <select name="classroom" value={formData.classroom} onChange={(e)=>setFormData({...formData, classroom:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none">
@@ -815,28 +637,12 @@ const ExamsManagement = () => {
                                         </div>
                                     )}
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Duration (Mins) {formData.neetMode === 'official' && formData.isNeetPattern && <span className="text-xs text-indigo-500 font-black">(Auto)</span>}</label>
-                                        <input 
-                                            type="number" 
-                                            name="duration" 
-                                            value={formData.duration} 
-                                            onChange={(e)=>setFormData({...formData, duration: parseInt(e.target.value) || 0})} 
-                                            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none ${formData.neetMode === 'official' && formData.isNeetPattern ? 'bg-indigo-50 border-indigo-100 text-indigo-700 font-bold' : 'bg-slate-50 border-slate-200'}`} 
-                                            readOnly={formData.neetMode === 'official' && formData.isNeetPattern}
-                                            required 
-                                        />
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Duration (Mins)</label>
+                                        <input type="number" name="duration" value={formData.duration} onChange={(e)=>setFormData({...formData, duration:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required />
                                     </div>
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Total Marks {formData.neetMode === 'official' && formData.isNeetPattern && <span className="text-xs text-indigo-500 font-black">(Auto)</span>}</label>
-                                        <input 
-                                            type="number" 
-                                            name="totalMarks" 
-                                            value={formData.totalMarks} 
-                                            onChange={(e)=>setFormData({...formData, totalMarks: parseInt(e.target.value) || 0})} 
-                                            className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none ${formData.neetMode === 'official' && formData.isNeetPattern ? 'bg-indigo-50 border-indigo-100 text-indigo-700 font-bold' : 'bg-slate-50 border-slate-200'}`} 
-                                            readOnly={formData.neetMode === 'official' && formData.isNeetPattern}
-                                            required 
-                                        />
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Total Marks</label>
+                                        <input type="number" name="totalMarks" value={formData.totalMarks} onChange={(e)=>setFormData({...formData, totalMarks:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required />
                                     </div>
                                     <div className="col-span-2 pt-4">
                                         <button 
@@ -905,166 +711,99 @@ const ExamsManagement = () => {
                                             <Plus className="w-4 h-4" /> Add Question
                                         </button>
                                     </div>
-
-                                    {formData.isNeetPattern && formData.neetMode === 'official' && (
-                                        <div className="bg-indigo-50 border border-indigo-100 rounded-2xl p-4 space-y-3">
-                                            <div className="flex items-center gap-2 text-indigo-700">
-                                                <TrendingUp className="w-4 h-4" />
-                                                <span className="text-xs font-black uppercase tracking-wider">NEET 200 Structure Progress (Click to Nav)</span>
-                                            </div>
-                                            <div className="grid grid-cols-3 gap-3">
-                                                {['Physics', 'Chemistry', 'Biology'].map(sub => {
-                                                    const count = formData.questions.filter(q => q.subject === sub).length;
-                                                    const req = sub === 'Biology' ? 100 : 50;
-                                                    
-                                                    return (
-                                                        <button 
-                                                            key={sub} 
-                                                            type="button"
-                                                            onClick={() => setActiveCreationSubject(sub)}
-                                                            className={`text-left p-2 rounded-xl border transition-all ${activeCreationSubject === sub ? 'bg-white border-indigo-500 shadow-sm' : 'bg-white/50 border-transparent hover:bg-white'}`}
-                                                        >
-                                                            <p className="text-[10px] font-black text-slate-500 uppercase">{sub}</p>
-                                                            <div className="flex justify-between items-center text-[10px]">
-                                                                <span className={count === req ? 'text-emerald-600 font-bold' : 'text-slate-400'}>{count}/{req}</span>
-                                                            </div>
-                                                            <div className="w-full h-1 bg-slate-100 rounded-full overflow-hidden mt-1">
-                                                                <div 
-                                                                    className={`h-full transition-all duration-500 ${count === req ? 'bg-emerald-500' : 'bg-indigo-500'}`}
-                                                                    style={{ width: `${Math.min(100, (count / req) * 100)}%` }}
-                                                                />
-                                                            </div>
-                                                        </button>
-                                                    );
-                                                })}
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {formData.isNeetPattern && (
-                                        <div className="flex items-center p-1 bg-slate-100 rounded-xl w-fit">
-                                            {['Physics', 'Chemistry', 'Biology'].map(sub => (
-                                                <button
-                                                    key={sub}
-                                                    type="button"
-                                                    onClick={() => setActiveCreationSubject(sub)}
-                                                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${activeCreationSubject === sub ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
-                                                >
-                                                    {sub} ({formData.questions.filter(q => q.subject === sub).length})
-                                                </button>
-                                            ))}
-                                        </div>
-                                    )}
                                     
                                     <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
-                                        {formData.questions
-                                            .map((q, originalIdx) => ({ ...q, originalIdx }))
-                                            .filter(q => !formData.isNeetPattern || q.subject === activeCreationSubject)
-                                            .map((q, filteredIdx) => {
-                                                const qIndex = q.originalIdx;
-                                                return (
-                                                    <div key={qIndex} className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 relative group">
-                                                        {formData.questions.length > 1 && (
-                                                            <button 
-                                                                type="button" 
-                                                                onClick={() => removeQuestion(qIndex)}
-                                                                className="absolute top-4 right-4 p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
-                                                            >
-                                                                <Trash2 className="w-4 h-4" />
-                                                            </button>
-                                                        )}
-                                                        <div className="flex gap-4 items-start">
-                                                            <div className="flex-1">
-                                                                <div className="flex justify-between items-center mb-3">
-                                                                    <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Question {qIndex + 1}</label>
-                                                                    {formData.isNeetPattern && (
-                                                                        <div className="flex items-center gap-2">
-                                                                            <span className="text-[10px] font-black text-indigo-600 uppercase bg-indigo-50 px-2 py-1 rounded">
-                                                                                {q.subject}
-                                                                            </span>
-                                                                        </div>
+                                        {formData.questions.map((q, qIndex) => (
+                                            <div key={qIndex} className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 relative group">
+                                                {formData.questions.length > 1 && (
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={() => removeQuestion(qIndex)}
+                                                        className="absolute top-4 right-4 p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                                <div className="flex gap-4 items-start">
+                                                    <div className="flex-1">
+                                                        <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Question {qIndex + 1}</label>
+                                                        <textarea 
+                                                            value={q.questionText} 
+                                                            onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
+                                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none min-h-[80px]"
+                                                            placeholder="Enter question here..."
+                                                            required
+                                                        />
+                                                    </div>
+                                                    <div className="w-32 flex flex-col items-center gap-2">
+                                                        <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Image</label>
+                                                        <div className="relative group/img w-full aspect-square bg-white border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
+                                                            {q.imageUrl ? (
+                                                                <>
+                                                                    <img src={q.imageUrl} alt="Question" className="w-full h-full object-cover" />
+                                                                    <button 
+                                                                        type="button" 
+                                                                        onClick={() => handleQuestionChange(qIndex, 'imageUrl', '')}
+                                                                        className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center"
+                                                                    >
+                                                                        <Trash2 className="w-5 h-5 text-white" />
+                                                                    </button>
+                                                                </>
+                                                            ) : (
+                                                                <label className="cursor-pointer flex flex-col items-center gap-1">
+                                                                    {uploadingImage === qIndex ? (
+                                                                        <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
+                                                                    ) : (
+                                                                        <>
+                                                                            <ImageIcon className="w-6 h-6 text-slate-400" />
+                                                                            <span className="text-[10px] font-bold text-slate-400">UPLOAD</span>
+                                                                        </>
                                                                     )}
-                                                                </div>
-                                                                
-                                                                <textarea 
-                                                                    value={q.questionText} 
-                                                                    onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
-                                                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none min-h-[80px]"
-                                                                    placeholder="Enter question here..."
+                                                                    <input 
+                                                                        type="file" 
+                                                                        accept="image/*" 
+                                                                        className="hidden" 
+                                                                        onChange={(e) => handleImageUpload(qIndex, e.target.files[0])}
+                                                                        disabled={uploadingImage === qIndex}
+                                                                    />
+                                                                </label>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="grid grid-cols-2 gap-3">
+                                                    {q.options.map((option, oIndex) => (
+                                                        <div key={oIndex} className="flex flex-col gap-1">
+                                                            <div className="flex items-center gap-2">
+                                                                <input 
+                                                                    type="radio" 
+                                                                    name={`correct-${qIndex}`} 
+                                                                    checked={q.correctAnswer === oIndex}
+                                                                    onChange={() => handleQuestionChange(qIndex, 'correctAnswer', oIndex)}
+                                                                    className="accent-indigo-600 w-4 h-4"
+                                                                />
+                                                                <input 
+                                                                    value={option} 
+                                                                    onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
+                                                                    className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                                                    placeholder={`Option ${String.fromCharCode(65 + oIndex)}`}
                                                                     required
                                                                 />
                                                             </div>
-                                                            <div className="w-32 flex flex-col items-center gap-2">
-                                                                <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Image</label>
-                                                                <div className="relative group/img w-full aspect-square bg-white border-2 border-dashed border-slate-200 rounded-xl flex items-center justify-center overflow-hidden">
-                                                                    {q.imageUrl ? (
-                                                                        <>
-                                                                            <img src={q.imageUrl} alt="Question" className="w-full h-full object-cover" />
-                                                                            <button 
-                                                                                type="button" 
-                                                                                onClick={() => handleQuestionChange(qIndex, 'imageUrl', '')}
-                                                                                className="absolute inset-0 bg-slate-900/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center"
-                                                                            >
-                                                                                <Trash2 className="w-5 h-5 text-white" />
-                                                                            </button>
-                                                                        </>
-                                                                    ) : (
-                                                                        <label className="cursor-pointer flex flex-col items-center gap-1">
-                                                                            {uploadingImage === qIndex ? (
-                                                                                <Loader2 className="w-6 h-6 text-indigo-500 animate-spin" />
-                                                                            ) : (
-                                                                                <>
-                                                                                    <ImageIcon className="w-6 h-6 text-slate-400" />
-                                                                                    <span className="text-[10px] font-bold text-slate-400">UPLOAD</span>
-                                                                                </>
-                                                                            )}
-                                                                            <input 
-                                                                                type="file" 
-                                                                                accept="image/*" 
-                                                                                className="hidden" 
-                                                                                onChange={(e) => handleImageUpload(qIndex, e.target.files[0])}
-                                                                                disabled={uploadingImage === qIndex}
-                                                                            />
-                                                                        </label>
-                                                                    )}
-                                                                </div>
-                                                            </div>
                                                         </div>
-                                                        
-                                                        <div className="grid grid-cols-2 gap-3">
-                                                            {q.options.map((option, oIndex) => (
-                                                                <div key={oIndex} className="flex flex-col gap-1">
-                                                                    <div className="flex items-center gap-2">
-                                                                        <input 
-                                                                            type="radio" 
-                                                                            name={`correct-${qIndex}`} 
-                                                                            checked={q.correctAnswer === oIndex}
-                                                                            onChange={() => handleQuestionChange(qIndex, 'correctAnswer', oIndex)}
-                                                                            className="accent-indigo-600 w-4 h-4"
-                                                                        />
-                                                                        <input 
-                                                                            value={option} 
-                                                                            onChange={(e) => handleOptionChange(qIndex, oIndex, e.target.value)}
-                                                                            className="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                                                                            placeholder={`Option ${String.fromCharCode(65 + oIndex)}`}
-                                                                            required
-                                                                        />
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                        <div>
-                                                            <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Explanation (Optional)</label>
-                                                            <input 
-                                                                value={q.explanation} 
-                                                                onChange={(e) => handleQuestionChange(qIndex, 'explanation', e.target.value)}
-                                                                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                                                                placeholder="Explain why the answer is correct..."
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
+                                                    ))}
+                                                </div>
+                                                <div>
+                                                    <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Explanation (Optional)</label>
+                                                    <input 
+                                                        value={q.explanation} 
+                                                        onChange={(e) => handleQuestionChange(qIndex, 'explanation', e.target.value)}
+                                                        className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                                        placeholder="Explain why the answer is correct..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
 
                                     <div className="flex gap-4 pt-4 border-t border-slate-100">
@@ -1076,19 +815,10 @@ const ExamsManagement = () => {
                                             <ChevronLeft className="w-5 h-5" /> Back
                                         </button>
                                         <button 
-                                            type="button"
-                                            onClick={(e) => handleCreateExam(e, 'draft')}
-                                            className="flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold rounded-xl hover:bg-slate-200 transition-all"
+                                            type="submit" 
+                                            className="flex-[2] py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                                         >
-                                            Save Draft
-                                        </button>
-                                        <button 
-                                            type="button" 
-                                            onClick={(e) => handleCreateExam(e, 'published')}
-                                            className="flex-[2] py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
-                                        >
-                                            <CheckCircle2 className="w-5 h-5" />
-                                            {isEditing ? 'Publish Changes' : 'Publish Exam'}
+                                            Create Exam
                                         </button>
                                     </div>
                                 </div>

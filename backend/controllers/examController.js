@@ -54,9 +54,6 @@ export const getExams = async (req, res) => {
     const { subject, classLevel, examType, classroomId } = req.query;
     try {
         let query = { isActive: true };
-        if (req.user.role === 'student') {
-            query.status = 'published';
-        }
         if (subject) query.subject = subject;
         if (classLevel) query.classLevel = classLevel;
         if (examType) query.examType = examType;
@@ -108,7 +105,7 @@ export const getExams = async (req, res) => {
 // @route   POST /api/exams/bulk
 // @access  Private (Teacher/Admin)
 export const createExamWithQuestions = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks, isNeetPattern, status } = req.body;
+    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks } = req.body;
 
     if (!title || !duration || !subject || !classroom) {
         return res.status(400).json({ message: "Please provide all required fields: title, duration, subject, and classroom." });
@@ -130,8 +127,6 @@ export const createExamWithQuestions = async (req, res) => {
             : [],
         explanation: question?.explanation?.trim?.() || "",
         imageUrl: question?.imageUrl || undefined,
-        subject: question?.subject,
-        section: question?.section,
     }));
 
     const invalidQuestionIndex = normalizedQuestions.findIndex((question) => {
@@ -167,8 +162,6 @@ export const createExamWithQuestions = async (req, res) => {
             examType: examType || "subject-wise",
             marksPerQuestion: marksPerQuestion ?? 1,
             negativeMarks: negativeMarks ?? 0,
-            isNeetPattern: isNeetPattern || false,
-            status: status || 'draft',
             teacher: req.user._id,
         });
 
@@ -417,53 +410,27 @@ export const submitExam = async (req, res) => {
             return res.status(404).json({ message: "Exam or questions not found" });
         }
 
-        const marksPerQ = exam.marksPerQuestion ?? (exam.isNeetPattern ? 4 : 1);
-        const negMarks  = exam.negativeMarks   ?? (exam.isNeetPattern ? 1 : 0);
+        const marksPerQ = exam.marksPerQuestion ?? 1;
+        const negMarks  = exam.negativeMarks   ?? 0;
 
         let score = 0;
-        
-        // Tracking for NEET attempts per subject (max 45 for Phy/Chem, 90 for Biology)
-        const neetAttemptCounts = {
-            "Physics": 0,
-            "Chemistry": 0,
-            "Biology": 0
-        };
-
         const processedAnswers = answers.map((ans) => {
             const question = questions.find((q) => q._id.toString() === ans.questionId);
-            if (!question) return null;
-
-            const isCorrect = question.correctAnswer === ans.selectedOption;
+            const isCorrect = question && question.correctAnswer === ans.selectedOption;
             const isAttempted = ans.selectedOption !== null && ans.selectedOption !== undefined;
-            
-            let countsForScore = true;
 
-            // Apply Simplified NEET logic (Flat per-subject limits)
-            if (exam.isNeetPattern && isAttempted) {
-                const sub = question.subject;
-                const limit = sub === 'Biology' ? 90 : 45;
-                if (neetAttemptCounts[sub] >= limit) {
-                    countsForScore = false; // Ignore beyond first X attempted per subject
-                } else {
-                    neetAttemptCounts[sub]++;
-                }
-            }
-
-            if (countsForScore) {
-                if (isCorrect) {
-                    score += marksPerQ;
-                } else if (isAttempted) {
-                    score -= negMarks;
-                }
+            if (isCorrect) {
+                score += marksPerQ;
+            } else if (isAttempted) {
+                score -= negMarks; // subtract negative marks only if answered wrongly
             }
 
             return {
                 questionId: ans.questionId,
                 selectedOption: ans.selectedOption,
                 isCorrect,
-                ignoredByNeetRule: !countsForScore
             };
-        }).filter(Boolean);
+        });
 
         score = Math.max(0, parseFloat(score.toFixed(2))); // floor at 0, round to 2 decimal places
 
@@ -512,7 +479,7 @@ export const deleteExam = async (req, res) => {
 // @access  Private (Teacher/Admin)
 export const updateExam = async (req, res) => {
     try {
-        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType, status } = req.body;
+        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType } = req.body;
         const exam = await Exam.findById(req.params.id);
 
         if (!exam) {
@@ -532,7 +499,6 @@ export const updateExam = async (req, res) => {
         exam.classroom = classroom || exam.classroom;
         exam.examCategory = examCategory || exam.examCategory;
         exam.examType = examType || exam.examType;
-        if (status) exam.status = status;
 
         const updatedExam = await exam.save();
 

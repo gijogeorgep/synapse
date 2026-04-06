@@ -1,5 +1,5 @@
 import React from "react";
-import synapse_y_logo from "../assets/synapse y logo.png"; // background logo
+import synapse_y_logo from "../assets/synapse_y_logo.png"; // background logo
 import amith from "../assets/amith.jpeg"; // founder photo
 import { Facebook, Phone, Instagram, Send, Star, Users, GraduationCap, Quote, Zap } from "lucide-react";
 import useGsapReveal from "../hooks/useGsapReveal";
@@ -105,7 +105,7 @@ const About = () => {
 
             <div className="space-y-6 text-lg text-slate-600 max-w-xl font-medium leading-relaxed">
               <p>
-                At <span className="text-slate-900 font-bold">Synapse Edu Hub</span>, we believe learning is most effective when it speaks your way. We bridge the gap between complexity and clarity.
+                As <span className="text-slate-900 font-bold">India's Most Focused Learning Ecosystem</span>, we believe learning is most effective when it speaks your way. We bridge the gap between complexity and clarity.
               </p>
               <p className="text-base text-slate-500">
                 We connect students with expert faculty who teach in their regional language — Malayalam, Hindi, Tamil, Telugu, or English. Education isn't just about subjects; it's about understanding you.

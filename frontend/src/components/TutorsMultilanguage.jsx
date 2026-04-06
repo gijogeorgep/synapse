@@ -2,7 +2,7 @@ import React from "react";
 import tutorsImg from "../assets/tutors_img.png";
 import { Languages } from "lucide-react";
 import useGsapReveal from "../hooks/useGsapReveal";
-import synapsespeaksyou  from "../assets/synapse speaks you title.png";
+import synapsespeaksyou  from "../assets/synapse_speaks_you_title.png";
 const TutorsMultilanguage = () => {
   const scopeRef = useGsapReveal();
 

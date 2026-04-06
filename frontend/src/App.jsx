@@ -84,13 +84,13 @@ function LandingPage() {
       <section id="about" className="scroll-mt-20 md:scroll-mt-24">
         <About />
         <div className="bg-[#f8fafc] pb-20 text-center">
-            <Link 
-                to="/about"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-cyan-700 rounded-2xl font-bold border border-cyan-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
-            >
-                Learn more about our mission
-                <ArrowRight className="w-4 h-4" />
-            </Link>
+          <Link
+            to="/about"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-cyan-700 rounded-2xl font-bold border border-cyan-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
+          >
+            Learn more about our mission
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
       <TutorsMultilanguage />
@@ -170,12 +170,21 @@ function RouteSeo() {
 
   const seoByPath = {
     "/": {
-      title: "Synapse Edu Hub | Personalized Coaching, Study Materials & Online Exams",
+      title: "Synapse Edu Hub| Indias most focused learning ecosystem",
       description:
-        "Achieve academic success with Synapse Edu Hub through expert mentors, multilingual learning support, mock tests, study materials, and performance tracking.",
+        "Achieve academic excellence with Synapse Edu Hub, India's most focused learning ecosystem. We offer personalized coaching, expert mentorship, and comprehensive study materials for competitive exams.",
       keywords:
-        "Synapse Edu Hub, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition",
+        "India's most focused learning ecosystem, Synapse Edu Hub, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition, NEET coaching, JEE coaching",
       structuredData: [websiteSchema, organizationSchema],
+      canonicalPath: "/",
+    },
+    "/indias-most-focused-learning-ecosystem": {
+      title: "Synapse Edu Hub| Indiasmost focused learning ecosystem",
+      description:
+        "Welcome to India's most focused learning ecosystem. Synapse Edu Hub provides top-tier educational resources, expert guidance, and a personalized approach to help students succeed in their academic journeys.",
+      keywords:
+        "India's most focused learning ecosystem, Synapse Edu Hub, educational success, expert mentors, focused learning India",
+      canonicalPath: "/",
     },
     "/about": {
       title: "About Synapse Edu Hub | Student-first academic coaching",
@@ -241,6 +250,7 @@ function AppContent() {
       <div className={`flex-1 ${!isAdminAuth ? "mt-20 md:mt-24" : ""}`}>
         <Routes>
           <Route path="/" element={<LandingPage />} />
+          <Route path="/indias-most-focused-learning-ecosystem" element={<LandingPage />} />
           <Route path="/admin-portal-auth" element={<AdminAuth />} />
 
           {/* Public Pages */}

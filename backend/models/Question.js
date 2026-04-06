@@ -39,14 +39,6 @@ const questionSchema = new mongoose.Schema(
         imageUrl: {
             type: String,
         },
-        subject: {
-            type: String,
-            enum: ["Physics", "Chemistry", "Botany", "Zoology", "Biology"],
-        },
-        section: {
-            type: String,
-            enum: ["A", "B"],
-        },
     },
     {
         timestamps: true,

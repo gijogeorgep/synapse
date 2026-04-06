@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronLeft, ChevronRight, Eye, Brain, FileText, Sparkles, ExternalLink, Lock } from "lucide-react";
-import q_cloud_synapse from "../assets/q cloud synapse.png";
-import q_cloud_synapse2 from "../assets/q cloud synapse 2.png";
+import q_cloud_synapse from "../assets/q_cloud_synapse.png";
+import q_cloud_synapse2 from "../assets/q_cloud_synapse_2.png";
 import brainmap1 from "../assets/brainmap1.png";
 import brainmap2 from "../assets/brainmap2.png";
 import brainmap3 from "../assets/brainmap3.png";

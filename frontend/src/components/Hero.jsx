@@ -169,7 +169,7 @@ const Hero = () => {
                 <div className="relative z-10 p-0 flex items-end justify-center">
                   <img
                     src={heroimg}
-                    alt="Students Learning"
+                    alt="Synapse Edu Hub - India's Most Focused Learning Ecosystem"
                     className="w-full h-auto relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-100 lg:scale-[1.15] origin-bottom hover:scale-105 lg:hover:scale-[1.20] transition-transform duration-700"
                   />
 

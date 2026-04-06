@@ -12,7 +12,7 @@ import {
   MapPin,
   ArrowUp
 } from "lucide-react";
-import ylogo from "../assets/synapse y logo.png";
+import ylogo from "../assets/synapse_y_logo.png";
 import { scrollToHomeSection } from "../utils/scrollToHomeSection";
 
 const Footer = () => {
@@ -54,7 +54,7 @@ const Footer = () => {
               </div>
             </div>
             <p className="text-slate-400 text-[13px] leading-relaxed max-w-sm mb-6 font-medium">
-              Elite mentorship and personalized learning for NEET, JEE & School excellence.
+              India's Most Focused Learning Ecosystem. Elite mentorship for NEET, JEE & School excellence.
             </p>
             <div className="flex flex-wrap gap-2.5">
               {[
