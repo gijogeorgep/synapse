@@ -57,6 +57,10 @@ const userSchema = new mongoose.Schema(
       unique: true,
       sparse: true, // Allows null/missing for independent users who don't have one yet
     },
+    sessionToken: {
+      type: String,
+      default: null,
+    },
     isBlocked: {
       type: Boolean,
       default: false,

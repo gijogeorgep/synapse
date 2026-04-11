@@ -656,7 +656,7 @@ export const createResource = async (req, res) => {
       public_id,
       subject,
       board,
-      classroom,
+      classroom: classroom || null, // Ensure empty string is saved as null
       category: category || "study_material",
       year,
       uploadedBy: req.user._id,

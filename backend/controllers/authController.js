@@ -3,6 +3,7 @@ import OTP from "../models/OTP.js";
 import generateToken from "../utils/generateToken.js";
 import { generateUniqueId } from "../utils/idGenerator.js";
 import { sendRegistrationEmail, sendOTPEmail } from "../utils/emailService.js";
+import crypto from "crypto";
 
 // @desc    Send OTP for Registration
 // @route   POST /api/auth/send-otp
@@ -78,6 +79,7 @@ export const registerUser = async (req, res) => {
             return res.status(400).json({ message: "Invalid or expired OTP" });
         }
 
+        const sessionToken = crypto.randomUUID();
         const user = await User.create({
             name,
             email,
@@ -85,6 +87,7 @@ export const registerUser = async (req, res) => {
             phoneNumber,
             role: "student",
             userType: "independent",
+            sessionToken,
             // uniqueId will be generated during first enrollment to match the program prefix
         });
         if (user) {
@@ -102,7 +105,7 @@ export const registerUser = async (req, res) => {
                 phoneNumber: user.phoneNumber,
                 uniqueId: user.uniqueId,
                 userType: user.userType,
-                token: generateToken(user._id),
+                token: generateToken(user._id, sessionToken),
             });
         } else {
             res.status(400).json({ message: "Invalid user data" });
@@ -131,6 +134,10 @@ export const authUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && (await user.matchPassword(password))) {
+            const sessionToken = crypto.randomUUID();
+            user.sessionToken = sessionToken;
+            await user.save();
+
             res.json({
                 _id: user._id,
                 name: user.name,
@@ -142,7 +149,7 @@ export const authUser = async (req, res) => {
                 phoneNumber: user.phoneNumber,
                 class: user.class,
                 subjects: user.subjects,
-                token: generateToken(user._id),
+                token: generateToken(user._id, sessionToken),
             });
         } else {
             res.status(401).json({ message: "Incorrect email or password" });
@@ -259,7 +266,11 @@ export const adminLogin = async (req, res) => {
                     return res.status(403).json({ message: "Not authorized as administrator. Access denied." });
                 }
 
-                const token = generateToken(user._id);
+                const sessionToken = crypto.randomUUID();
+                user.sessionToken = sessionToken;
+                await user.save();
+
+                const token = generateToken(user._id, sessionToken);
                 console.log(`[AUTH] Admin login successful: ${email} (${user.role})`);
 
                 return res.json({
@@ -285,5 +296,20 @@ export const adminLogin = async (req, res) => {
             message: "Internal server error during authentication",
             error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
+    }
+};
+// @desc    Logout user & clear session
+// @route   POST /api/auth/logout
+// @access  Private
+export const logoutUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id);
+        if (user) {
+            user.sessionToken = null;
+            await user.save();
+        }
+        res.status(200).json({ message: "Logged out successfully" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

@@ -85,6 +85,11 @@ const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
         if (response.ok) {
             return data;
         } else {
+            // Check for specific session invalidation from backend (Single Session Enforcement)
+            if (data?.code === "SESSION_INVALIDATED") {
+                window.dispatchEvent(new CustomEvent("auth:session-invalidated", { detail: data.message }));
+            }
+            
             return Promise.reject(data?.message || `Error ${response.status}: ${response.statusText}`);
         }
     } catch (error) {

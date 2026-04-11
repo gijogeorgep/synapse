@@ -1,19 +1,39 @@
-import { createContext, useState, useEffect, useContext } from "react";
+import { createContext, useState, useEffect, useContext, useCallback } from "react";
 import { loginUser, registerUser } from "../api/authService";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-
-    useEffect(() => {
-        const savedUser = localStorage.getItem("userInfo");
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
+    const [user, setUser] = useState(() => {
+        try {
+            const savedUser = localStorage.getItem("userInfo");
+            return savedUser ? JSON.parse(savedUser) : null;
+        } catch (error) {
+            console.error("[AUTH_CONTEXT] Error parsing saved user info:", error);
+            return null;
         }
-        setLoading(false);
-    }, []);
+    });
+    const [loading, setLoading] = useState(true);
+    const [sessionInvalidated, setSessionInvalidated] = useState(false);
+
+    const logout = useCallback(async ({ invalidated = false } = {}) => {
+        // Call backend to clear sessionToken from DB (best effort)
+        if (user?.token && !invalidated) {
+            try {
+                await fetch(`${import.meta.env.VITE_API_URL || "/api"}/auth/logout`, {
+                    method: "POST",
+                    headers: { Authorization: `Bearer ${user.token}` },
+                });
+            } catch (_) {
+                // Ignore network errors during logout
+            }
+        }
+        if (invalidated) {
+            setSessionInvalidated(true);
+        }
+        setUser(null);
+        localStorage.removeItem("userInfo");
+    }, [user]);
 
     const login = async (email, password) => {
         try {
@@ -80,10 +100,19 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const logout = () => {
-        setUser(null);
-        localStorage.removeItem("userInfo");
-    };
+    useEffect(() => {
+        setLoading(false);
+
+        // Listen for "Session Invalidated" from API client (Single Active Session)
+        const handleSessionInvalidated = (e) => {
+            console.warn("[AUTH_CONTEXT] Session invalidated detected from API client.");
+            logout({ invalidated: true });
+        };
+        
+        window.addEventListener("auth:session-invalidated", handleSessionInvalidated);
+        return () => window.removeEventListener("auth:session-invalidated", handleSessionInvalidated);
+    }, [logout]);
+
 
     const updateUser = (updatedData) => {
         console.log("[AUTH_CONTEXT] updateUser called with:", updatedData);
@@ -97,7 +126,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading }}>
+        <AuthContext.Provider value={{ user, login, register, logout, updateUser, loading, sessionInvalidated, setSessionInvalidated }}>
             {children}
         </AuthContext.Provider>
     );

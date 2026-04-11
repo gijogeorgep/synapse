@@ -1,11 +1,10 @@
 import { useEffect } from "react";
 
 const SITE_NAME = "Synapse Edu Hub";
-const SITE_TAGLINE = "India's Most Focused Learning Ecosystem";
 const DEFAULT_DESCRIPTION =
-  `${SITE_TAGLINE}. Achieve academic excellence with personalized coaching, expert mentorship, and comprehensive study materials.`;
+  "Synapse Edu Hub offers personalized coaching, study materials, multilingual support, and online assessments to help students achieve academic success.";
 const DEFAULT_KEYWORDS =
-  "Synapse Edu Hub, India's most focused learning ecosystem, online coaching Kerala, study materials, mock tests, student learning platform, multilingual education, NEET coaching, JEE coaching";
+  "Synapse Edu Hub, online coaching Kerala, study materials, mock tests, student learning platform, multilingual education";
 
 const setOrRemoveMetaTag = (attr, key, content) => {
   const selector = `meta[${attr}="${key}"]`;
@@ -73,7 +72,7 @@ const SEO = ({
   title = SITE_NAME,
   description = DEFAULT_DESCRIPTION,
   keywords = DEFAULT_KEYWORDS,
-  image = "/synapse_favicon.png",
+  image = "/synapse favicon.png",
   url,
   canonicalPath,
   type = "website",

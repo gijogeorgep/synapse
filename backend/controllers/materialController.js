@@ -56,29 +56,54 @@ export const getMaterials = async (req, res) => {
     try {
         let query = {};
         
+        // Safety check for req.user
+        if (!req.user) {
+            console.warn("[GET_MATERIALS] Warning: req.user is undefined despite protect middleware.");
+            return res.status(401).json({ message: "Not authorized, user data missing" });
+        }
+
         // Filtering for Students
-        if (req.user && req.user.role === 'student' && req.user.userType === 'institutional') {
+        if (req.user.role === 'student') {
             const studentClassrooms = await Classroom.find({ students: req.user._id }).select("_id");
-            const classroomIdsFromStudents = studentClassrooms.map((c) => c._id?.toString()).filter(Boolean);
+            const classroomIdsFromStudents = (studentClassrooms || []).map((c) => c._id?.toString()).filter(Boolean);
+            
             const enrolledClassrooms = Array.isArray(req.user.enrolledClassrooms)
-                ? req.user.enrolledClassrooms.map((id) => id?.toString()).filter(Boolean)
+                ? req.user.enrolledClassrooms.map((id) => {
+                    if (!id) return null;
+                    return (id?._id || id)?.toString();
+                  }).filter(Boolean)
                 : [];
+                
             const classroomIdSet = new Set([...classroomIdsFromStudents, ...enrolledClassrooms]);
             const classroomIds = Array.from(classroomIdSet);
 
+            console.log(`[GET_MATERIALS] Student ${req.user.email} (ID: ${req.user._id}) filtering for classrooms:`, classroomIds);
+
+            // Construct OR clause: materials in their classrooms OR global materials
             const orClauses = [
                 { classroom: null },
                 { classroom: "" },
                 { classroom: { $exists: false } }
             ];
+
             if (classroomIds.length > 0) {
                 orClauses.unshift({ classroom: { $in: classroomIds } });
             }
 
-            query.$or = orClauses;
+            // Only apply restrictions for institutional users or if classroom assignments are expected
+            // We're keeping it slightly more open to ensure visibility
+            if (req.user.userType === 'institutional' || classroomIds.length > 0) {
+                query.$or = orClauses;
+            }
         }
 
+        console.log(`[GET_MATERIALS] Final Query:`, JSON.stringify(query, null, 2));
+
         const materials = await StudyMaterial.find(query);
+        console.log(`[GET_MATERIALS] Found ${materials.length} materials for ${req.user.email}`);
+        if (materials.length > 0) {
+            console.log("[GET_MATERIALS] Sample titles:", materials.slice(0, 3).map(m => m.title));
+        }
         res.json(materials);
     } catch (error) {
         res.status(500).json({ message: error.message });

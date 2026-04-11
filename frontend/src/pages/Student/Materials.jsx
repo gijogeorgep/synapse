@@ -21,9 +21,11 @@ const StudentMaterials = () => {
                 const userInfo = JSON.parse(localStorage.getItem("userInfo"));
                 const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
                 const { data } = await axios.get('/api/materials', config);
+                console.log("[STUDENT_MATERIALS] Received from API:", data);
                 setMaterials(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error("Error fetching materials:", error);
+                console.log("[STUDENT_MATERIALS] Fetch failed");
             } finally {
                 setLoading(false);
             }

@@ -13,8 +13,22 @@ export const protect = async (req, res, next) => {
 
             const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            req.user = await User.findById(decoded.id).select("-password");
+            const user = await User.findById(decoded.id).select("-password");
 
+            if (!user) {
+                return res.status(401).json({ message: "Not authorized, user not found" });
+            }
+
+            // Single active session check:
+            // If sessionToken in JWT doesn't match the one in DB, another device has logged in
+            if (decoded.sessionToken && user.sessionToken && decoded.sessionToken !== user.sessionToken) {
+                return res.status(401).json({
+                    message: "Your session was ended because your account was logged in from another device.",
+                    code: "SESSION_INVALIDATED",
+                });
+            }
+
+            req.user = user;
             next();
         } catch (error) {
             console.error(error);
