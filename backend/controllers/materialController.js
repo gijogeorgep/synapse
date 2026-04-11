@@ -18,7 +18,7 @@ export const uploadMaterial = async (req, res) => {
             fileType,
             fileUrl,
             subject,
-            classroom,
+            classroom: classroom || null,
             category: category || "study_material",
             isPaid,
             price: isPaid ? price : 0,
@@ -79,10 +79,9 @@ export const getMaterials = async (req, res) => {
 
             console.log(`[GET_MATERIALS] Student ${req.user.email} (ID: ${req.user._id}) filtering for classrooms:`, classroomIds);
 
-            // Construct OR clause: materials in their classrooms OR global materials
+            // Always include global materials (null classroom) plus classroom-specific materials
             const orClauses = [
                 { classroom: null },
-                { classroom: "" },
                 { classroom: { $exists: false } }
             ];
 
@@ -90,11 +89,7 @@ export const getMaterials = async (req, res) => {
                 orClauses.unshift({ classroom: { $in: classroomIds } });
             }
 
-            // Only apply restrictions for institutional users or if classroom assignments are expected
-            // We're keeping it slightly more open to ensure visibility
-            if (req.user.userType === 'institutional' || classroomIds.length > 0) {
-                query.$or = orClauses;
-            }
+            query.$or = orClauses;
         }
 
         console.log(`[GET_MATERIALS] Final Query:`, JSON.stringify(query, null, 2));
