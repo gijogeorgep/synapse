@@ -1,7 +1,8 @@
 import { useMemo, useState, useEffect } from "react";
-import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { BookOpen, FileText, Search, Download, ExternalLink, Filter, Loader2, Eye } from "lucide-react";
+import { getMaterials } from "../../api/services";
+import { getApiUrl } from "../../api/apiClient";
 
 const StudentMaterials = () => {
     const { user } = useAuth();
@@ -18,9 +19,7 @@ const StudentMaterials = () => {
     useEffect(() => {
         const fetchMaterials = async () => {
             try {
-                const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-                const config = { headers: { Authorization: `Bearer ${userInfo?.token}` } };
-                const { data } = await axios.get('/api/materials', config);
+                const data = await getMaterials();
                 console.log("[STUDENT_MATERIALS] Received from API:", data);
                 setMaterials(Array.isArray(data) ? data : []);
             } catch (error) {
@@ -172,7 +171,7 @@ const StudentMaterials = () => {
 
                                     <div className="flex items-center gap-2 justify-end">
                                         <a
-                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `/api/materials/view/${it._id}/preview.pdf` : (it.fileUrl || "#")}
+                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}/preview.pdf` : (it.fileUrl || "#")}
                                             target="_blank"
                                             rel="noreferrer"
                                             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-colors"
@@ -182,7 +181,7 @@ const StudentMaterials = () => {
                                             <span>View</span>
                                         </a>
                                         <a
-                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `/api/materials/view/${it._id}?download=true` : (it.fileUrl ? it.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
+                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}?download=true` : (it.fileUrl ? it.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
                                             download
                                             rel="noreferrer"
                                             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-cyan-600 text-white text-xs font-semibold shadow-sm hover:bg-cyan-700 transition-colors"

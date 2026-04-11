@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { BookCopy, PlusCircle, FileText, Video, Link, Trash2, CheckCircle2, AlertCircle, X, Eye, Download } from 'lucide-react';
+import { getAdminResources, getAdminClassrooms, createAdminResource, deleteAdminResource, uploadImage, uploadFile } from '../../../api/services';
 
 const LibraryManagement = () => {
     const [resources, setResources] = useState([]);
@@ -31,13 +31,12 @@ const LibraryManagement = () => {
     const fetchData = async () => {
         try {
             setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
             const [resData, classData] = await Promise.all([
-                axios.get('/api/admin/resources', config),
-                axios.get('/api/admin/classrooms', config)
+                getAdminResources(),
+                getAdminClassrooms()
             ]);
-            const resourcesData = Array.isArray(resData.data) ? resData.data : [];
-            const classroomsData = Array.isArray(classData.data) ? classData.data : [];
+            const resourcesData = Array.isArray(resData) ? resData : [];
+            const classroomsData = Array.isArray(classData) ? classData : [];
             setResources(resourcesData);
             setClassrooms(classroomsData);
             if (classroomsData.length > 0) {
@@ -53,15 +52,14 @@ const LibraryManagement = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.post('/api/admin/resources', formData, config);
+            await createAdminResource(formData);
             setStatus({ type: 'success', message: 'Resource added to library!' });
             setIsModalOpen(false);
             setFormData({ title: '', description: '', fileType: 'pdf', fileUrl: '', subject: '', classroom: classrooms[0]?._id || '', category: 'study_material', year: '' });
             setUploadMethod('file');
             fetchData();
         } catch (error) {
-            setStatus({ type: 'error', message: 'Failed to add resource.' });
+            setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Failed to add resource.' });
         }
     };
 
@@ -70,19 +68,12 @@ const LibraryManagement = () => {
         if (!file) return;
 
         const isImage = file.type.startsWith('image/');
-        const endpoint = isImage ? '/api/upload/image' : '/api/upload/file';
         const formDataPayload = new FormData();
         formDataPayload.append(isImage ? 'image' : 'file', file);
 
         setUploading(true);
         try {
-            const config = {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${userInfo.token}`
-                }
-            };
-            const { data } = await axios.post(endpoint, formDataPayload, config);
+            const data = await (isImage ? uploadImage(formDataPayload) : uploadFile(formDataPayload));
             setFormData(prev => ({ ...prev, fileUrl: data.url, public_id: data.public_id }));
             setStatus({ type: 'success', message: 'File uploaded successfully' });
         } catch (error) {
@@ -161,8 +152,7 @@ const LibraryManagement = () => {
                                         onClick={async () => {
                                             if (window.confirm('Are you sure you want to delete this resource?')) {
                                                 try {
-                                                    const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-                                                    await axios.delete(`/api/admin/resources/${res._id}`, config);
+                                                    await deleteAdminResource(res._id);
                                                     setStatus({ type: 'success', message: 'Resource deleted' });
                                                     fetchData();
                                                 } catch (error) {

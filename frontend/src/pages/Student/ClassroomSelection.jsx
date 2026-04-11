@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import { GraduationCap, CheckCircle2, ArrowRight, Loader2, CreditCard } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { getPublicClassrooms, enrollInClassroom } from "../../api/services";
 
 const ClassroomSelection = () => {
     const { user, logout } = useAuth();
@@ -15,7 +15,7 @@ const ClassroomSelection = () => {
     useEffect(() => {
         const fetchPublicClassrooms = async () => {
             try {
-                const { data } = await axios.get("/api/classrooms/public");
+                const data = await getPublicClassrooms();
                 setClassrooms(data);
             } catch (err) {
                 console.error("Error fetching classrooms:", err);
@@ -41,19 +41,13 @@ const ClassroomSelection = () => {
         setEnrolling(classroomId);
         setError("");
         try {
-            const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${userInfo?.token}`,
-                },
-            };
-            const { data } = await axios.post(`/api/classrooms/${classroomId}/enroll`, {}, config);
+            await enrollInClassroom(classroomId);
             
             // Success! Update local storage or user context if needed
             // For now, let's just navigate to dashboard
             navigate("/student/dashboard");
         } catch (err) {
-            setError(err.response?.data?.message || "Enrollment failed. Please try again.");
+            setError(err.response?.data?.message || err.message || "Enrollment failed. Please try again.");
         } finally {
             setEnrolling(null);
         }

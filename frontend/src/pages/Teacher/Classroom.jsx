@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import axios from "axios";
+
 import {
     Video,
     Link2,
@@ -13,6 +13,7 @@ import {
     ExternalLink,
     AlertCircle
 } from "lucide-react";
+import { updateClassroomResources, uploadImage } from "../../api/services";
 
 const TeacherClassroom = () => {
     const { user } = useAuth();
@@ -106,16 +107,9 @@ const TeacherClassroom = () => {
     const handleSaveLink = async (e) => {
         e.preventDefault();
         try {
-            const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-            const config = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${userInfo?.token}`,
-                },
-            };
-            await axios.put(`/api/classrooms/${classroom._id}/resources`, {
+            await updateClassroomResources(classroom._id, {
                 onlineClassLink: meetLink
-            }, config);
+            });
             
             setLinkSaved(true);
             setTimeout(() => setLinkSaved(false), 2000);
@@ -129,39 +123,20 @@ const TeacherClassroom = () => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Since we don't have a file upload service set up for 'lectureNote' objects yet,
-        // we'll simulate the URL for now or if there is an uploadRoute we could use it.
-        // Looking at routes, there is an uploadRoutes.js
-        
         try {
-            const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-            const config = {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${userInfo?.token}`,
-                },
-            };
-
             const formData = new FormData();
             formData.append('image', file); // Use 'image' as per uploadRoutes logic usually
 
-            const { data: uploadData } = await axios.post('/api/upload', formData, config);
+            const uploadData = await uploadImage(formData);
 
             const newNote = {
                 title: file.name.replace(/\.[^/.]+$/, ""),
                 url: uploadData.url,
             };
 
-            const resourceConfig = {
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${userInfo?.token}`,
-                },
-            };
-
-            const { data: updatedClassroom } = await axios.put(`/api/classrooms/${classroom._id}/resources`, {
+            const updatedClassroom = await updateClassroomResources(classroom._id, {
                 lectureNote: newNote
-            }, resourceConfig);
+            });
 
             setLectures(updatedClassroom.lectureNotes);
         } catch (error) {

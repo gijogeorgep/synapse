@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { ArrowUpCircle, GraduationCap, CheckCircle2, AlertCircle, ChevronRight, Users, Loader2 } from 'lucide-react';
+import { getAdminClassrooms, promoteClassroom } from '../../../api/services';
 
 const Promotions = () => {
     const [classrooms, setClassrooms] = useState([]);
@@ -19,8 +19,7 @@ const Promotions = () => {
     const fetchClassrooms = async () => {
         try {
             setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const { data } = await axios.get('/api/admin/classrooms', config);
+            const data = await getAdminClassrooms();
             setClassrooms(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching classrooms:", error);
@@ -35,17 +34,16 @@ const Promotions = () => {
 
         try {
             setIsPromoting(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.post('/api/admin/promote', {
+            await promoteClassroom({
                 classroomId: selectedClassroom._id,
                 nextClass
-            }, config);
+            });
             
             setStatus({ type: 'success', message: `Successfully promoted classroom to Class ${nextClass}!` });
             fetchClassrooms();
             setSelectedClassroom(null);
         } catch (error) {
-            setStatus({ type: 'error', message: 'Failed to promote classroom.' });
+            setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Failed to promote classroom.' });
         } finally {
             setIsPromoting(false);
         }

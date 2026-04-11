@@ -1,4 +1,4 @@
-const getApiUrl = () => {
+export const getApiUrl = () => {
     let base = import.meta.env.VITE_API_URL || "";
     
     // Clean up base URL if it contains '||' (frequent copy-paste error)

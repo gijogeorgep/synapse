@@ -258,6 +258,26 @@ export const getAdminClassrooms = async (req, res) => {
   }
 };
 
+// @desc    Get single Classroom
+// @route   GET /api/admin/classrooms/:id
+// @access  Private/Admin
+export const getAdminClassroomById = async (req, res) => {
+  try {
+    const classroom = await Classroom.findById(req.params.id)
+      .populate("students", "name email role uniqueId phoneNumber")
+      .populate("teachers", "name email role uniqueId phoneNumber");
+
+    if (!classroom) {
+      return res.status(404).json({ message: "Classroom not found" });
+    }
+
+    res.status(200).json(classroom);
+  } catch (error) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
 // @desc    Update a Classroom
 // @route   PATCH /api/admin/classrooms/:id
 // @access  Private/Admin

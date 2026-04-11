@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import axios from "axios";
 import {
   UserPlus,
   Mail,
@@ -10,6 +9,7 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { createAdminUser } from "../../../api/services";
 
 // Fixed program list — each entry maps to an ID prefix
 const PROGRAMS = [
@@ -90,7 +90,8 @@ const CreateUser = () => {
   // Available classes for non-E-Zone programs
   const CLASS_OPTIONS = ["4", "5", "6", "7", "8", "9", "10"];
 
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+
 
   const validate = (name, value) => {
     let error = "";
@@ -170,24 +171,13 @@ const CreateUser = () => {
     setStatus({ type: "", message: "" });
 
     try {
-      const config = {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${userInfo.token}`,
-        },
-      };
-
       // Send both className (the class number) and programType (for ID generation)
       const submissionData = {
         ...formData,
         // programType is already in formData, just ensure className is the actual class number
       };
 
-      const { data } = await axios.post(
-        "/api/admin/users",
-        submissionData,
-        config,
-      );
+      const data = await createAdminUser(submissionData);
       setStatus({ type: "success", message: "User created successfully!" });
 
       // Store generated credentials to show to admin
@@ -220,7 +210,7 @@ const CreateUser = () => {
     } catch (error) {
       setStatus({
         type: "error",
-        message: error.response?.data?.message || "Error creating user",
+        message: error.response?.data?.message || error.message || "Error creating user",
       });
     } finally {
       setIsSubmitting(false);

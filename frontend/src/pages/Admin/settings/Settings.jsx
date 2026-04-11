@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Settings, Shield, User, Clock, CheckCircle2, AlertCircle, Terminal, HardDrive } from 'lucide-react';
+import { getAuditLogs } from '../../../api/services';
 
 const AdminSettings = () => {
     const [logs, setLogs] = useState([]);
@@ -16,8 +16,7 @@ const AdminSettings = () => {
     const fetchLogs = async () => {
         try {
             setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const { data } = await axios.get('/api/admin/audit-logs', config);
+            const data = await getAuditLogs();
             setLogs(data);
         } catch (error) {
             console.error("Error fetching logs:", error);

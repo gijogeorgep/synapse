@@ -7,6 +7,7 @@ import {
     blockAdminUser,
     createClassroom,
     getAdminClassrooms,
+    getAdminClassroomById,
     updateClassroom,
     deleteClassroom,
     assignUsersToClassroom,
@@ -51,6 +52,7 @@ router.route("/classrooms")
     .get(getAdminClassrooms);
 
 router.route("/classrooms/:id")
+    .get(getAdminClassroomById)
     .patch(updateClassroom)
     .delete(deleteClassroom);
 

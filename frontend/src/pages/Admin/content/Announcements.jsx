@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Megaphone, PlusCircle, Trash2, CheckCircle2, AlertCircle, Clock, X, Users, GraduationCap, Globe } from 'lucide-react';
+import { getAdminAnnouncements, getAdminClassrooms, createAdminAnnouncement, deleteAdminAnnouncement } from '../../../api/services';
 
 const Announcements = () => {
     const [announcements, setAnnouncements] = useState([]);
@@ -26,8 +26,7 @@ const Announcements = () => {
     const fetchAnnouncements = async () => {
         try {
             setLoading(true);
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const { data } = await axios.get('/api/admin/announcements', config);
+            const data = await getAdminAnnouncements();
             setAnnouncements(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching announcements:", error);
@@ -38,8 +37,7 @@ const Announcements = () => {
 
     const fetchClassrooms = async () => {
         try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            const { data } = await axios.get('/api/admin/classrooms', config);
+            const data = await getAdminClassrooms();
             setClassrooms(data);
         } catch (error) {
             console.error("Error fetching classrooms:", error);
@@ -53,8 +51,6 @@ const Announcements = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            
             // Construct final payload based on audience selection
             const payload = {
                 title: formData.title,
@@ -63,7 +59,7 @@ const Announcements = () => {
                 targetClassroom: audienceType === 'classroom' ? formData.targetClassroom : null
             };
 
-            await axios.post('/api/admin/announcements', payload, config);
+            await createAdminAnnouncement(payload);
             setStatus({ type: 'success', message: 'Notification broadcasted successfully!' });
             setIsModalOpen(false);
             setFormData({ title: '', content: '', targetRole: 'all', targetClassroom: '' });
@@ -71,15 +67,14 @@ const Announcements = () => {
             fetchAnnouncements();
             setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Failed to broadcast notification.' });
+            setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Failed to broadcast notification.' });
         }
     };
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure? This will remove the history but won't delete sent notifications.")) return;
         try {
-            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            await axios.delete(`/api/admin/announcements/${id}`, config);
+            await deleteAdminAnnouncement(id);
             fetchAnnouncements();
         } catch (error) {
             console.error("Error deleting announcement:", error);
