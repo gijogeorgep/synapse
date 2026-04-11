@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { BookCopy, PlusCircle, FileText, Video, Link, Trash2, CheckCircle2, AlertCircle, X, Eye, Download } from 'lucide-react';
 import { getAdminResources, getAdminClassrooms, createAdminResource, deleteAdminResource, uploadImage, uploadFile } from '../../../api/services';
 
@@ -51,15 +52,19 @@ const LibraryManagement = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const loadId = toast.loading('Adding resource...');
         try {
             await createAdminResource(formData);
             setStatus({ type: 'success', message: 'Resource added to library!' });
+            toast.success('Resource added to library!', { id: loadId });
             setIsModalOpen(false);
             setFormData({ title: '', description: '', fileType: 'pdf', fileUrl: '', subject: '', classroom: classrooms[0]?._id || '', category: 'study_material', year: '' });
             setUploadMethod('file');
             fetchData();
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Failed to add resource.' });
+            const msg = error.response?.data?.message || error.message || 'Failed to add resource.';
+            setStatus({ type: 'error', message: msg });
+            toast.error(msg, { id: loadId });
         }
     };
 
@@ -72,13 +77,17 @@ const LibraryManagement = () => {
         formDataPayload.append(isImage ? 'image' : 'file', file);
 
         setUploading(true);
+        const loadId = toast.loading('Uploading file...');
         try {
             const data = await (isImage ? uploadImage(formDataPayload) : uploadFile(formDataPayload));
             setFormData(prev => ({ ...prev, fileUrl: data.url, public_id: data.public_id }));
             setStatus({ type: 'success', message: 'File uploaded successfully' });
+            toast.success('File uploaded successfully', { id: loadId });
         } catch (error) {
             console.error('File upload failed:', error);
-            setStatus({ type: 'error', message: 'File upload failed' });
+            const msg = 'File upload failed';
+            setStatus({ type: 'error', message: msg });
+            toast.error(msg, { id: loadId });
         } finally {
             setUploading(false);
         }
@@ -151,12 +160,15 @@ const LibraryManagement = () => {
                                     <button
                                         onClick={async () => {
                                             if (window.confirm('Are you sure you want to delete this resource?')) {
+                                                const loadId = toast.loading('Deleting resource...');
                                                 try {
                                                     await deleteAdminResource(res._id);
                                                     setStatus({ type: 'success', message: 'Resource deleted' });
+                                                    toast.success('Resource deleted', { id: loadId });
                                                     fetchData();
                                                 } catch (error) {
                                                     setStatus({ type: 'error', message: 'Failed to delete resource' });
+                                                    toast.error('Failed to delete resource', { id: loadId });
                                                 }
                                             }
                                         }}

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { Megaphone, PlusCircle, Trash2, CheckCircle2, AlertCircle, Clock, X, Users, GraduationCap, Globe } from 'lucide-react';
 import { getAdminAnnouncements, getAdminClassrooms, createAdminAnnouncement, deleteAdminAnnouncement } from '../../../api/services';
 
@@ -59,25 +60,32 @@ const Announcements = () => {
                 targetClassroom: audienceType === 'classroom' ? formData.targetClassroom : null
             };
 
+            const loadId = toast.loading('Broadcasting notification...');
             await createAdminAnnouncement(payload);
-            setStatus({ type: 'success', message: 'Notification broadcasted successfully!' });
+            const msg = 'Notification broadcasted successfully!';
+            setStatus({ type: 'success', message: msg });
+            toast.success(msg, { id: loadId });
             setIsModalOpen(false);
             setFormData({ title: '', content: '', targetRole: 'all', targetClassroom: '' });
             setAudienceType('all');
             fetchAnnouncements();
-            setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Failed to broadcast notification.' });
+            const msg = error.response?.data?.message || error.message || 'Failed to broadcast notification.';
+            setStatus({ type: 'error', message: msg });
+            toast.error(msg, { id: loadId });
         }
     };
 
     const handleDelete = async (id) => {
         if (!window.confirm("Are you sure? This will remove the history but won't delete sent notifications.")) return;
+        const loadId = toast.loading('Deleting announcement...');
         try {
             await deleteAdminAnnouncement(id);
+            toast.success('Announcement history entry removed.', { id: loadId });
             fetchAnnouncements();
         } catch (error) {
             console.error("Error deleting announcement:", error);
+            toast.error('Failed to remove history entry.', { id: loadId });
         }
     };
 

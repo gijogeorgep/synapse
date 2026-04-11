@@ -3,6 +3,7 @@ import { useAuth } from "../../../context/AuthContext";
 import { Mail, Lock, Loader2, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import apiClient from "../../../api/apiClient";
+import { toast } from "react-hot-toast";
 
 const AdminAuth = () => {
     const { login, updateUser } = useAuth();
@@ -42,12 +43,16 @@ const AdminAuth = () => {
                 throw new Error("Invalid login response: Role must be a string");
             }
             
+            
             console.log("[ADMIN_AUTH] Successful login, role:", data.role);
+            toast.success(`Welcome Master Dashboard! Authenticated as ${data.role}`);
             updateUser(data);
             navigate("/admin/dashboard");
         } catch (err) {
             console.error("[ADMIN_AUTH] Login Error:", err);
-            setError(err.message || "Failed to login. Please check your credentials.");
+            const msg = err.message || "Failed to login. Please check your credentials.";
+            setError(msg);
+            toast.error(msg);
         } finally {
             setLoading(false);
         }

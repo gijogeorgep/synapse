@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, useContext, useCallback } from "react";
 import { loginUser, registerUser } from "../api/authService";
+import { toast } from "react-hot-toast";
 
 const AuthContext = createContext();
 
@@ -30,6 +31,9 @@ export const AuthProvider = ({ children }) => {
         }
         if (invalidated) {
             setSessionInvalidated(true);
+            toast.error("Session expired. Please login again.");
+        } else {
+            toast.success("Logged out successfully");
         }
         setUser(null);
         localStorage.removeItem("userInfo");
@@ -60,8 +64,11 @@ export const AuthProvider = ({ children }) => {
             console.log("[AUTH_CONTEXT] Login successful for:", data.email, "Role:", data.role);
             setUser(data);
             localStorage.setItem("userInfo", JSON.stringify(data));
+            toast.success(`Welcome back, ${data.name || 'User'}!`);
             return { success: true };
         } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message || "Login failed";
+            toast.error(errorMsg);
             return { success: false, message: error };
         }
     };
@@ -94,8 +101,11 @@ export const AuthProvider = ({ children }) => {
             console.log("[AUTH_CONTEXT] Registration successful for:", data.email, "Role:", data.role);
             setUser(data);
             localStorage.setItem("userInfo", JSON.stringify(data));
+            toast.success("Account created successfully!");
             return { success: true };
         } catch (error) {
+            const errorMsg = error.response?.data?.message || error.message || "Registration failed";
+            toast.error(errorMsg);
             return { success: false, message: error };
         }
     };

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { createAdminUser } from "../../../api/services";
+import { toast } from "react-hot-toast";
 
 // Fixed program list — each entry maps to an ID prefix
 const PROGRAMS = [
@@ -164,11 +165,13 @@ const CreateUser = () => {
         type: "error",
         message: "Please fix the errors in the form",
       });
+      toast.error("Please fix the validation errors in the form");
       return;
     }
 
     setIsSubmitting(true);
     setStatus({ type: "", message: "" });
+    const loadId = toast.loading("Creating user...");
 
     try {
       // Send both className (the class number) and programType (for ID generation)
@@ -179,6 +182,7 @@ const CreateUser = () => {
 
       const data = await createAdminUser(submissionData);
       setStatus({ type: "success", message: "User created successfully!" });
+      toast.success("User created successfully!", { id: loadId });
 
       // Store generated credentials to show to admin
       if (data.uniqueId || data.password) {
@@ -208,10 +212,12 @@ const CreateUser = () => {
 
       setTimeout(() => setStatus({ type: "", message: "" }), 3000);
     } catch (error) {
+       const msg = error.response?.data?.message || error.message || "Error creating user";
       setStatus({
         type: "error",
-        message: error.response?.data?.message || error.message || "Error creating user",
+        message: msg,
       });
+      toast.error(msg, { id: loadId });
     } finally {
       setIsSubmitting(false);
     }

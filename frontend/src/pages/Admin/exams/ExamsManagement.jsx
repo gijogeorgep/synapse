@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 import { Award, PlusCircle, User, BookOpen, Clock, CheckCircle2, AlertCircle, X, Search, Filter, Plus, Trash2, ChevronRight, ChevronLeft, Image as ImageIcon, Loader2, Users, BarChart2, TrendingUp, MoreVertical, Edit2 } from 'lucide-react';
 import { createBulkExam, deleteExam, updateBulkExam, getQuestions, getAdminExams, getAdminClassrooms, getExamDetails, submitAdminResult, uploadImage, saveDraftQuestion, getDraftQuestions, updateQuestion, publishQuestion, deleteQuestion } from '../../../api/services';
 
@@ -101,6 +102,7 @@ const ExamsManagement = () => {
         }
 
         setIsSavingDraft(true);
+        const loadId = toast.loading('Saving draft questions...');
         try {
             await Promise.all(formData.questions.map((q) =>
                 saveDraftQuestion({
@@ -115,10 +117,13 @@ const ExamsManagement = () => {
                 })
             ));
             setStatus({ type: 'success', message: 'Questions saved as draft successfully.' });
+            toast.success('Questions saved as draft successfully.', { id: loadId });
             fetchDraftQuestions();
         } catch (error) {
             console.error('Error saving draft questions:', error);
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Failed to save exam draft.' });
+            const msg = error.response?.data?.message || 'Failed to save exam draft.';
+            setStatus({ type: 'error', message: msg });
+            toast.error(msg, { id: loadId });
         } finally {
             setIsSavingDraft(false);
         }
@@ -146,30 +151,40 @@ const ExamsManagement = () => {
             await deleteQuestion(draftId);
             fetchDraftQuestions();
             setStatus({ type: 'success', message: 'Draft deleted.' });
+            toast.success('Draft deleted.');
         } catch (error) {
             console.error('Error deleting draft question:', error);
-            setStatus({ type: 'error', message: 'Failed to delete draft.' });
+            const msg = 'Failed to delete draft.';
+            setStatus({ type: 'error', message: msg });
+            toast.error(msg);
         }
     };
 
 
-    const handleCreateExam = async (e) => {
-        e.preventDefault();
+    const handleCreateExam = async (e, isDraft = false) => {
+        if (e) e.preventDefault();
+        const examStatus = isDraft ? 'draft' : 'published';
+        const loadId = toast.loading(isEditing ? (isDraft ? 'Saving draft...' : 'Publishing...') : (isDraft ? 'Saving draft...' : 'Creating exam...'));
         try {
+            const payload = { ...formData, status: examStatus };
             if (isEditing) {
-                await updateBulkExam(editingExamId, formData);
-                setStatus({ type: 'success', message: 'Exam updated successfully!' });
+                await updateBulkExam(editingExamId, payload);
+                const msg = isDraft ? 'Draft updated successfully!' : 'Exam published successfully!';
+                setStatus({ type: 'success', message: msg });
+                toast.success(msg, { id: loadId });
             } else {
-                await createBulkExam(formData);
-                setStatus({ type: 'success', message: 'Exam created successfully with questions!' });
+                await createBulkExam(payload);
+                const msg = isDraft ? 'Exam saved as draft!' : 'Exam created and published!';
+                setStatus({ type: 'success', message: msg });
+                toast.success(msg, { id: loadId });
             }
             setIsModalOpen(false);
             resetForm();
             fetchData();
-            fetchDraftQuestions();
-
         } catch (error) {
-            setStatus({ type: 'error', message: error.response?.data?.message || 'Failed to process exam.' });
+            const msg = error.response?.data?.message || 'Failed to process exam.';
+            setStatus({ type: 'error', message: msg });
+            toast.error(msg, { id: loadId });
         }
     };
 
@@ -194,17 +209,29 @@ const ExamsManagement = () => {
         try {
             setLoading(true);
             const questRes = await getQuestions(exam._id);
+            let examDate = '';
+            try {
+                if (exam.date) {
+                    const d = new Date(exam.date);
+                    if (!isNaN(d.getTime())) {
+                        examDate = d.toISOString().slice(0, 16);
+                    }
+                }
+            } catch (e) {
+                console.error("Date parsing error:", e);
+            }
+
             setFormData({
-                title: exam.title,
-                subject: exam.subject,
-                classLevel: exam.classLevel,
-                date: exam.date ? new Date(exam.date).toISOString().slice(0, 16) : '',
-                duration: exam.duration,
-                totalMarks: exam.totalMarks,
-                classroom: exam.classroom._id,
+                title: exam.title || '',
+                subject: exam.subject || '',
+                classLevel: exam.classLevel || '',
+                date: examDate,
+                duration: exam.duration || 0,
+                totalMarks: exam.totalMarks || 0,
+                classroom: exam.classroom?._id || exam.classroom || '',
                 examCategory: exam.examCategory || 'scheduled',
                 examType: exam.examType || 'subject-wise',
-                questions: questRes.data.length > 0 ? questRes.data : [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
+                questions: (questRes && questRes.length > 0) ? questRes : [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
             });
             setIsEditing(true);
             setEditingExamId(exam._id);
@@ -222,11 +249,15 @@ const ExamsManagement = () => {
         if (!window.confirm("Are you sure you want to delete this exam? This action cannot be undone.")) return;
         try {
             await deleteExam(examId);
-            setStatus({ type: 'success', message: 'Exam deleted successfully.' });
+            const msg = 'Exam deleted successfully.';
+            setStatus({ type: 'success', message: msg });
+            toast.success(msg);
             fetchData();
             setActiveMenu(null);
         } catch (error) {
-            setStatus({ type: 'error', message: 'Failed to delete exam.' });
+            const msg = 'Failed to delete exam.';
+            setStatus({ type: 'error', message: msg });
+            toast.error(msg);
         }
     };
 
@@ -293,10 +324,14 @@ const ExamsManagement = () => {
                 examId: selectedExam._id,
                 ...resultData
             });
-            setStatus({ type: 'success', message: 'Marks submitted successfully!' });
+            const msg = 'Marks submitted successfully!';
+            setStatus({ type: 'success', message: msg });
+            toast.success(msg);
             setResultData({ studentId: '', marksObtained: '', remarks: '' });
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Failed to submit marks.' });
+            const msg = error || 'Failed to submit marks.';
+            setStatus({ type: 'error', message: msg });
+            toast.error(msg);
         }
     };
 
@@ -355,7 +390,14 @@ const ExamsManagement = () => {
                                  </div>
                                  <div className="flex gap-1">
                                     <div className="text-right mr-2">
-                                        <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{exam.subject}</span>
+                                        <div className="flex items-center gap-2 justify-end mb-1">
+                                            <span className="text-xs font-bold text-slate-400 opacity-60 tracking-widest leading-none">{exam.subject}</span>
+                                            {exam.status === 'draft' ? (
+                                                <span className="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-black rounded-lg border border-amber-100 uppercase tracking-tighter">Draft</span>
+                                            ) : (
+                                                <span className="px-2 py-0.5 bg-emerald-50 text-emerald-600 text-[10px] font-black rounded-lg border border-emerald-100 uppercase tracking-tighter">Live</span>
+                                            )}
+                                        </div>
                                         <p className="text-sm font-bold text-indigo-600">Class {exam.classLevel}</p>
                                     </div>
                                     <div className="relative">
@@ -403,11 +445,11 @@ const ExamsManagement = () => {
                              </div>
                              <div className="flex gap-2">
                                 <button 
-                                    onClick={() => fetchExamDetails(exam._id)}
+                                    onClick={() => exam.status === 'draft' ? openEditModal(exam) : fetchExamDetails(exam._id)}
                                     className="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center justify-center gap-2"
                                 >
                                     <BarChart2 className="w-4 h-4" /> 
-                                    View Report
+                                    {exam.status === 'draft' ? 'Review & Publish' : 'View Report'}
                                 </button>
                                 <button 
                                     onClick={() => openResultModal(exam)}
@@ -651,6 +693,13 @@ const ExamsManagement = () => {
                                         >
                                             Next: Add Questions <ChevronRight className="w-5 h-5" />
                                         </button>
+                                        <button 
+                                            type="button" 
+                                            onClick={() => handleCreateExam(null, true)}
+                                            className="w-full mt-3 py-3 border-2 border-slate-100 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                                        >
+                                            Save Exam Details as Draft
+                                        </button>
                                     </div>
                                 </div>
                             ) : (
@@ -677,26 +726,46 @@ const ExamsManagement = () => {
                                             </button>
                                         </div>
                                     </div>
-                                    <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 max-h-56 overflow-y-auto">
+                                    <div className="grid grid-cols-1 gap-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
                                         {draftQuestions.length === 0 ? (
-                                            <p className="text-xs text-slate-500">No drafts available for this classroom.</p>
+                                            <div className="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                                <AlertCircle className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                                <p className="text-xs text-slate-400 font-medium">No drafts available for this classroom.</p>
+                                            </div>
                                         ) : (
-                                            <ul className="space-y-2">
-                                                {draftQuestions.map((draft) => (
-                                                    <li key={draft._id} className="flex items-center justify-between gap-2 bg-white p-2 rounded-lg border">
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-xs text-slate-700 truncate">{draft.questionText || 'Untitled question'}</span>
-                                                            <span className="text-[10px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">Draft</span>
+                                            draftQuestions.map((draft) => (
+                                                <div key={draft._id} className="group bg-white p-4 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-sm transition-all flex flex-col gap-3">
+                                                    <div className="flex items-start justify-between gap-3">
+                                                        <div className="flex-1">
+                                                            <div className="flex items-center gap-2 mb-1">
+                                                                <span className="px-1.5 py-0.5 bg-amber-50 text-amber-600 text-[9px] font-black rounded uppercase tracking-tighter border border-amber-100">Question Draft</span>
+                                                                <span className="text-[10px] text-slate-400 font-medium">{new Date(draft.createdAt).toLocaleDateString()}</span>
+                                                            </div>
+                                                            <p className="text-sm font-bold text-slate-700 leading-relaxed line-clamp-2">
+                                                                {draft.questionText || 'Untitled question'}
+                                                            </p>
                                                         </div>
-                                                        <div className="flex gap-1">
-                                                            <button type="button" onClick={() => handleLoadDraftQuestion(draft)}
-                                                                className="text-[10px] text-cyan-600 font-bold rounded px-2 py-1 border border-cyan-200 hover:bg-cyan-50">Load</button>
-                                                            <button type="button" onClick={() => handleDeleteDraftQuestion(draft._id)}
-                                                                className="text-[10px] text-rose-600 font-bold rounded px-2 py-1 border border-rose-200 hover:bg-rose-50">Delete</button>
-                                                        </div>
-                                                    </li>
-                                                ))}
-                                            </ul>
+                                                    </div>
+                                                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-50">
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => handleLoadDraftQuestion(draft)}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-600 font-bold rounded-lg hover:bg-indigo-100 transition-all text-[10px]"
+                                                        >
+                                                            <Plus className="w-3.5 h-3.5" />
+                                                            Load to Exam
+                                                        </button>
+                                                        <button 
+                                                            type="button" 
+                                                            onClick={() => handleDeleteDraftQuestion(draft._id)}
+                                                            className="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                                                            title="Delete Draft"
+                                                        >
+                                                            <Trash2 className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            ))
                                         )}
                                     </div>
                                 <div className="space-y-6">
@@ -805,21 +874,29 @@ const ExamsManagement = () => {
                                         ))}
                                     </div>
 
-                                    <div className="flex gap-4 pt-4 border-t border-slate-100">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setCurrentStep(1)} 
-                                            className="flex-1 py-3.5 text-slate-600 font-bold border border-slate-200 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <ChevronLeft className="w-5 h-5" /> Back
-                                        </button>
-                                        <button 
-                                            type="submit" 
-                                            className="flex-[2] py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
-                                        >
-                                            Create Exam
-                                        </button>
-                                    </div>
+                                <div className="flex gap-3 pt-6 border-t border-slate-100">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setCurrentStep(1)}
+                                        className="px-6 py-4 bg-slate-50 text-slate-600 font-bold rounded-xl hover:bg-slate-100 transition-all flex items-center gap-2"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" /> Back
+                                    </button>
+                                    <button 
+                                        type="button" 
+                                        onClick={() => handleCreateExam(null, true)}
+                                        className="flex-1 py-4 bg-white border-2 border-indigo-100 text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        Save as Draft
+                                    </button>
+                                    <button 
+                                        type="submit"
+                                        className="flex-[2] py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                                    >
+                                        <CheckCircle2 className="w-5 h-5" />
+                                        {isEditing ? (formData.status === 'draft' ? 'Publish Exam' : 'Update & Sync') : 'Create & Publish Exam'}
+                                    </button>
+                                </div>
                                 </div>
                             </div>
                                 </>

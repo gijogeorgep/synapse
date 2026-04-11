@@ -12,6 +12,7 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { sendOtpAPI } from "../../api/authService";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
   const { login, register } = useAuth();
@@ -58,7 +59,9 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
       result = await login(formData.email, formData.password);
     } else if (mode === "register") {
       if (formData.password !== formData.confirmPassword) {
-        setError("Passwords do not match");
+        const msg = "Passwords do not match";
+        setError(msg);
+        toast.error(msg);
         setLoading(false);
         return;
       }
@@ -66,21 +69,23 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
       // Phone Number Validation - 10 digits
       const phoneRegex = /^\d{10}$/;
       if (!phoneRegex.test(formData.phoneNumber.replace(/\s+/g, ""))) {
-        setError("Phone number must be exactly 10 digits");
+        const msg = "Phone number must be exactly 10 digits";
+        setError(msg);
+        toast.error(msg);
         setLoading(false);
         return;
       }
 
       try {
         await sendOtpAPI(formData.email);
+        toast.success("OTP sent to your email!");
         setMode("verify");
         setLoading(false);
         return;
       } catch (err) {
-        setError(
-          err.response?.data?.message ||
-            "Failed to send OTP. Email may already be in use.",
-        );
+        const msg = err.response?.data?.message || "Failed to send OTP. Email may already be in use.";
+        setError(msg);
+        toast.error(msg);
         setLoading(false);
         return;
       }
