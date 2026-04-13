@@ -19,7 +19,7 @@ export const getMyClassrooms = async (req, res) => {
         } else if (role === 'teacher') {
             classrooms = await Classroom.find({ teachers: userId })
                 .populate('teachers', 'name email avatarUrl')
-                .populate('students', 'name email avatarUrl');
+                .populate('students', 'name email avatarUrl uniqueId');
         } else if (role === 'admin') {
             // Admin can see all classrooms
             classrooms = await Classroom.find()

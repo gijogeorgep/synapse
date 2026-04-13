@@ -68,14 +68,6 @@ export const uploadImage = (formData) => {
     });
 };
 
-export const uploadFile = (formData) => {
-    return apiClient("/upload/file", {
-        method: "POST",
-        body: formData,
-        headers: null,
-    });
-};
-
 // Classroom Services
 export const getMyClassrooms = () => apiClient("/classrooms/my-classrooms");
 export const getTeacherClassrooms = () => apiClient("/classrooms/my-classrooms");
@@ -84,16 +76,6 @@ export const getPublicClassrooms = () => apiClient("/classrooms/public");
 
 export const updateClassroomResources = (id, resourceData) =>
     apiClient(`/classrooms/${id}/resources`, { method: "PUT", body: resourceData });
-
-export const enrollInClassroom = (id) =>
-    apiClient(`/classrooms/${id}/enroll`, { method: "POST" });
-
-// Assignment Services
-export const getAssignments = (classroomId) => apiClient(`/assignments/classroom/${classroomId}`);
-export const createAssignment = (data) => apiClient("/assignments", { method: "POST", body: data });
-export const getAssignmentSubmissions = (id) => apiClient(`/assignments/${id}/submissions`);
-export const submitHomework = (id, data) => apiClient(`/assignments/${id}/submit`, { method: "POST", body: data });
-export const gradeHomework = (submissionId, data) => apiClient(`/assignments/submissions/${submissionId}/grade`, { method: "PUT", body: data });
 
 // Admin Services
 export const getAdminClassrooms = () => apiClient("/admin/classrooms");
@@ -108,11 +90,6 @@ export const deleteAdminClassroom = (id) =>
     apiClient(`/admin/classrooms/${id}`, { method: "DELETE" });
 export const assignUserToClassroom = (id, assignData) => 
     apiClient(`/admin/classrooms/${id}/assign`, { method: "POST", body: assignData });
-
-export const promoteClassroom = (promotionData) =>
-    apiClient("/admin/promote", { method: "POST", body: promotionData });
-
-export const getAuditLogs = () => apiClient("/admin/audit-logs");
 
 export const getAdminAnnouncements = () => apiClient("/admin/announcements");
 export const createAdminAnnouncement = (announcementData) =>
@@ -130,13 +107,6 @@ export const deleteAdminUser = (id) =>
     apiClient(`/admin/users/${id}`, { method: "DELETE" });
 export const blockAdminUser = (id, blockData) => 
     apiClient(`/admin/users/${id}/block`, { method: "PATCH", body: blockData });
-
-// Resource Library Services
-export const getAdminResources = () => apiClient("/admin/resources");
-export const createAdminResource = (resourceData) =>
-    apiClient("/admin/resources", { method: "POST", body: resourceData });
-export const deleteAdminResource = (id) =>
-    apiClient(`/admin/resources/${id}`, { method: "DELETE" });
 
 // Program Services
 export const getPrograms = () => apiClient("/programs");

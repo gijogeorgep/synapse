@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { User, Mail, Lock, Camera, Save, Loader2, ShieldCheck, Phone } from "lucide-react";
 import { getProfile, updateProfile, updatePassword, uploadImage } from "../../api/services";
@@ -85,10 +86,10 @@ const TeacherSettings = () => {
             // Update context/localStorage
             updateUser({ avatarUrl: result.url });
 
-            alert("Profile picture updated successfully!");
+            toast.success("Profile picture updated successfully!");
         } catch (error) {
             console.error("Upload error:", error);
-            alert("Failed to upload image: " + error);
+            toast.error("Failed to upload image: " + error);
         } finally {
             setUploading(false);
         }
@@ -100,7 +101,7 @@ const TeacherSettings = () => {
         // Phone Number Validation - 10 digits
         const phoneRegex = /^\d{10}$/;
         if (profile.phoneNumber && !phoneRegex.test(profile.phoneNumber.replace(/\s+/g, ""))) {
-            alert("Phone number must be exactly 10 digits");
+            toast.error("Phone number must be exactly 10 digits");
             return;
         }
 
@@ -112,10 +113,10 @@ const TeacherSettings = () => {
                 phoneNumber: profile.phoneNumber
             });
             updateUser({ ...user, name: profile.name, phoneNumber: profile.phoneNumber });
-            alert("Profile updated successfully!");
+            toast.success("Profile updated successfully!");
             setIsEditingProfile(false);
         } catch (error) {
-            alert("Failed to update profile: " + error);
+            toast.error("Failed to update profile: " + error);
         } finally {
             setSaving(false);
         }
@@ -124,7 +125,7 @@ const TeacherSettings = () => {
     const handleChangePassword = async (e) => {
         e.preventDefault();
         if (passwords.newPassword !== passwords.confirmPassword) {
-            alert("New password and confirm password do not match.");
+            toast.error("New password and confirm password do not match.");
             return;
         }
 
@@ -134,11 +135,11 @@ const TeacherSettings = () => {
                 currentPassword: passwords.currentPassword,
                 newPassword: passwords.newPassword
             });
-            alert("Password updated successfully!");
+            toast.success("Password updated successfully!");
             setPasswords({ currentPassword: "", newPassword: "", confirmPassword: "" });
             setIsEditingPassword(false);
         } catch (error) {
-            alert("Failed to update password: " + error);
+            toast.error("Failed to update password: " + error);
         } finally {
             setUpdatingPassword(false);
         }

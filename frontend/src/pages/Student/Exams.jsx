@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
+import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { Clock, CheckCircle2, FileText, PlayCircle, Award, X, ChevronRight, ChevronLeft } from "lucide-react";
+import { Clock, CheckCircle2, FileText, PlayCircle, Award, X, ChevronRight, ChevronLeft, Shield, AlertCircle } from "lucide-react";
 import { getExams, getQuestions, submitExamResult, getMyResults } from "../../api/services";
 
 const StudentExams = () => {
@@ -22,6 +23,10 @@ const StudentExams = () => {
     const [timeLeft, setTimeLeft] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [examResult, setExamResult] = useState(null);
+    const [violationCount, setViolationCount] = useState(0);
+    const [isViolationOverlay, setIsViolationOverlay] = useState(false);
+    const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
+    const [pendingExam, setPendingExam] = useState(null);
 
     // NEET Player State
     const [activeSubject, setActiveSubject] = useState("Physics");
@@ -78,7 +83,28 @@ const StudentExams = () => {
         return e.examType === "subject-wise" || !e.examType;
     });
 
-    const handleStartExam = async (exam) => {
+    const enterFullscreen = () => {
+        const docElm = document.documentElement;
+        if (docElm.requestFullscreen) {
+            docElm.requestFullscreen();
+        } else if (docElm.mozRequestFullScreen) {
+            docElm.mozRequestFullScreen();
+        } else if (docElm.webkitRequestFullScreen) {
+            docElm.webkitRequestFullScreen();
+        } else if (docElm.msRequestFullscreen) {
+            docElm.msRequestFullscreen();
+        }
+    };
+
+    const handleStartExam = (exam) => {
+        setPendingExam(exam);
+        setIsInstructionsOpen(true);
+    };
+
+    const confirmStartExam = async () => {
+        if (!pendingExam) return;
+        const exam = pendingExam;
+        setIsInstructionsOpen(false);
         setLoading(true);
         try {
             const qs = await getQuestions(exam._id);
@@ -88,15 +114,24 @@ const StudentExams = () => {
             setCurrentQuestionIndex(0);
             setSelectedAnswers({});
             setExamResult(null);
+            setViolationCount(0);
 
             // Set initial NEET focus if applicable
             if (exam.isNeetPattern) {
                 setActiveSubject("Physics");
             }
+
+            // Request Fullscreen
+            try {
+                enterFullscreen();
+            } catch (err) {
+                console.warn("Fullscreen request failed", err);
+            }
         } catch (error) {
-            alert("Error starting exam: " + error);
+            toast.error("Error starting exam: " + error);
         } finally {
             setLoading(false);
+            setPendingExam(null);
         }
     };
 
@@ -108,7 +143,7 @@ const StudentExams = () => {
             setActiveExam(result.exam);
             setExamResult(result);
         } catch (error) {
-            alert("Error loading review: " + error);
+            toast.error("Error loading review: " + (error.message || error));
         } finally {
             setLoading(false);
         }
@@ -121,10 +156,82 @@ const StudentExams = () => {
                 setTimeLeft((prev) => prev - 1);
             }, 1000);
         } else if (timeLeft === 0 && activeExam && !examResult) {
-            handleSubmitExam();
+            handleSubmitExam("Time Up");
         }
         return () => clearInterval(timer);
     }, [activeExam, timeLeft, examResult]);
+
+    // Proctoring Logic & Integrity
+    useEffect(() => {
+        if (!activeExam || examResult) return;
+
+        const handleVisibilityChange = () => {
+            if (document.hidden) {
+                handleViolation("Tab/Window Switch");
+            }
+        };
+
+        const handleBlur = () => {
+            handleViolation("Lost Focus");
+        };
+
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement && !activeExam?.isManualExit && !examResult) {
+                handleViolation("Exited Fullscreen");
+            }
+        };
+
+        const handleBeforeUnload = (e) => {
+            e.preventDefault();
+            e.returnValue = ''; // Standard for modern browsers to show a 'Leave site?' dialog
+        };
+
+        const handleContextMenu = (e) => e.preventDefault();
+        const handleCopyPaste = (e) => {
+            toast.error("Copy/Paste is disabled during exams!");
+            e.preventDefault();
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("blur", handleBlur);
+        document.addEventListener("fullscreenchange", handleFullscreenChange);
+        document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+        document.addEventListener("mozfullscreenchange", handleFullscreenChange);
+        document.addEventListener("MSFullscreenChange", handleFullscreenChange);
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        document.addEventListener("contextmenu", handleContextMenu);
+        document.addEventListener("copy", handleCopyPaste);
+        document.addEventListener("paste", handleCopyPaste);
+
+        return () => {
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("blur", handleBlur);
+            document.removeEventListener("fullscreenchange", handleFullscreenChange);
+            document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+            document.removeEventListener("mozfullscreenchange", handleFullscreenChange);
+            document.removeEventListener("MSFullscreenChange", handleFullscreenChange);
+            window.removeEventListener("beforeunload", handleBeforeUnload);
+            document.removeEventListener("contextmenu", handleContextMenu);
+            document.removeEventListener("copy", handleCopyPaste);
+            document.removeEventListener("paste", handleCopyPaste);
+        };
+    }, [activeExam, examResult]);
+
+    const handleViolation = (reason) => {
+        if (examResult) return;
+
+        setViolationCount((prev) => {
+            const next = prev + 1;
+            if (next >= 3) {
+                toast.error(`Automated Submission: Multiple proctoring violations (${reason})`, { duration: 6000 });
+                handleSubmitExam(`Locked out: ${reason}`);
+            } else {
+                toast.error(`WARNING: Proctoring Violation (${reason}) Detected! (${next}/3). Switching tabs is forbidden.`, { duration: 5000 });
+                setIsViolationOverlay(true);
+            }
+            return next;
+        });
+    };
 
     const handleAnswerSelect = (questionId, optionIndex) => {
         // NEET Section B logic: prevent more than 10 attempts
@@ -139,7 +246,7 @@ const StudentExams = () => {
 
                 const limit = sub === 'Biology' ? 90 : 45;
                 if (subjectAnswersCount >= limit) {
-                    alert(`In NEET, you can only attempt ${limit} questions for ${sub}.`);
+                    toast.error(`In NEET, you can only attempt ${limit} questions for ${sub}.`);
                     return;
                 }
             }
@@ -151,7 +258,7 @@ const StudentExams = () => {
         });
     };
 
-    const handleSubmitExam = async () => {
+    const handleSubmitExam = async (statusReason = "Normal") => {
         setIsSubmitting(true);
         try {
             const formattedAnswers = Object.entries(selectedAnswers).map(([qId, opt]) => ({
@@ -161,10 +268,16 @@ const StudentExams = () => {
             const res = await submitExamResult(activeExam._id, {
                 answers: formattedAnswers,
                 timeTaken: activeExam.duration * 60 - timeLeft,
+                submissionStatus: statusReason 
             });
             setExamResult(res);
             setUpcomingExams((prev) => prev.filter((exam) => exam._id !== activeExam._id));
             setCompletedExams((prev) => [{ ...res, exam: activeExam }, ...prev]);
+
+            // Exit fullscreen
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            }
 
             // Re-fetch questions with correct answers & explanations now that result exists
             try {
@@ -174,9 +287,10 @@ const StudentExams = () => {
                 console.warn("Could not re-fetch questions for review:", e);
             }
         } catch (error) {
-            alert("Error submitting exam: " + error);
+            toast.error("Error submitting exam: " + (error.message || error));
         } finally {
             setIsSubmitting(false);
+            setIsViolationOverlay(false);
         }
     };
 
@@ -375,14 +489,6 @@ const StudentExams = () => {
                                     <Clock className="w-5 h-5" />
                                     <span className="text-lg">{formatTime(timeLeft)}</span>
                                 </div>
-                                {!examResult && (
-                                    <button
-                                        onClick={() => { if (confirm("Are you sure you want to exit? Your progress may not be saved.")) setActiveExam(null); }}
-                                        className="p-2 hover:bg-white rounded-full transition-colors"
-                                    >
-                                        <X className="w-6 h-6 text-slate-400" />
-                                    </button>
-                                )}
                             </div>
                         </div>
 
@@ -650,7 +756,7 @@ const StudentExams = () => {
 
                                     {currentQuestionIndex === questions.length - 1 ? (
                                         <button
-                                            onClick={handleSubmitExam}
+                                            onClick={() => handleSubmitExam("Normal")}
                                             disabled={isSubmitting}
                                             className="px-10 py-3 rounded-full bg-emerald-600 text-white font-black shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 hover:scale-105 transition-all disabled:opacity-50"
                                         >
@@ -668,6 +774,114 @@ const StudentExams = () => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+            )}
+
+            {/* Violation Overlay */}
+            {isViolationOverlay && !examResult && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/90 backdrop-blur-xl animate-in fade-in duration-300">
+                    <div className="max-w-md w-full p-10 bg-white rounded-[3rem] text-center space-y-6 shadow-2xl">
+                        <div className="w-20 h-20 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto">
+                            <AlertCircle className="w-10 h-10" />
+                        </div>
+                        <h2 className="text-2xl font-black text-slate-900">Proctoring Warning!</h2>
+                        <p className="text-slate-500 font-medium">
+                            You switched tabs or lost focus. This is strictly prohibited. 
+                            <span className="block mt-2 font-bold text-rose-600">Violation {violationCount}/3</span>
+                        </p>
+                        <p className="text-sm text-slate-400">If you reach 3 violations, your exam will be submitted automatically.</p>
+                        <button 
+                            onClick={() => {
+                                setIsViolationOverlay(false);
+                                enterFullscreen();
+                            }}
+                            className="w-full py-4 bg-slate-900 text-white font-black rounded-full hover:scale-105 transition-all"
+                        >
+                            I Understand, Resume Exam
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* Exam Instructions Modal */}
+            {isInstructionsOpen && pendingExam && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 flex flex-col">
+                        <div className="p-8 space-y-8 flex-1 flex flex-col overflow-hidden">
+                            <div className="flex items-center gap-6 shrink-0">
+                                <div className="p-4 bg-cyan-600 text-white rounded-[1.5rem] shadow-xl shadow-cyan-100 shrink-0">
+                                    <Shield className="w-8 h-8" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <h2 className="text-2xl font-black text-slate-900 truncate">Exam Guidelines</h2>
+                                    <p className="text-slate-500 font-medium truncate">Please read carefully.</p>
+                                </div>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto space-y-8 pr-2 custom-scrollbar">
+                                <div className="bg-slate-50 p-6 rounded-3xl space-y-4 border border-slate-100">
+                                    <div className="grid grid-cols-3 gap-4 text-center">
+                                        <div className="p-3 bg-white rounded-2xl border border-slate-100">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Duration</p>
+                                            <p className="text-sm font-black text-slate-900">{pendingExam.duration}m</p>
+                                        </div>
+                                        <div className="p-3 bg-white rounded-2xl border border-slate-100">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subject</p>
+                                            <p className="text-sm font-black text-slate-900 truncate px-1">{pendingExam.subject}</p>
+                                        </div>
+                                        <div className="p-3 bg-white rounded-2xl border border-slate-100">
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Qns</p>
+                                            <p className="text-sm font-black text-slate-900">{pendingExam.totalMarks}</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-4 pt-2">
+                                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest border-b border-slate-200 pb-2">Proctoring Rules</h3>
+                                        <ul className="space-y-3">
+                                            <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                                                <div className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center shrink-0 mt-0.5">1</div>
+                                                <span>The exam will open in <span className="text-slate-900 font-black">Fullscreen Mode</span>. Do not exit until finished.</span>
+                                            </li>
+                                            <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                                                <div className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center shrink-0 mt-0.5">2</div>
+                                                <span>Switching tabs, minimizing the browser, or opening other apps is strictly detected.</span>
+                                            </li>
+                                            <li className="flex items-start gap-3 text-sm font-bold text-rose-600">
+                                                <div className="w-5 h-5 rounded-full bg-rose-100 text-rose-500 flex items-center justify-center shrink-0 mt-0.5">3</div>
+                                                <span>You have a <span className="text-rose-700 font-black">3-Strike Limit</span>. Reaching 3 violations will result in Automatic Submission.</span>
+                                            </li>
+                                            <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                                                <div className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center shrink-0 mt-0.5">4</div>
+                                                <span><span className="text-slate-900 font-black">Total Lockdown</span>: The only way to exit is by finishing. You cannot cancel or go back.</span>
+                                            </li>
+                                            <li className="flex items-start gap-3 text-sm font-bold text-slate-600">
+                                                <div className="w-5 h-5 rounded-full bg-cyan-100 text-cyan-600 flex items-center justify-center shrink-0 mt-0.5">5</div>
+                                                <span>Right-click, Copy, and Paste are disabled during the session.</span>
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-4">
+                                <button 
+                                    onClick={() => {
+                                        setIsInstructionsOpen(false);
+                                        setPendingExam(null);
+                                    }}
+                                    className="flex-1 py-4 px-6 rounded-full bg-slate-100 text-slate-500 font-bold hover:bg-slate-200 transition-all"
+                                >
+                                    Go Back
+                                </button>
+                                <button 
+                                    onClick={confirmStartExam}
+                                    className="flex-[2] py-4 px-6 rounded-full bg-slate-900 text-white font-black shadow-xl shadow-slate-200 hover:scale-[1.02] active:scale-95 transition-all"
+                                >
+                                    I Agree & Start Exam
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}

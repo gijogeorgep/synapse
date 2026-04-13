@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import {
     GraduationCap,
     PlusCircle,
@@ -11,13 +12,14 @@ import {
     X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
-import { getExamsByClassroom, createBulkExam, deleteExam, getExamDetails } from "../../api/services";
+import { getExamsBySpecificClassroom, createBulkExam, deleteExam, getExamDetails, getTeacherClassrooms } from "../../api/services";
 
 const Exams = () => {
     const { user } = useAuth();
     const [view, setView] = useState("selection"); // 'selection' or 'classroom'
     const [selectedClassroom, setSelectedClassroom] = useState(null);
     const [exams, setExams] = useState([]);
+    const [classrooms, setClassrooms] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
@@ -30,20 +32,29 @@ const Exams = () => {
         title: "",
         description: "",
         duration: 30,
+        date: "",
         examType: "subject-wise",
         questions: [
             { questionText: "", options: ["", "", "", ""], correctAnswer: 0 },
         ],
     });
 
-    const teacherSubjects =
-        user?.teacherSubjects || user?.subjects || ["Physics", "Chemistry", "Mathematics"];
-    const classLevel = user?.classLevel || "10";
+    useEffect(() => {
+        const fetchClassrooms = async () => {
+            try {
+                const data = await getTeacherClassrooms();
+                setClassrooms(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Error fetching classrooms:", error);
+            }
+        };
+        fetchClassrooms();
+    }, []);
 
-    const fetchExams = async (subject) => {
+    const fetchExams = async (classroomId) => {
         setLoading(true);
         try {
-            const data = await getExamsByClassroom(subject, classLevel);
+            const data = await getExamsBySpecificClassroom(classroomId);
             setExams(data);
         } catch (error) {
             console.error("Error fetching exams:", error);
@@ -52,9 +63,9 @@ const Exams = () => {
         }
     };
 
-    const handleSelectClassroom = (subject) => {
-        setSelectedClassroom(subject);
-        fetchExams(subject);
+    const handleSelectClassroom = (classroom) => {
+        setSelectedClassroom(classroom);
+        fetchExams(classroom._id);
         setView("classroom");
     };
 
@@ -96,21 +107,24 @@ const Exams = () => {
         try {
             await createBulkExam({
                 ...formData,
-                subject: selectedClassroom,
-                classLevel: classLevel,
+                subject: selectedClassroom?.subjects?.[0] || "General",
+                classLevel: selectedClassroom?.className || "10",
+                classroom: selectedClassroom?._id,
             });
             setShowCreateModal(false);
             setFormData({
                 title: "",
                 description: "",
                 duration: 30,
+                date: "",
+                examType: "subject-wise",
                 questions: [
                     { questionText: "", options: ["", "", "", ""], correctAnswer: 0 },
                 ],
             });
-            fetchExams(selectedClassroom);
+            fetchExams(selectedClassroom._id);
         } catch (error) {
-            alert(error);
+            toast.error(error.message || "Failed to create exam");
         }
     };
 
@@ -122,7 +136,7 @@ const Exams = () => {
             setSelectedExamDetails(data);
         } catch (error) {
             console.error("Error fetching exam details:", error);
-            alert("Could not load exam details.");
+            toast.error("Could not load exam details.");
             setShowDetailsModal(false);
         } finally {
             setLoadingDetails(false);
@@ -134,9 +148,9 @@ const Exams = () => {
 
         try {
             await deleteExam(examId);
-            fetchExams(selectedClassroom);
+            fetchExams(selectedClassroom._id);
         } catch (error) {
-            alert("Error deleting exam: " + error);
+            toast.error("Error deleting exam: " + (error.message || error));
         }
     };
 
@@ -157,17 +171,17 @@ const Exams = () => {
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {teacherSubjects.map((subject) => (
+                    {classrooms.map((cls) => (
                         <button
-                            key={subject}
-                            onClick={() => handleSelectClassroom(subject)}
+                            key={cls._id}
+                            onClick={() => handleSelectClassroom(cls)}
                             className="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:border-cyan-200 hover:bg-cyan-50/30 transition-all text-left group"
                         >
                             <div className="w-14 h-14 rounded-2xl bg-cyan-100 flex items-center justify-center mb-6 group-hover:bg-cyan-200 transition-colors">
                                 <GraduationCap className="w-7 h-7 text-cyan-600" />
                             </div>
-                            <h3 className="text-xl font-bold text-slate-900 mb-1">{subject}</h3>
-                            <p className="text-slate-500 font-medium">Class {classLevel}</p>
+                            <h3 className="text-xl font-bold text-slate-900 mb-1">{cls.name}</h3>
+                            <p className="text-slate-500 font-medium">Class {cls.className} • {cls.subjects?.join(", ")}</p>
                             <div className="mt-6 flex items-center text-cyan-600 font-semibold group-hover:translate-x-1 transition-transform">
                                 <span>Manage Exams</span>
                                 <Plus className="w-4 h-4 ml-2" />
@@ -192,7 +206,7 @@ const Exams = () => {
                     </button>
                     <div className="flex items-center space-x-2 text-cyan-600 font-bold tracking-wide uppercase text-xs mb-2">
                         <GraduationCap className="w-4 h-4" />
-                        <span>{selectedClassroom} - Class {classLevel}</span>
+                        <span>{selectedClassroom?.name} - Class {selectedClassroom?.className}</span>
                     </div>
                     <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
                         Manage <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-indigo-600">Exams</span>
@@ -275,7 +289,7 @@ const Exams = () => {
                         <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                             <div>
                                 <h2 className="text-2xl font-bold text-slate-900">Create New Exam</h2>
-                                <p className="text-slate-500 text-sm">{selectedClassroom} - Class {classLevel}</p>
+                                <p className="text-slate-500 text-sm">{selectedClassroom?.name} - Class {selectedClassroom?.className}</p>
                             </div>
                             <button
                                 onClick={() => setShowCreateModal(false)}
@@ -287,20 +301,30 @@ const Exams = () => {
 
                         <form onSubmit={handleCreateExam} className="overflow-y-auto p-8 flex-1 space-y-8">
                             {/* Basic Details */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div className="space-y-2 col-span-1 md:col-span-1">
                                     <label className="text-sm font-bold text-slate-700">Exam Title</label>
                                     <input
                                         type="text"
                                         required
                                         className="w-full px-5 py-3 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-cyan-50 focus:border-cyan-200 outline-none transition-all"
-                                        placeholder="Half Yearly Exam - Chapter 1 & 2"
+                                        placeholder="Half Yearly Exam"
                                         value={formData.title}
                                         onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700">Duration (Minutes)</label>
+                                <div className="space-y-2 col-span-1 md:col-span-1">
+                                    <label className="text-sm font-bold text-slate-700">Date & Time</label>
+                                    <input
+                                        type="datetime-local"
+                                        required
+                                        className="w-full px-5 py-3 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-cyan-50 focus:border-cyan-200 outline-none transition-all"
+                                        value={formData.date || ""}
+                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-2 col-span-1 md:col-span-1">
+                                    <label className="text-sm font-bold text-slate-700">Duration (Mins)</label>
                                     <input
                                         type="number"
                                         required
@@ -309,7 +333,7 @@ const Exams = () => {
                                         onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                                     />
                                 </div>
-                                <div className="md:col-span-2 space-y-2">
+                                <div className="col-span-1 md:col-span-3 space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Description</label>
                                     <textarea
                                         className="w-full px-5 py-3 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-cyan-50 focus:border-cyan-200 outline-none transition-all h-24 resize-none"

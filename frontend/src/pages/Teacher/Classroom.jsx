@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import toast from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
@@ -19,7 +20,7 @@ import {
 } from "lucide-react";
 import { 
     updateClassroomResources, 
-    uploadImage, 
+    uploadFile, 
     getAssignments, 
     createAssignment, 
     getAssignmentSubmissions, 
@@ -49,8 +50,8 @@ const TeacherClassroom = () => {
     const [linkSaved, setLinkSaved] = useState(false);
 
     // Real data hooks
-    const [students, setStudents] = useState([]);
-    const [loadingStudents, setLoadingStudents] = useState(true);
+    const [students, setStudents] = useState(classroom?.students || []);
+    const [loadingStudents, setLoadingStudents] = useState(false);
 
     const [lectures, setLectures] = useState(classroom?.lectureNotes || []);
 
@@ -122,14 +123,14 @@ const TeacherClassroom = () => {
             setTimeout(() => setLinkSaved(false), 2000);
         } catch (error) {
             console.error("Error saving link:", error);
-            alert("Failed to save link");
+            toast.error("Failed to save link");
         }
     };
 
     const handleCreateAssignment = async (e) => {
         e.preventDefault();
         if (!newAssignment.title || !newAssignment.dueDate) {
-            alert("Title and Due Date are required");
+            toast.error("Title and Due Date are required");
             return;
         }
 
@@ -143,10 +144,10 @@ const TeacherClassroom = () => {
             setSelectedAssignment(data);
             setIsCreatingAssignment(false);
             setNewAssignment({ title: "", description: "", dueDate: "" });
-            alert("Assignment created successfully!");
+            toast.success("Assignment created successfully!");
         } catch (error) {
             console.error("Error creating assignment:", error);
-            alert("Failed to create assignment");
+            toast.error("Failed to create assignment");
         } finally {
             setCreatingAction(false);
         }
@@ -162,10 +163,10 @@ const TeacherClassroom = () => {
             setSubmissions(submissions.map(s => s._id === updated._id ? { ...s, ...updated } : s));
             setGradingSubmission(null);
             setGradeData({ grade: "", feedback: "" });
-            alert("Graded successfully!");
+            toast.success("Graded successfully!");
         } catch (error) {
             console.error("Error grading:", error);
-            alert("Failed to save grade");
+            toast.error("Failed to save grade");
         } finally {
             setIsGrading(false);
         }
@@ -179,7 +180,7 @@ const TeacherClassroom = () => {
             const formData = new FormData();
             formData.append('file', file); // Use 'file' for PDF uploads
 
-            const uploadData = await uploadImage(formData); // Note: services might need uploadFile vs uploadImage distinction
+            const uploadData = await uploadFile(formData);
 
             const newNote = {
                 title: file.name.replace(/\.[^/.]+$/, ""),
@@ -193,7 +194,7 @@ const TeacherClassroom = () => {
             setLectures(updatedClassroom.lectureNotes);
         } catch (error) {
             console.error("Error uploading lecture:", error);
-            alert("Failed to upload lecture note");
+            toast.error("Failed to upload lecture note");
         }
     };
 
