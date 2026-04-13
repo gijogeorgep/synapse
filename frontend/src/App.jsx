@@ -1,6 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Link } from "react-router-dom";
 import { useEffect } from "react";
-import { Toaster } from "react-hot-toast";
 import { ArrowRight } from "lucide-react";
 import "./App.css";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
@@ -319,7 +318,6 @@ function AppContent() {
 function App() {
   return (
     <Router>
-      <Toaster position="top-center" reverseOrder={false} />
       <AppContent />
     </Router>
   );

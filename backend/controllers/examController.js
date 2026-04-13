@@ -54,9 +54,6 @@ export const getExams = async (req, res) => {
     const { subject, classLevel, examType, classroomId } = req.query;
     try {
         let query = { isActive: true };
-        if (req.user.role === "student") {
-            query.status = "published";
-        }
         if (subject) query.subject = subject;
         if (classLevel) query.classLevel = classLevel;
         if (examType) query.examType = examType;
@@ -90,7 +87,7 @@ export const getExams = async (req, res) => {
             }
         }
 
-        let exams = await Exam.find(query).populate("teacher", "name").populate("classroom", "name className board");
+        let exams = await Exam.find(query).populate("teacher", "name");
 
         if (req.user.role === 'student') {
             const submittedResults = await Result.find({ student: req.user._id }).select("exam");
@@ -108,7 +105,7 @@ export const getExams = async (req, res) => {
 // @route   POST /api/exams/bulk
 // @access  Private (Teacher/Admin)
 export const createExamWithQuestions = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks, status } = req.body;
+    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks } = req.body;
 
     if (!title || !duration || !subject || !classroom) {
         return res.status(400).json({ message: "Please provide all required fields: title, duration, subject, and classroom." });
@@ -151,6 +148,7 @@ export const createExamWithQuestions = async (req, res) => {
     }
 
     try {
+        // Create Exam
         const exam = await Exam.create({
             title,
             description,
@@ -164,20 +162,18 @@ export const createExamWithQuestions = async (req, res) => {
             examType: examType || "subject-wise",
             marksPerQuestion: marksPerQuestion ?? 1,
             negativeMarks: negativeMarks ?? 0,
-            status: status || "draft",
             teacher: req.user._id,
         });
 
         const questionsWithExamId = normalizedQuestions.map((question) => ({
             ...question,
             exam: exam._id,
-            status: status === "published" ? "published" : "draft",
+            status: 'published',
             createdBy: req.user._id,
         }));
         await Question.insertMany(questionsWithExamId);
 
-        // Only send notifications/emails if published
-        if (classroom && exam.status === "published") {
+        if (classroom) {
             const classroomData = await Classroom.findById(classroom).populate("students", "email name");
             if (classroomData && classroomData.students && classroomData.students.length > 0) {
                 const studentEmails = classroomData.students.map(s => s.email);
@@ -367,7 +363,7 @@ export const getExamQuestions = async (req, res) => {
         const includeDrafts = req.query.includeDrafts === 'true';
         const query = { exam: req.params.id };
 
-        if (req.user.role === 'student' || (!["admin", "superadmin"].includes(req.user.role) && !includeDrafts)) {
+        if (req.user.role === 'student' || !includeDrafts) {
             query.status = 'published';
         }
 
@@ -483,7 +479,7 @@ export const deleteExam = async (req, res) => {
 // @access  Private (Teacher/Admin)
 export const updateExam = async (req, res) => {
     try {
-        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType, status } = req.body;
+        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType } = req.body;
         const exam = await Exam.findById(req.params.id);
 
         if (!exam) {
@@ -495,7 +491,6 @@ export const updateExam = async (req, res) => {
             return res.status(401).json({ message: "Not authorized to update this exam" });
         }
 
-        const oldStatus = exam.status;
         exam.title = title || exam.title;
         exam.subject = subject || exam.subject;
         exam.duration = duration || exam.duration;
@@ -504,26 +499,8 @@ export const updateExam = async (req, res) => {
         exam.classroom = classroom || exam.classroom;
         exam.examCategory = examCategory || exam.examCategory;
         exam.examType = examType || exam.examType;
-        if (status) exam.status = status;
 
         const updatedExam = await exam.save();
-
-        // If transitioning from draft to published, send notifications
-        if (oldStatus === "draft" && updatedExam.status === "published" && updatedExam.classroom) {
-            const classroomData = await Classroom.findById(updatedExam.classroom).populate("students", "email name");
-            if (classroomData && classroomData.students && classroomData.students.length > 0) {
-                const studentEmails = classroomData.students.map(s => s.email);
-                sendExamScheduledEmail(studentEmails, updatedExam.title, updatedExam.date, classroomData.name);
-            }
-
-            // Send Application Notification
-            await Notification.create({
-                targetClassroom: updatedExam.classroom,
-                title: "New Exam Scheduled",
-                message: `${updatedExam.title} is now scheduled for your classroom.`,
-                type: "exam"
-            });
-        }
 
         // If questions are provided, replace existing questions
         if (questions && questions.length > 0) {
@@ -531,7 +508,6 @@ export const updateExam = async (req, res) => {
             const questionsWithExam = questions.map((q) => ({
                 ...q,
                 exam: updatedExam._id,
-                status: updatedExam.status, // Ensure questions match exam status
             }));
             await Question.insertMany(questionsWithExam);
         }

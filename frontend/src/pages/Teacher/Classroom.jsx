@@ -11,9 +11,20 @@ import {
     ArrowLeft,
     Save,
     ExternalLink,
-    AlertCircle
+    AlertCircle,
+    Calendar,
+    Plus,
+    CheckCircle2,
+    Loader2
 } from "lucide-react";
-import { updateClassroomResources, uploadImage } from "../../api/services";
+import { 
+    updateClassroomResources, 
+    uploadImage, 
+    getAssignments, 
+    createAssignment, 
+    getAssignmentSubmissions, 
+    gradeHomework 
+} from "../../api/services";
 
 const TeacherClassroom = () => {
     const { user } = useAuth();
@@ -43,66 +54,62 @@ const TeacherClassroom = () => {
 
     const [lectures, setLectures] = useState(classroom?.lectureNotes || []);
 
-    // Fetch students
+    // Assignment & Submission state
+    const [assignments, setAssignments] = useState([]);
+    const [loadingAssignments, setLoadingAssignments] = useState(true);
+    const [selectedAssignment, setSelectedAssignment] = useState(null);
+    const [submissions, setSubmissions] = useState([]);
+    const [loadingSubmissions, setLoadingSubmissions] = useState(false);
+    
+    const [isCreatingAssignment, setIsCreatingAssignment] = useState(false);
+    const [newAssignment, setNewAssignment] = useState({
+        title: "",
+        description: "",
+        dueDate: ""
+    });
+    const [creatingAction, setCreatingAction] = useState(false);
+
+    // Grading state
+    const [gradingSubmission, setGradingSubmission] = useState(null);
+    const [gradeData, setGradeData] = useState({ grade: "", feedback: "" });
+    const [isGrading, setIsGrading] = useState(false);
+
+    // Fetch assignments
     useEffect(() => {
-        const fetchStudents = async () => {
+        const fetchAssignments = async () => {
             if (!classroom?._id) return;
             try {
-                setLoadingStudents(true);
-                const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${userInfo?.token}`,
-                    },
-                };
-                // You might have a more specific endpoint to fetch users for a classroom,
-                // for now we'll assume the classroom object already has some populated
-                // students, or we can use the admin endpoint if authorized, or just fallback.
-                // Assuming classroom object from previous page might already have populated students:
-                if (classroom.students && classroom.students.length > 0 && typeof classroom.students[0] === 'object') {
-                    setStudents(classroom.students);
-                } else {
-                    setStudents([]);
+                setLoadingAssignments(true);
+                const data = await getAssignments(classroom._id);
+                setAssignments(data);
+                if (data.length > 0) {
+                    setSelectedAssignment(data[0]);
                 }
             } catch (error) {
-                console.error("Error fetching students:", error);
+                console.error("Error fetching assignments:", error);
             } finally {
-                setLoadingStudents(false);
+                setLoadingAssignments(false);
             }
         };
-        fetchStudents();
+        fetchAssignments();
     }, [classroom]);
 
-
-
-    const submissions =
-        user?.submissions?.[fallbackSubject] ||
-        [
-            {
-                id: 1,
-                studentName: "Aarav",
-                assignmentTitle: "Homework 1",
-                submittedAt: "2026-03-05 10:30",
-                status: "Submitted",
-                fileUrl: "#",
-            },
-            {
-                id: 2,
-                studentName: "Diya",
-                assignmentTitle: "Homework 1",
-                submittedAt: "2026-03-05 11:15",
-                status: "Submitted",
-                fileUrl: "#",
-            },
-            {
-                id: 3,
-                studentName: "Rahul",
-                assignmentTitle: "Quiz Prep",
-                submittedAt: "2026-03-06 09:00",
-                status: "Graded",
-                fileUrl: "#",
-            },
-        ];
+    // Fetch submissions when an assignment is selected
+    useEffect(() => {
+        const fetchSubmissions = async () => {
+            if (!selectedAssignment?._id) return;
+            try {
+                setLoadingSubmissions(true);
+                const data = await getAssignmentSubmissions(selectedAssignment._id);
+                setSubmissions(data);
+            } catch (error) {
+                console.error("Error fetching submissions:", error);
+            } finally {
+                setLoadingSubmissions(false);
+            }
+        };
+        fetchSubmissions();
+    }, [selectedAssignment]);
 
     const handleSaveLink = async (e) => {
         e.preventDefault();
@@ -119,15 +126,60 @@ const TeacherClassroom = () => {
         }
     };
 
+    const handleCreateAssignment = async (e) => {
+        e.preventDefault();
+        if (!newAssignment.title || !newAssignment.dueDate) {
+            alert("Title and Due Date are required");
+            return;
+        }
+
+        try {
+            setCreatingAction(true);
+            const data = await createAssignment({
+                ...newAssignment,
+                classroomId: classroom._id
+            });
+            setAssignments([data, ...assignments]);
+            setSelectedAssignment(data);
+            setIsCreatingAssignment(false);
+            setNewAssignment({ title: "", description: "", dueDate: "" });
+            alert("Assignment created successfully!");
+        } catch (error) {
+            console.error("Error creating assignment:", error);
+            alert("Failed to create assignment");
+        } finally {
+            setCreatingAction(false);
+        }
+    };
+
+    const handleGradeSubmission = async (e) => {
+        e.preventDefault();
+        if (!gradingSubmission) return;
+
+        try {
+            setIsGrading(true);
+            const updated = await gradeHomework(gradingSubmission._id, gradeData);
+            setSubmissions(submissions.map(s => s._id === updated._id ? { ...s, ...updated } : s));
+            setGradingSubmission(null);
+            setGradeData({ grade: "", feedback: "" });
+            alert("Graded successfully!");
+        } catch (error) {
+            console.error("Error grading:", error);
+            alert("Failed to save grade");
+        } finally {
+            setIsGrading(false);
+        }
+    };
+
     const handleUploadLecture = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         try {
             const formData = new FormData();
-            formData.append('image', file); // Use 'image' as per uploadRoutes logic usually
+            formData.append('file', file); // Use 'file' for PDF uploads
 
-            const uploadData = await uploadImage(formData);
+            const uploadData = await uploadImage(formData); // Note: services might need uploadFile vs uploadImage distinction
 
             const newNote = {
                 title: file.name.replace(/\.[^/.]+$/, ""),
@@ -254,49 +306,222 @@ const TeacherClassroom = () => {
                         </div>
                     </section>
 
-                    {/* Student submissions */}
+                    {/* Assignments & Tasks */}
                     <section className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
-                        <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2 mb-4">
-                            <FileCheck className="w-5 h-5 text-emerald-600" />
-                            Student submissions
-                        </h2>
-                        <div className="space-y-2 max-h-64 overflow-y-auto">
-                            {submissions.map((s) => (
-                                <div
-                                    key={s.id}
-                                    className="flex items-center justify-between gap-4 p-3 rounded-2xl bg-slate-50 hover:bg-emerald-50/60 border border-slate-100 hover:border-emerald-100 transition-colors"
-                                >
-                                    <div>
-                                        <p className="text-sm font-semibold text-slate-900">
-                                            {s.studentName}
-                                        </p>
-                                        <p className="text-xs text-slate-500">
-                                            {s.assignmentTitle} • {s.submittedAt}
-                                        </p>
+                        <div className="flex items-center justify-between mb-6">
+                            <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                <FileCheck className="w-5 h-5 text-emerald-600" />
+                                Assignments & Tasks
+                            </h2>
+                            <button
+                                onClick={() => setIsCreatingAssignment(!isCreatingAssignment)}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-all"
+                            >
+                                <Plus className="w-4 h-4" />
+                                {isCreatingAssignment ? "Cancel" : "Assign task"}
+                            </button>
+                        </div>
+
+                        {isCreatingAssignment && (
+                            <form onSubmit={handleCreateAssignment} className="mb-8 p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4 animate-in slide-in-from-top-4 duration-300">
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Assignment Title</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        value={newAssignment.title}
+                                        onChange={(e) => setNewAssignment({...newAssignment, title: e.target.value})}
+                                        placeholder="e.g. Chapter 1 Practice"
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Due Date</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            value={newAssignment.dueDate}
+                                            onChange={(e) => setNewAssignment({...newAssignment, dueDate: e.target.value})}
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+                                        />
                                     </div>
-                                    <div className="flex items-center gap-2">
-                                        <span
-                                            className={`px-2 py-1 rounded-full text-[11px] font-semibold ${s.status === "Graded"
-                                                    ? "bg-emerald-100 text-emerald-700"
-                                                    : "bg-amber-100 text-amber-700"
-                                                }`}
+                                    <div className="flex items-end shadow-sm">
+                                        <button
+                                            type="submit"
+                                            disabled={creatingAction}
+                                            className="w-full py-2.5 rounded-xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 transition-all disabled:opacity-50"
                                         >
-                                            {s.status}
-                                        </span>
-                                        <a
-                                            href={s.fileUrl || "#"}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50"
-                                        >
-                                            <ExternalLink className="w-3 h-3" />
-                                            View
-                                        </a>
+                                            {creatingAction ? "Posting..." : "Post assignment"}
+                                        </button>
                                     </div>
                                 </div>
-                            ))}
+                                <div className="space-y-1.5">
+                                    <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Instructions (Optional)</label>
+                                    <textarea
+                                        value={newAssignment.description}
+                                        onChange={(e) => setNewAssignment({...newAssignment, description: e.target.value})}
+                                        rows={3}
+                                        className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+                                    />
+                                </div>
+                            </form>
+                        )}
+
+                        {loadingAssignments ? (
+                            <div className="flex justify-center py-6 text-slate-400">
+                                <Loader2 className="w-6 h-6 animate-spin" />
+                            </div>
+                        ) : assignments.length === 0 ? (
+                            <div className="text-center py-8 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <p className="text-sm text-slate-500">No assignments posted yet.</p>
+                            </div>
+                        ) : (
+                            <div className="flex gap-2 overflow-x-auto pb-4 scrollbar-hide">
+                                {assignments.map(a => (
+                                    <button
+                                        key={a._id}
+                                        onClick={() => setSelectedAssignment(a)}
+                                        className={`px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border ${
+                                            selectedAssignment?._id === a._id
+                                                ? 'bg-cyan-600 border-cyan-600 text-white shadow-lg shadow-cyan-600/20'
+                                                : 'bg-white border-slate-200 text-slate-600 hover:border-cyan-200'
+                                        }`}
+                                    >
+                                        {a.title}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        <div className="mt-6">
+                            {selectedAssignment ? (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between text-xs text-slate-500 border-b border-slate-50 pb-2">
+                                        <div className="flex items-center gap-3">
+                                            <span className="flex items-center gap-1"><Calendar className="w-3 h-3" /> Due {new Date(selectedAssignment.dueDate).toLocaleDateString()}</span>
+                                            <span>•</span>
+                                            <span>{submissions.length} submissions</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+                                        {loadingSubmissions ? (
+                                            <div className="flex justify-center py-10">
+                                                <Loader2 className="w-6 h-6 animate-spin text-cyan-600" />
+                                            </div>
+                                        ) : submissions.length === 0 ? (
+                                            <div className="text-center py-10 bg-slate-50 rounded-2xl border border-dashed border-slate-100">
+                                                <p className="text-xs text-slate-400">No submissions yet for this task.</p>
+                                            </div>
+                                        ) : (
+                                            submissions.map((s) => (
+                                                <div
+                                                    key={s._id}
+                                                    className="flex flex-col gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-100"
+                                                >
+                                                    <div className="flex items-start justify-between">
+                                                        <div>
+                                                            <p className="text-sm font-bold text-slate-900">{s.student?.name}</p>
+                                                            <p className="text-[10px] text-slate-500">{s.student?.uniqueId} • Submitted {new Date(s.submittedAt).toLocaleDateString()}</p>
+                                                        </div>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${s.status === 'Graded' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+                                                                {s.status}
+                                                            </span>
+                                                            <a
+                                                                href={s.fileUrl}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="p-1.5 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-cyan-600 transition-colors"
+                                                            >
+                                                                <ExternalLink className="w-3.5 h-3.5" />
+                                                            </a>
+                                                        </div>
+                                                    </div>
+
+                                                    {s.status === 'Graded' ? (
+                                                        <div className="p-3 bg-white rounded-xl border border-slate-100">
+                                                            <div className="flex items-center justify-between mb-1">
+                                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Result: {s.grade}</span>
+                                                                <button onClick={() => { setGradingSubmission(s); setGradeData({ grade: s.grade, feedback: s.feedback }); }} className="text-[10px] font-bold text-cyan-600 hover:underline">Edit</button>
+                                                            </div>
+                                                            <p className="text-xs text-slate-600 italic">"{s.feedback}"</p>
+                                                        </div>
+                                                    ) : (
+                                                        <button
+                                                            onClick={() => setGradingSubmission(s)}
+                                                            className="text-xs font-bold text-cyan-600 hover:underline text-left w-fit"
+                                                        >
+                                                            Grade this student →
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            ))
+                                        )}
+                                    </div>
+                                </div>
+                            ) : !loadingAssignments && (
+                                <div className="text-center py-10">
+                                    <p className="text-sm text-slate-400">Select an assignment to view submissions.</p>
+                                </div>
+                            )}
                         </div>
                     </section>
+
+                    {/* Grading Modal */}
+                    {gradingSubmission && (
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                            <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl p-6 md:p-8 space-y-6 animate-in zoom-in-95 duration-300">
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">Grade Homework</h3>
+                                    <p className="text-sm text-slate-500">Student: {gradingSubmission.student?.name}</p>
+                                </div>
+
+                                <form onSubmit={handleGradeSubmission} className="space-y-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Grade / Score</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={gradeData.grade}
+                                            onChange={(e) => setGradeData({...gradeData, grade: e.target.value})}
+                                            placeholder="e.g. A+, 90/100, Excellent"
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-400 uppercase tracking-widest pl-1">Feedback</label>
+                                        <textarea
+                                            value={gradeData.feedback}
+                                            onChange={(e) => setGradeData({...gradeData, feedback: e.target.value})}
+                                            rows={4}
+                                            placeholder="Enter student feedback..."
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-3 pt-2">
+                                        <button
+                                            type="button"
+                                            onClick={() => setGradingSubmission(null)}
+                                            className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-600 font-bold text-sm hover:bg-slate-200"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button
+                                            type="submit"
+                                            disabled={isGrading}
+                                            className="flex-[2] py-3 rounded-xl bg-cyan-600 text-white font-bold text-sm shadow-lg shadow-cyan-600/20 hover:bg-cyan-700 disabled:opacity-50"
+                                        >
+                                            {isGrading ? "Saving..." : "Save Grade"}
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
                 </div>
 
                 {/* Students in class */}

@@ -8,7 +8,6 @@ import {
 } from '../../../api/services';
 import { X, GraduationCap, Users, PlusCircle, CheckCircle2, AlertCircle, BookOpen, MoreVertical, Edit, Trash2, Search, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'react-hot-toast';
 import { useState, useEffect } from 'react';
 const ClassroomManagement = () => {
     const navigate = useNavigate();
@@ -141,12 +140,10 @@ const ClassroomManagement = () => {
         e.preventDefault();
         setIsSubmitting(true);
         setStatus({ type: '', message: '' });
-        const loadId = toast.loading('Creating classroom...');
 
         try {
             await createAdminClassroom(formData);
             setStatus({ type: 'success', message: 'Classroom created successfully!' });
-            toast.success('Classroom created successfully!', { id: loadId });
             setIsCreateModalOpen(false);
 
             setFormData({
@@ -194,11 +191,9 @@ const ClassroomManagement = () => {
     const handleUpdateSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        const loadId = toast.loading('Updating classroom...');
         try {
             await updateAdminClassroom(selectedClassroom._id, editFormData);
             setStatus({ type: 'success', message: 'Classroom updated successfully!' });
-            toast.success('Classroom updated successfully!', { id: loadId });
             setIsEditModalOpen(false);
             fetchData();
         } catch (error) {
@@ -228,11 +223,9 @@ const ClassroomManagement = () => {
 
     const confirmDelete = async () => {
         setIsSubmitting(true);
-        const loadId = toast.loading('Deleting classroom...');
         try {
             await deleteAdminClassroom(selectedClassroom._id);
             setStatus({ type: 'success', message: 'Classroom deleted successfully!' });
-            toast.success('Classroom deleted successfully!', { id: loadId });
             setIsDeleteModalOpen(false);
             fetchData();
         } catch (error) {
@@ -246,9 +239,7 @@ const ClassroomManagement = () => {
         e.preventDefault();
 
         if (!assignData.classroomId || assignData.userIds.length === 0) {
-            const msg = 'Please select a classroom and at least one user.';
-            setStatus({ type: 'error', message: msg });
-            toast.error(msg);
+            setStatus({ type: 'error', message: 'Please select a classroom and at least one user.' });
             return;
         }
 
@@ -261,17 +252,14 @@ const ClassroomManagement = () => {
                 role: assignData.role
             });
 
-            const msg = `${assignData.userIds.length} ${assignData.role}${assignData.userIds.length > 1 ? 's' : ''} assigned successfully!`;
-            setStatus({ type: 'success', message: msg });
-            toast.success(msg, { id: loadId });
+            setStatus({ type: 'success', message: `${assignData.userIds.length} ${assignData.role}${assignData.userIds.length > 1 ? 's' : ''} assigned successfully!` });
             setAssignData(prev => ({ ...prev, userIds: [] }));
             setAssignUserPickerOpen(false);
             setAssignUserSearch('');
             fetchData(); // Refresh classrooms with new data
+            setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            const msg = error || 'Error assigning user';
-            setStatus({ type: 'error', message: msg });
-            toast.error(msg, { id: loadId });
+            setStatus({ type: 'error', message: error || 'Error assigning user' });
         } finally {
             setIsSubmitting(false);
         }
