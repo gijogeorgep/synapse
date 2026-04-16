@@ -155,6 +155,11 @@ export const createAssignment = (assignmentData) =>
   apiClient("/assignments", { method: "POST", body: assignmentData });
 export const getAssignmentSubmissions = (assignmentId) =>
   apiClient(`/assignments/${assignmentId}/submissions`);
+export const submitHomework = (assignmentId, submissionData) =>
+  apiClient(`/assignments/${assignmentId}/submit`, {
+    method: "POST",
+    body: submissionData,
+  });
 export const gradeHomework = (submissionId, gradeData) =>
   apiClient(`/assignments/submissions/${submissionId}/grade`, {
     method: "PUT",
