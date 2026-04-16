@@ -148,6 +148,27 @@ export const markAllNotificationsRead = () =>
 export const clearAllNotifications = () =>
   apiClient("/notifications/clear-all", { method: "PATCH" });
 
+// Assignment Services
+export const getAssignments = (classroomId) =>
+  apiClient(`/assignments/classroom/${classroomId}`);
+export const createAssignment = (assignmentData) =>
+  apiClient("/assignments", { method: "POST", body: assignmentData });
+export const getAssignmentSubmissions = (assignmentId) =>
+  apiClient(`/assignments/${assignmentId}/submissions`);
+export const gradeHomework = (submissionId, gradeData) =>
+  apiClient(`/assignments/submissions/${submissionId}/grade`, {
+    method: "PUT",
+    body: gradeData,
+  });
+
+// Upload Services (File / PDF)
+export const uploadFile = (formData) =>
+  apiClient("/upload/file", {
+    method: "POST",
+    body: formData,
+    headers: null, // let browser set multipart/form-data boundary
+  });
+
 // Contact Services
 export const submitContactForm = (contactData) =>
   apiClient("/contact", { method: "POST", body: contactData });
