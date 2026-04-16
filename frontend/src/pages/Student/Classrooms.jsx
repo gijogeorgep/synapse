@@ -84,9 +84,9 @@ const StudentClassrooms = () => {
                             {/* Card Header Illustration/Background */}
                             <div className={`h-36 relative overflow-hidden p-6 bg-gradient-to-br ${getSubjectColor(c.subjects?.[0])}`}>
                                 {c.imageUrl && (
-                                    <img 
-                                        src={c.imageUrl} 
-                                        alt={c.name} 
+                                    <img
+                                        src={c.imageUrl}
+                                        alt={c.name}
                                         className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 opacity-60 mix-blend-overlay"
                                     />
                                 )}
@@ -190,4 +190,3 @@ const StudentClassrooms = () => {
 };
 
 export default StudentClassrooms;
-

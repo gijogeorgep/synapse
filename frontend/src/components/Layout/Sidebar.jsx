@@ -17,12 +17,14 @@ import {
     ArrowUpCircle,
     BookCopy,
     LogOut,
-    Sparkles
+    Sparkles,
+    ChevronLeft,
+    ChevronRight,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const Sidebar = ({ role }) => {
+const Sidebar = ({ role, collapsed = false, onToggleCollapse }) => {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -90,34 +92,56 @@ const Sidebar = ({ role }) => {
                 onConfirm={handleLogoutConfirm}
                 onCancel={() => setShowLogoutModal(false)}
             />
-            <aside className="sticky top-24 flex h-[calc(100vh-6rem)] w-64 shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white">
-                <div className="p-6">
+            <aside
+                className={`sticky top-24 flex h-[calc(100vh-6rem)] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-all duration-300 ${
+                    collapsed ? "w-20" : "w-64"
+                }`}
+            >
+                <div className={`flex items-center ${collapsed ? "justify-center px-3 py-5" : "justify-end px-6 py-5"}`}>
+                    <button
+                        type="button"
+                        onClick={onToggleCollapse}
+                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-cyan-600"
+                        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                        {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+                    </button>
+                </div>
+
+                <div className={collapsed ? "px-3 pb-6" : "px-6 pb-6"}>
                     <nav className="space-y-2">
                         {currentLinks.map((link) => (
                             <NavLink
                                 key={link.path}
                                 to={link.path}
                                 className={({ isActive }) =>
-                                    `flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold transition-all ${isActive
+                                    `group flex items-center rounded-xl font-semibold transition-all ${
+                                        collapsed ? "justify-center px-3 py-3" : "space-x-3 px-4 py-3"
+                                    } ${isActive
                                         ? "bg-cyan-50 text-cyan-600 shadow-sm"
                                         : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600"
                                     }`
                                 }
+                                title={collapsed ? link.name : undefined}
                             >
                                 <link.icon className="w-5 h-5" />
-                                <span>{link.name}</span>
+                                {!collapsed && <span>{link.name}</span>}
                             </NavLink>
                         ))}
                     </nav>
                 </div>
 
-                <div className="p-6 mt-auto border-t border-slate-100">
+                <div className={`mt-auto border-t border-slate-100 ${collapsed ? "p-3" : "p-6"}`}>
                     <button
                         onClick={() => setShowLogoutModal(true)}
-                        className="w-full flex items-center space-x-3 px-4 py-3 rounded-xl font-semibold text-red-600 hover:bg-red-50 transition-all group"
+                        className={`w-full flex items-center rounded-xl font-semibold text-red-600 transition-all group hover:bg-red-50 ${
+                            collapsed ? "justify-center px-3 py-3" : "space-x-3 px-4 py-3"
+                        }`}
+                        title={collapsed ? "Logout" : undefined}
                     >
                         <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        <span>Logout</span>
+                        {!collapsed && <span>Logout</span>}
                     </button>
                 </div>
             </aside>

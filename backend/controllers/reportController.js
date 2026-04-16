@@ -10,23 +10,21 @@ import { Payment } from "../models/Financial.js";
 export const getOverallStats = async (req, res) => {
     try {
         const isSuperAdmin = req.user.role === 'superadmin';
-        const ownershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
+        // Classrooms are scoped by creator for admins; users are global (consistent with User Management page)
+        const classroomOwnershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
 
-        const [classrooms, students, teachers, exams] = await Promise.all([
-            Classroom.find(ownershipQuery),
-            User.find({ ...ownershipQuery, role: 'student' }),
-            User.find({ ...ownershipQuery, role: 'teacher' }),
-            Exam.find(isSuperAdmin ? {} : { classroom: { $in: await Classroom.find(ownershipQuery).select('_id') } }),
-            Payment.find(isSuperAdmin ? {} : { student: { $in: await User.find({ ...ownershipQuery, role: 'student' }).select('_id') } })
+        const [classrooms, students, teachers, admins, exams] = await Promise.all([
+            Classroom.find(classroomOwnershipQuery),
+            User.find({ role: 'student' }),
+            User.find({ role: 'teacher' }),
+            User.find({ role: 'admin' }),
+            Exam.find(isSuperAdmin ? {} : { classroom: { $in: await Classroom.find(classroomOwnershipQuery).select('_id') } }),
         ]);
 
-        const totalRevenue = teachers.length > 0 ? 0 : 0; // Logic for placeholder
-        const combinedRevenue = (isSuperAdmin || !ownershipQuery.createdBy) 
-            ? await Payment.aggregate([{ $match: { status: 'completed' } }, { $group: { _id: null, total: { $sum: '$amount' } } }])
-            : await Payment.aggregate([
-                { $match: { status: 'completed', student: { $in: students.map(s => s._id) } } },
-                { $group: { _id: null, total: { $sum: '$amount' } } }
-            ]);
+        const combinedRevenue = await Payment.aggregate([
+            { $match: { status: 'completed' } },
+            { $group: { _id: null, total: { $sum: '$amount' } } }
+        ]);
 
         const totalResults = await Result.find({ exam: { $in: exams.map(e => e._id) } });
         
@@ -85,6 +83,7 @@ export const getOverallStats = async (req, res) => {
             totalClassrooms: classrooms.length,
             totalStudents: students.length,
             totalTeachers: teachers.length,
+            totalAdmins: admins.length,
             totalExams: exams.length,
             totalRevenue: combinedRevenue[0]?.total || 0,
             avgPerformance: Math.round(avgScore),
@@ -108,9 +107,9 @@ export const getOverallStats = async (req, res) => {
 export const getClassroomReports = async (req, res) => {
     try {
         const isSuperAdmin = req.user.role === 'superadmin';
-        const ownershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
+        const classroomOwnershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
 
-        const classrooms = await Classroom.find(ownershipQuery)
+        const classrooms = await Classroom.find(classroomOwnershipQuery)
             .populate('students', 'name')
             .populate('teachers', 'name');
 
@@ -196,9 +195,9 @@ export const getStudentDeepDive = async (req, res) => {
 export const getSubjectMastery = async (req, res) => {
     try {
         const isSuperAdmin = req.user.role === 'superadmin';
-        const ownershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
+        const classroomOwnershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
 
-        const classrooms = await Classroom.find(ownershipQuery).select('_id');
+        const classrooms = await Classroom.find(classroomOwnershipQuery).select('_id');
         const exams = await Exam.find({ classroom: { $in: classrooms.map(c => c._id) } });
         const results = await Result.find({ exam: { $in: exams.map(e => e._id) } }).populate('exam', 'subject totalMarks');
 
@@ -225,10 +224,8 @@ export const getSubjectMastery = async (req, res) => {
 // @route   GET /api/reports/students-list
 export const getStudentsList = async (req, res) => {
     try {
-        const isSuperAdmin = req.user.role === 'superadmin';
-        const ownershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
-
-        const students = await User.find({ ...ownershipQuery, role: 'student' })
+        // All admins can see all students (consistent with User Management page)
+        const students = await User.find({ role: 'student' })
             .select('name uniqueId email enrolledClassrooms')
             .populate('enrolledClassrooms', 'name');
 
@@ -242,10 +239,8 @@ export const getStudentsList = async (req, res) => {
 // @route   GET /api/reports/teachers-list
 export const getTeachersList = async (req, res) => {
     try {
-        const isSuperAdmin = req.user.role === 'superadmin';
-        const ownershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
-
-        const teachers = await User.find({ ...ownershipQuery, role: 'teacher' })
+        // All admins can see all teachers (consistent with User Management page)
+        const teachers = await User.find({ role: 'teacher' })
             .select('name uniqueId email')
             .lean();
 
@@ -269,10 +264,8 @@ export const getTeachersList = async (req, res) => {
 export const getTeacherStats = async (req, res) => {
     try {
         const teacherId = req.params.id;
-        const isSuperAdmin = req.user.role === 'superadmin';
-        const ownershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
 
-        const teacher = await User.findOne({ _id: teacherId, ...ownershipQuery, role: 'teacher' }).select('-password');
+        const teacher = await User.findOne({ _id: teacherId, role: 'teacher' }).select('-password');
         if (!teacher) return res.status(404).json({ message: "Teacher not found or access denied" });
 
         const classrooms = await Classroom.find({ teachers: teacherId });

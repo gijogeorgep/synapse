@@ -29,6 +29,10 @@ const submissionSchema = mongoose.Schema(
             type: String,
             default: "",
         },
+        score: {
+            type: Number,
+            default: null,
+        },
         feedback: {
             type: String,
             default: "",

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Users, CreditCard, ShieldCheck, GraduationCap, BookOpen } from "lucide-react";
-import { getOverallStats, getClassroomReports, getAdminsListForReports } from "../../../api/services";
+import { getOverallStats, getClassroomReports } from "../../../api/services";
 import { useAuth } from "../../../context/AuthContext";
 
 const formatCurrency = (amount) =>
@@ -14,28 +14,23 @@ const AdminDashboard = () => {
     const { user } = useAuth();
     const [overallStats, setOverallStats] = useState(null);
     const [classroomReports, setClassroomReports] = useState([]);
-    const [adminCount, setAdminCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
                 setLoading(true);
-                const isSuperAdmin = user?.role === "superadmin";
-                const [statsRes, classroomRes, adminsRes] = await Promise.all([
+                const [statsRes, classroomRes] = await Promise.all([
                     getOverallStats(),
                     getClassroomReports(),
-                    isSuperAdmin ? getAdminsListForReports() : Promise.resolve([]),
                 ]);
 
                 setOverallStats(statsRes || null);
                 setClassroomReports(Array.isArray(classroomRes) ? classroomRes : []);
-                setAdminCount(Array.isArray(adminsRes) ? adminsRes.length : 0);
             } catch (error) {
                 console.error("Failed to fetch admin dashboard data:", error);
                 setOverallStats(null);
                 setClassroomReports([]);
-                setAdminCount(0);
             } finally {
                 setLoading(false);
             }
@@ -59,17 +54,13 @@ const AdminDashboard = () => {
             color: "text-indigo-600",
             bg: "bg-indigo-50",
         },
-        ...(user?.role === "superadmin"
-            ? [
-                  {
-                      name: "Total Admins",
-                      value: adminCount,
-                      icon: Users,
-                      color: "text-cyan-600",
-                      bg: "bg-cyan-50",
-                  },
-              ]
-            : []),
+        {
+            name: "Total Admins",
+            value: overallStats?.totalAdmins ?? 0,
+            icon: Users,
+            color: "text-cyan-600",
+            bg: "bg-cyan-50",
+        },
         {
             name: "Total Revenue",
             value: formatCurrency(overallStats?.totalRevenue),

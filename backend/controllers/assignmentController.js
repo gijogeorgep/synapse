@@ -7,7 +7,8 @@ import Classroom from "../models/Classroom.js";
 // @access  Private (Teacher/Admin)
 export const createAssignment = async (req, res) => {
     try {
-        const { title, description, dueDate, classroomId, attachments } = req.body;
+        const { title, description, dueDate, classroomId, attachments, maxPoints } = req.body;
+        const parsedMaxPoints = Number(maxPoints);
 
         const classroom = await Classroom.findById(classroomId);
         if (!classroom) {
@@ -25,6 +26,7 @@ export const createAssignment = async (req, res) => {
             title,
             description,
             dueDate,
+            maxPoints: Number.isFinite(parsedMaxPoints) && parsedMaxPoints > 0 ? parsedMaxPoints : 100,
             classroom: classroomId,
             teacher: req.user._id,
             attachments: attachments || [],
@@ -132,17 +134,28 @@ export const getAssignmentSubmissions = async (req, res) => {
 // @access  Private (Teacher/Admin)
 export const gradeSubmission = async (req, res) => {
     try {
-        const { grade, feedback } = req.body;
+        const { score, feedback } = req.body;
         const submission = await Submission.findById(req.params.id);
 
         if (!submission) {
             return res.status(404).json({ message: "Submission not found" });
         }
 
+        const assignment = await Assignment.findById(submission.assignment);
+        if (!assignment) {
+            return res.status(404).json({ message: "Assignment not found" });
+        }
+
         // Potential check: is the user a teacher of the classroom that owns this assignment?
         // For brevity, we trust the 'teacher' role middleware, but a deeper check could be added.
 
-        submission.grade = grade;
+        const parsedScore = Number(score);
+        const normalizedScore = Number.isFinite(parsedScore)
+            ? Math.max(0, Math.min(parsedScore, assignment.maxPoints || 100))
+            : 0;
+
+        submission.score = normalizedScore;
+        submission.grade = `${normalizedScore}/${assignment.maxPoints || 100}`;
         submission.feedback = feedback;
         submission.status = "Graded";
         await submission.save();
@@ -150,5 +163,74 @@ export const gradeSubmission = async (req, res) => {
         res.status(200).json(submission);
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+// @desc    View a submitted assignment file inline
+// @route   GET /api/assignments/submissions/:id/view
+// @access  Private
+export const viewSubmissionFile = async (req, res) => {
+    try {
+        const submission = await Submission.findById(req.params.id).populate(
+            "assignment",
+            "classroom teacher title"
+        );
+
+        if (!submission) {
+            return res.status(404).json({ message: "Submission not found" });
+        }
+
+        const assignment = submission.assignment;
+        if (!assignment) {
+            return res.status(404).json({ message: "Assignment not found" });
+        }
+
+        const isOwner = submission.student.toString() === req.user._id.toString();
+        const isAdmin = ["admin", "superadmin"].includes(req.user.role);
+        const isTeacher = req.user.role === "teacher";
+
+        if (!isOwner && !isAdmin && !isTeacher) {
+            return res.status(403).json({ message: "Not authorized to view this submission" });
+        }
+
+        if (isTeacher && !isAdmin) {
+            const classroom = await Classroom.findById(assignment.classroom).select("teachers");
+            const teacherIds = Array.isArray(classroom?.teachers) ? classroom.teachers.map((t) => t.toString()) : [];
+            if (!teacherIds.includes(req.user._id.toString())) {
+                return res.status(403).json({ message: "Not authorized to view this submission" });
+            }
+        }
+
+        const sourceUrl = submission.fileUrl;
+        if (!sourceUrl) {
+            return res.status(404).json({ message: "Submission file not found" });
+        }
+
+        const upstream = await fetch(sourceUrl);
+        if (!upstream.ok) {
+            const text = await upstream.text();
+            throw new Error(`Failed to fetch submission file: ${upstream.status} ${text}`);
+        }
+
+        const fileName = submission.fileName || "submission.pdf";
+        const isPdf =
+            fileName.toLowerCase().endsWith(".pdf") ||
+            (submission.fileUrl || "").toLowerCase().includes(".pdf");
+
+        // Homework submissions are uploaded as PDFs, so force inline PDF rendering.
+        // This prevents browsers from treating the blob as a downloadable binary.
+        const contentType = isPdf ? "application/pdf" : (upstream.headers.get("content-type") || "application/pdf");
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `inline; filename="${fileName}"`);
+        res.setHeader("X-Content-Type-Options", "nosniff");
+
+        const arrayBuffer = await upstream.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+    } catch (error) {
+        console.error("Error viewing submission file:", error);
+        res.status(500).json({
+            message: "Error viewing submission file",
+            details: process.env.NODE_ENV === "development" ? error.message : undefined,
+        });
     }
 };

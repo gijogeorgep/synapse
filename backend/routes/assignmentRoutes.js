@@ -4,7 +4,8 @@ import {
     getClassroomAssignments,
     submitAssignment,
     getAssignmentSubmissions,
-    gradeSubmission
+    gradeSubmission,
+    viewSubmissionFile
 } from "../controllers/assignmentController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
@@ -17,5 +18,6 @@ router.get("/classroom/:classroomId", getClassroomAssignments);
 router.post("/:id/submit", submitAssignment);
 router.get("/:id/submissions", authorize('teacher', 'admin', 'superadmin'), getAssignmentSubmissions);
 router.put("/submissions/:id/grade", authorize('teacher', 'admin', 'superadmin'), gradeSubmission);
+router.get("/submissions/:id/view", viewSubmissionFile);
 
 export default router;

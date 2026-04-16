@@ -14,6 +14,12 @@ const assignmentSchema = mongoose.Schema(
             type: Date,
             required: true,
         },
+        maxPoints: {
+            type: Number,
+            required: true,
+            default: 100,
+            min: 1,
+        },
         classroom: {
             type: mongoose.Schema.Types.ObjectId,
             required: true,
