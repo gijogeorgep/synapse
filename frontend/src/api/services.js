@@ -73,6 +73,8 @@ export const getMyClassrooms = () => apiClient("/classrooms/my-classrooms");
 export const getTeacherClassrooms = () => apiClient("/classrooms/my-classrooms");
 export const getClassroomById = (id) => apiClient(`/classrooms/${id}`);
 export const getPublicClassrooms = () => apiClient("/classrooms/public");
+export const enrollInClassroom = (id) =>
+    apiClient(`/classrooms/${id}/enroll`, { method: "POST" });
 
 export const updateClassroomResources = (id, resourceData) =>
     apiClient(`/classrooms/${id}/resources`, { method: "PUT", body: resourceData });
@@ -108,6 +110,17 @@ export const deleteAdminUser = (id) =>
 export const blockAdminUser = (id, blockData) => 
     apiClient(`/admin/users/${id}/block`, { method: "PATCH", body: blockData });
 
+export const promoteClassroom = (promotionData) =>
+    apiClient("/admin/promote", { method: "POST", body: promotionData });
+
+export const getAdminResources = () => apiClient("/admin/resources");
+export const createAdminResource = (resourceData) =>
+    apiClient("/admin/resources", { method: "POST", body: resourceData });
+export const deleteAdminResource = (id) =>
+    apiClient(`/admin/resources/${id}`, { method: "DELETE" });
+
+export const getAuditLogs = () => apiClient("/admin/audit-logs");
+
 // Program Services
 export const getPrograms = () => apiClient("/programs");
 export const getProgramById = (id) => apiClient(`/programs/${id}`);
@@ -128,3 +141,23 @@ export const clearAllNotifications = () => apiClient("/notifications/clear-all",
 // Contact Services
 export const submitContactForm = (contactData) =>
     apiClient("/contact", { method: "POST", body: contactData });
+
+// Assignment Services
+export const getAssignments = (classroomId) => apiClient(`/assignments/classroom/${classroomId}`);
+export const createAssignment = (assignmentData) =>
+    apiClient("/assignments", { method: "POST", body: assignmentData });
+export const submitHomework = (assignmentId, homeworkData) =>
+    apiClient(`/assignments/${assignmentId}/submit`, { method: "POST", body: homeworkData });
+export const getAssignmentSubmissions = (assignmentId) =>
+    apiClient(`/assignments/${assignmentId}/submissions`);
+export const gradeHomework = (submissionId, gradeData) =>
+    apiClient(`/assignments/submissions/${submissionId}/grade`, { method: "PUT", body: gradeData });
+
+// File Services
+export const uploadFile = (formData) => {
+    return apiClient("/upload/file", {
+        method: "POST",
+        body: formData,
+        headers: null,
+    });
+};
