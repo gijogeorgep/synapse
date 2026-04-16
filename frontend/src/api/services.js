@@ -172,3 +172,21 @@ export const uploadFile = (formData) =>
 // Contact Services
 export const submitContactForm = (contactData) =>
   apiClient("/contact", { method: "POST", body: contactData });
+
+// Promotion Services
+export const promoteClassroom = (promoteData) =>
+  apiClient("/admin/promote", { method: "POST", body: promoteData });
+
+// Audit Log Services
+export const getAuditLogs = () => apiClient("/admin/audit-logs");
+
+// Admin Resource (Library) Services
+export const getAdminResources = () => apiClient("/admin/resources");
+export const createAdminResource = (resourceData) =>
+  apiClient("/admin/resources", { method: "POST", body: resourceData });
+export const deleteAdminResource = (id) =>
+  apiClient(`/admin/resources/${id}`, { method: "DELETE" });
+
+// Student Enrollment Services
+export const enrollInClassroom = (classroomId) =>
+  apiClient(`/classrooms/${classroomId}/enroll`, { method: "POST" });
