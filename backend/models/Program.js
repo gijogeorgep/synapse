@@ -11,6 +11,11 @@ const programSchema = mongoose.Schema(
             unique: true,
             sparse: true, // Allow existing programs without codes initially
         },
+        slug: {
+            type: String,
+            unique: true,
+            sparse: true, // Allow existing programs without slugs initially
+        },
         tagline: {
             type: String,
             default: "",

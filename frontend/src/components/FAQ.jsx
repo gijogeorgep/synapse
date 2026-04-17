@@ -36,24 +36,24 @@ const FAQ = () => {
 
   const faqs = [
     {
-      question: "What programs does Synapse Edu Hub offer?",
-      answer: "We offer specialized programs including PRIME ONE (Personalized 1-on-1 Tuition), CLUSTER (Batch Intensive sessions), PLAN B (Focused Revision Program), and DEEP ROOTS (Comprehensive Bridge Course) tailored for different academic levels."
+      question: "What are the main programs at Synapse edu Hub?",
+      answer: "Our core programs include PRIME ONE (Personalized 1-on-1 Tuition), CLUSTER (Batch Intensive sessions), and DEEP ROOTS (Comprehensive Bridge Course), designed for India's most focused learning ecosystem."
     },
     {
-      question: "How can I enroll in a course?",
-      answer: "Enrolling is easy! You can fill out the contact form below with your details, call our support team at +91 81579 30567."
+      question: "Do you provide mock tests for NEET, JEE, and PSC?",
+      answer: "Yes! We specialize in providing expertly-designed mock tests and assessments for NEET, JEE, and PSC to help students test their knowledge and improve their speed."
     },
     {
       question: "Are the classes conducted online or offline?",
-      answer: "We offer maximum flexibility with both interactive online classes and offline sessions. Our offline classes are conducted at the Synapse Mavoor Hub (in collaboration with Crescent Study Centre), providing a premium, focused learning environment for our students."
-    },
-    {
-      question: "Do you provide study materials and notes?",
-      answer: "Yes, every enrolled student receives expertly curated study materials, comprehensive question banks, and simplified revision notes designed by our academic experts."
+      answer: "We offer maximum flexibility with both interactive online classes and offline sessions at the Synapse Mavoor Hub, tailored to suit your competitive exam preparation needs."
     },
     {
       question: "Can I get a demo session before joining?",
-      answer: "Absolutely! We believe in transparency and offer demo sessions for our major programs so you can experience our unique teaching methodology before making a commitment."
+      answer: "Absolutely! We believe in transparency and offer demo sessions for our major programs so you can experience our teaching methodology before enrolling."
+    },
+    {
+      question: "How can I enroll in a course?",
+      answer: "Enrolling is easy! You can fill out the contact form below, or call our support team at +91 81579 30567 to get started on your success journey."
     }
   ];
 

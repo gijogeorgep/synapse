@@ -14,6 +14,7 @@ import programRoutes from "./routes/programRoutes.js";
 import notificationRoutes from "./routes/notificationRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import assignmentRoutes from "./routes/assignmentRoutes.js";
+import sitemapRoutes from "./routes/sitemapRoutes.js";
 
 dotenv.config();
 
@@ -42,6 +43,7 @@ app.use("/api/programs", programRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/assignments", assignmentRoutes);
+app.use("/api/sitemap", sitemapRoutes);
 
 app.get("/", (req, res) => {
     res.send("API is running...");

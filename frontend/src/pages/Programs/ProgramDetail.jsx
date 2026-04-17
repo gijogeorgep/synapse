@@ -85,7 +85,7 @@ const ProgramDetail = () => {
             <div className="min-h-screen flex items-center justify-center bg-slate-50">
                 <SEO
                     title="Program Not Found"
-                    description="The requested academic program could not be found on Synapse Edu Hub."
+                    description="The requested academic program could not be found on Synapse edu Hub."
                     noindex
                 />
                 <div className="text-center">
@@ -106,7 +106,7 @@ const ProgramDetail = () => {
     const programDescription =
         program.tagline ||
         program.description ||
-        "Explore this academic program, key highlights, and enrollment details from Synapse Edu Hub.";
+        "Explore this academic program, key highlights, and enrollment details from Synapse edu Hub.";
     const canonicalProgramPath = `/programs/${id}`;
     const courseSchema = {
         "@context": "https://schema.org",
@@ -116,7 +116,7 @@ const ProgramDetail = () => {
         image: heroImage || undefined,
         provider: {
             "@type": "EducationalOrganization",
-            name: "Synapse Edu Hub",
+            name: "Synapse edu Hub",
             sameAs: typeof window !== "undefined" ? window.location.origin : undefined,
         },
         url: typeof window !== "undefined" ? `${window.location.origin}${canonicalProgramPath}` : canonicalProgramPath,
@@ -127,7 +127,7 @@ const ProgramDetail = () => {
             <SEO
                 title={program.title}
                 description={programDescription}
-                keywords={`${program.title}, ${program.subtitle || "academic program"}, Synapse Edu Hub, coaching Kerala`}
+                keywords={`${program.title}, ${program.subtitle || "academic program"}, Synapse edu Hub, coaching Kerala`}
                 image={heroImage || "/synapse favicon.png"}
                 canonicalPath={canonicalProgramPath}
                 structuredData={courseSchema}

@@ -1,11 +1,19 @@
 import Program from "../models/Program.js";
 
-// @desc    Get a single program by id
+// @desc    Get a single program by id or slug
 // @route   GET /api/programs/:id
 // @access  Public
 export const getProgramById = async (req, res) => {
     try {
-        const program = await Program.findById(req.params.id);
+        const { id } = req.params;
+        let program;
+
+        if (id.match(/^[0-9a-fA-F]{24}$/)) {
+            program = await Program.findById(id);
+        } else {
+            program = await Program.findOne({ slug: id });
+        }
+
         if (program) {
             res.json(program);
         } else {
@@ -64,8 +72,21 @@ export const createProgram = async (req, res) => {
             offerings
         } = req.body;
 
+        // Generate slug
+        const slug = title
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/(^-|-$)+/g, "");
+
+        // Check if slug already exists
+        const existingProgram = await Program.findOne({ slug });
+        if (existingProgram) {
+            return res.status(400).json({ message: "A program with a similar title already exists." });
+        }
+
         const program = await Program.create({
             title,
+            slug,
             tagline,
             subtitle,
             description,
@@ -99,6 +120,14 @@ export const updateProgram = async (req, res) => {
 
         if (program) {
             program.title = req.body.title || program.title;
+            
+            if (req.body.title) {
+                program.slug = req.body.title
+                    .toLowerCase()
+                    .replace(/[^a-z0-9]+/g, "-")
+                    .replace(/(^-|-$)+/g, "");
+            }
+
             program.tagline = req.body.tagline || program.tagline;
             program.subtitle = req.body.subtitle || program.subtitle;
             program.description = req.body.description || program.description;

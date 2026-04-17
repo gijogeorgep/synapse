@@ -78,9 +78,10 @@ const Hero = () => {
                   </span>
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-cyan-100 font-normal max-w-xl leading-relaxed mt-2 sm:mt-4 mx-auto lg:mx-0">
-                  Synapse Edu Hub offers personalized learning experiences,
-                  expert mentorship, and comprehensive resources to guide you
-                  toward academic success.
+                  Synapse edu Hub is India's most focused learning ecosystem. We specialize in programs like 
+                  <span className="font-bold text-white"> PRIME ONE, CLUSTER, and DEEP ROOTS</span>, 
+                  and provide expert mock tests and assessments for 
+                  <span className="font-bold text-white"> NEET, JEE, and PSC.</span>
                 </p>
               </div>
 
