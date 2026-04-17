@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
-const SITE_NAME = "Synapse Edu Hub";
+const SITE_NAME = "Synapse edu Hub";
 const DEFAULT_DESCRIPTION =
-  "Synapse Edu Hub offers personalized coaching, study materials, multilingual support, and online assessments to help students achieve academic success.";
+  "Synapse edu Hub offers personalized coaching, study materials, multilingual support, and online assessments to help students achieve academic success.";
 const DEFAULT_KEYWORDS =
   "Synapse Edu Hub, online coaching Kerala, study materials, mock tests, student learning platform, multilingual education";
 

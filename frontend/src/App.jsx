@@ -137,7 +137,7 @@ function RouteSeo() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Synapse Edu Hub",
+    name: "Synapse edu Hub",
     url: siteUrl || undefined,
     potentialAction: {
       "@type": "SearchAction",
@@ -149,7 +149,7 @@ function RouteSeo() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
-    name: "Synapse Edu Hub",
+    name: "Synapse edu Hub",
     url: siteUrl || undefined,
     email: "synapseeduhub@gmail.com",
     telephone: "+91 81579 30567",
@@ -170,9 +170,9 @@ function RouteSeo() {
 
   const seoByPath = {
     "/": {
-      title: "Synapse Edu Hub | Personalized Coaching, Study Materials & Online Exams",
+      title: "Synapse edu Hub|India's Most Focused Learning Ecosystem",
       description:
-        "Achieve academic success with Synapse Edu Hub through expert mentors, multilingual learning support, mock tests, study materials, and performance tracking.",
+        "Achieve academic success with Synapse edu Hub through expert mentors, multilingual learning support, mock tests, study materials, and performance tracking.",
       keywords:
         "Synapse Edu Hub, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition",
       structuredData: [websiteSchema, organizationSchema],
