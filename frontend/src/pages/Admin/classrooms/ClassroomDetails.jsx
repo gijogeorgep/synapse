@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
     ArrowLeft, BookOpen, Users, GraduationCap, Mail, AlertCircle,
     PlusCircle, Upload, FileText, Loader2, CheckCircle2, X, Trash2,
-    Image as ImageIcon, ChevronDown, ChevronUp, Eye, Send
+    ImageIcon, ChevronDown, ChevronUp, Eye, Send
 } from 'lucide-react';
+import { 
+    getAdminClassroomById, 
+    getDraftQuestions, 
+    saveDraftQuestion, 
+    updateQuestion as updateQuestionApi,
+    uploadImage,
+    uploadFile,
+    createBulkExam,
+    updateClassroomResources,
+    deleteQuestion
+} from '../../../api/services';
 
 const EMPTY_QUESTION = () => ({
     questionText: '',
@@ -39,9 +49,6 @@ const AdminClassroomDetails = () => {
     const [materialForm, setMaterialForm] = useState({ title: '', url: '' });
     const [isUploadingMaterial, setIsUploadingMaterial] = useState(false);
 
-    const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
-    const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-
     useEffect(() => {
         fetchClassroomDetails();
         fetchDraftQuestions();
@@ -50,12 +57,11 @@ const AdminClassroomDetails = () => {
     const fetchClassroomDetails = async () => {
         try {
             setLoading(true);
-            const { data } = await axios.get('/api/admin/classrooms', config);
-            const found = data.find(c => c._id === id);
-            if (found) setClassroom(found);
+            const data = await getAdminClassroomById(id);
+            if (data) setClassroom(data);
             else setError('Classroom not found.');
         } catch (err) {
-            setError('Failed to load classroom details.');
+            setError(err.message || 'Failed to load classroom details.');
         } finally {
             setLoading(false);
         }
@@ -69,7 +75,7 @@ const AdminClassroomDetails = () => {
     const fetchDraftQuestions = async () => {
         setIsLoadingDrafts(true);
         try {
-            const { data } = await axios.get(`/api/exams/questions/drafts?classroom=${id}`, config);
+            const data = await getDraftQuestions({ classroom: id });
             setDraftQuestions(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error('Failed to load draft questions', err);
@@ -99,10 +105,10 @@ const AdminClassroomDetails = () => {
                 };
 
                 if (q._id) {
-                    return axios.put(`/api/exams/questions/${q._id}`, payload, { headers: config.headers });
+                    return updateQuestionApi(q._id, payload);
                 }
 
-                return axios.post('/api/exams/questions/draft', payload, { headers: config.headers });
+                return saveDraftQuestion(payload);
             });
 
             await Promise.all(savePromises);
@@ -110,7 +116,7 @@ const AdminClassroomDetails = () => {
             showStatus('success', 'Draft saved successfully. You can continue editing or publish later.');
         } catch (err) {
             console.error('Draft save failed', err);
-            showStatus('error', err.response?.data?.message || 'Failed to save drafts.');
+            showStatus('error', err.message || 'Failed to save drafts.');
         } finally {
             setIsSavingDraft(false);
         }
@@ -130,7 +136,7 @@ const AdminClassroomDetails = () => {
         if (!window.confirm('Delete this draft question?')) return;
 
         try {
-            await axios.delete(`/api/exams/questions/${draftId}`, { headers: config.headers });
+            await deleteQuestion(draftId);
             await fetchDraftQuestions();
             showStatus('success', 'Draft removed.');
         } catch (err) {
@@ -223,12 +229,10 @@ const AdminClassroomDetails = () => {
         try {
             const formData = new FormData();
             formData.append('image', file);
-            const { data } = await axios.post('/api/upload/image', formData, {
-                headers: { Authorization: `Bearer ${userInfo.token}`, 'Content-Type': 'multipart/form-data' }
-            });
+            const data = await uploadImage(formData);
             updateQuestion(qIdx, 'imageUrl', data.url);
         } catch (err) {
-            showStatus('error', 'Image upload failed. Please try again.');
+            showStatus('error', err.message || 'Image upload failed. Please try again.');
         } finally {
             setUploadingImg(prev => ({ ...prev, [qIdx]: false }));
         }
@@ -243,7 +247,7 @@ const AdminClassroomDetails = () => {
 
         setIsCreatingExam(true);
         try {
-            await axios.post('/api/admin/exams/bulk', {
+            await createBulkExam({
                 title: examMeta.title,
                 description: examMeta.description,
                 duration: examMeta.duration,
@@ -263,7 +267,7 @@ const AdminClassroomDetails = () => {
                     explanation: q.explanation,
                     imageUrl: q.imageUrl || undefined,
                 })),
-            }, { headers: { ...config.headers, 'Content-Type': 'application/json' } });
+            });
 
             showStatus('success', 'Exam has been created successfully.');
             setExamMeta({ title: '', description: '', duration: 60, subject: '', marksPerQuestion: 1, negativeMarks: 0, examType: 'subject-wise' });
@@ -271,7 +275,7 @@ const AdminClassroomDetails = () => {
             setExpandedQ(0);
             setShowPreview(false);
         } catch (err) {
-            showStatus('error', err.response?.data?.message || 'Failed to create exam.');
+            showStatus('error', err.message || 'Failed to create exam.');
         } finally {
             setIsCreatingExam(false);
         }
@@ -286,15 +290,13 @@ const AdminClassroomDetails = () => {
         try {
             const formData = new FormData();
             formData.append(file.type.includes('image') ? 'image' : 'file', file);
-            const endpoint = file.type.includes('image') ? '/api/upload/image' : '/api/upload/file';
+            
+            const data = await (file.type.includes('image') ? uploadImage(formData) : uploadFile(formData));
 
-            const { data } = await axios.post(endpoint, formData, {
-                headers: { Authorization: `Bearer ${userInfo.token}`, 'Content-Type': 'multipart/form-data' }
-            });
             setMaterialForm(prev => ({ ...prev, url: data.url }));
             showStatus('success', 'File uploaded to Cloudinary! Now give it a title and save.');
         } catch (err) {
-            showStatus('error', 'File upload failed: ' + (err.response?.data?.message || err.message));
+            showStatus('error', 'File upload failed: ' + (err.message));
         } finally {
             setUploadingMaterialFile(false);
         }
@@ -305,14 +307,14 @@ const AdminClassroomDetails = () => {
         if (!materialForm.url) { showStatus('error', 'Please upload a file first.'); return; }
         setIsUploadingMaterial(true);
         try {
-            await axios.put(`/api/classrooms/${id}/resources`, {
+            await updateClassroomResources(id, {
                 lectureNote: { title: materialForm.title, url: materialForm.url }
-            }, { headers: { ...config.headers, 'Content-Type': 'application/json' } });
+            });
             showStatus('success', 'Study material saved!');
             setMaterialForm({ title: '', url: '' });
             fetchClassroomDetails();
         } catch (err) {
-            showStatus('error', err.response?.data?.message || 'Failed to save material.');
+            showStatus('error', err.message || 'Failed to save material.');
         } finally {
             setIsUploadingMaterial(false);
         }

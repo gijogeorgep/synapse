@@ -36,6 +36,8 @@ export const updateQuestion = (questionId, questionData) =>
 
 export const publishQuestion = (questionId) =>
   apiClient(`/exams/questions/${questionId}/publish`, { method: "POST" });
+export const deleteQuestion = (questionId) =>
+  apiClient(`/exams/questions/${questionId}`, { method: "DELETE" });
 
 // Report Services
 export const getOverallStats = () => apiClient("/reports/overall");
@@ -93,6 +95,7 @@ export const updateClassroomResources = (id, resourceData) =>
 
 // Admin Services
 export const getAdminClassrooms = () => apiClient("/admin/classrooms");
+export const getAdminClassroomById = (id) => apiClient(`/admin/classrooms/${id}`);
 export const createAdminUser = (userData) =>
   apiClient("/admin/users", { method: "POST", body: userData });
 export const getAdminUsers = () => apiClient("/admin/users");
