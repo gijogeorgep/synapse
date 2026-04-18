@@ -171,7 +171,7 @@ const StudentMaterials = () => {
 
                                     <div className="flex items-center gap-2 justify-end">
                                         <a
-                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}/preview.pdf` : (it.fileUrl || "#")}
+                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}/preview.pdf?token=${user?.token}` : (it.fileUrl || "#")}
                                             target="_blank"
                                             rel="noreferrer"
                                             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-colors"
@@ -181,7 +181,7 @@ const StudentMaterials = () => {
                                             <span>View</span>
                                         </a>
                                         <a
-                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}?download=true` : (it.fileUrl ? it.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
+                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}?download=true&token=${user?.token}` : (it.fileUrl ? it.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
                                             download
                                             rel="noreferrer"
                                             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-cyan-600 text-white text-xs font-semibold shadow-sm hover:bg-cyan-700 transition-colors"

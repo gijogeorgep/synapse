@@ -180,7 +180,7 @@ const LibraryManagement = () => {
                                     </button>
                                     <div className="flex items-center space-x-2 border-l border-slate-100 pl-2">
                                         <a
-                                            href={(res.fileType === 'pdf' || res.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${res._id}/preview.pdf` : (res.fileUrl || "#")}
+                                            href={(res.fileType === 'pdf' || res.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${res._id}/preview.pdf?token=${userInfo.token}` : (res.fileUrl || "#")}
                                             target="_blank"
                                             rel="noreferrer"
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[10px] font-bold hover:bg-slate-50 transition-all shadow-sm"
@@ -190,7 +190,7 @@ const LibraryManagement = () => {
                                             <span>VIEW</span>
                                         </a>
                                         <a
-                                            href={(res.fileType === 'pdf' || res.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${res._id}?download=true` : (res.fileUrl ? res.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
+                                            href={(res.fileType === 'pdf' || res.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${res._id}?download=true&token=${userInfo.token}` : (res.fileUrl ? res.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
                                             download
                                             rel="noreferrer"
                                             className="p-1.5 rounded-lg bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 transition-all"
