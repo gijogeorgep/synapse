@@ -39,6 +39,9 @@ const questionSchema = new mongoose.Schema(
         imageUrl: {
             type: String,
         },
+        sectionName: {
+            type: String, // e.g., 'Physics', 'Chemistry', 'Biology'
+        },
     },
     {
         timestamps: true,

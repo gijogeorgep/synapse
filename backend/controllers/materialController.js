@@ -140,9 +140,40 @@ export const getMaterialById = async (req, res) => {
 // @desc    View material via proxy (fixes Cloudinary MIME issues)
 // @route   GET /api/materials/view/:id
 export const viewMaterialProxy = async (req, res) => {
+    const { id } = req.params;
+    console.log(`[VIEW_PROXY] Request received for ID: ${id}`);
+
     try {
-        const material = await StudyMaterial.findById(req.params.id);
-        if (!material) return res.status(404).json({ message: "Material not found" });
+        // Validate ObjectID format to prevent internal errors
+        if (id && id.length !== 24) {
+            console.warn(`[VIEW_PROXY] Invalid ID format: ${id}`);
+            return res.status(400).json({ message: "Invalid material ID format" });
+        }
+
+        const material = await StudyMaterial.findById(id);
+        if (!material) {
+            console.warn(`[VIEW_PROXY] Material not found in DB for ID: ${id}`);
+            return res.status(404).json({ message: "Material not found" });
+        }
+
+        console.log(`[VIEW_PROXY] Found material: "${material.title}" (Paid: ${material.isPaid})`);
+
+        // Access control: Check if paid and if user has access
+        if (material.isPaid && req.user && req.user.role === "student") {
+            const hasSubscription = await Subscription.findOne({
+                student: req.user._id,
+                $or: [
+                    { material: material._id, status: "active" },
+                    { type: "full-access", status: "active" }
+                ]
+            });
+
+            if (!hasSubscription) {
+                console.warn(`[VIEW_PROXY] Access denied for student ${req.user.email} (No subscription)`);
+                return res.status(403).json({ message: "Payment required to access this material" });
+            }
+        }
+
 
         let publicId = material.public_id;
         
@@ -171,12 +202,12 @@ export const viewMaterialProxy = async (req, res) => {
             secure: true
         });
 
-        console.log(`Proxying PDF view for: ${material.title} -> ${secureUrl}`);
+        console.log(`[VIEW_PROXY] Proxying view for: ${material.title} -> ${secureUrl}`);
 
         const response = await fetch(secureUrl);
         if (!response.ok) {
             const errorText = await response.text();
-            console.error(`Cloudinary fetch failed (${response.status}):`, errorText);
+            console.error(`[VIEW_PROXY] Cloudinary fetch failed (${response.status}):`, errorText);
             throw new Error(`Cloudinary responded with ${response.status}`);
         }
 
@@ -196,7 +227,7 @@ export const viewMaterialProxy = async (req, res) => {
         const arrayBuffer = await response.arrayBuffer();
         res.send(Buffer.from(arrayBuffer));
     } catch (error) {
-        console.error("Proxy error:", error);
+        console.error("[VIEW_PROXY] Proxy error:", error);
         res.status(500).json({ 
             message: "Error viewing document", 
             details: process.env.NODE_ENV === 'development' ? error.message : undefined 

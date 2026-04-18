@@ -9,6 +9,7 @@ import {
     Clock,
     Plus,
     CheckCircle2,
+    AlertCircle,
     X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -34,6 +35,11 @@ const Exams = () => {
         duration: 30,
         date: "",
         examType: "subject-wise",
+        totalMarks: 20,
+        totalQuestions: 20,
+        marksPerQuestion: 1,
+        hasNegativeMarking: false,
+        negativeMarks: 0,
         questions: [
             { questionText: "", options: ["", "", "", ""], correctAnswer: 0 },
         ],
@@ -104,12 +110,28 @@ const Exams = () => {
 
     const handleCreateExam = async (e) => {
         e.preventDefault();
+
+        // Validate question count
+        const expected = parseInt(formData.totalQuestions);
+        if (formData.questions.length !== expected) {
+            toast.error(`You set ${expected} total questions but added ${formData.questions.length}. Please match the count.`);
+            return;
+        }
+
+        // Validate score feasibility
+        const maxScore = expected * parseFloat(formData.marksPerQuestion);
+        if (maxScore < parseFloat(formData.totalMarks)) {
+            toast.error(`Invalid config: ${expected} Qs × ${formData.marksPerQuestion} = ${maxScore} max score, but Total Marks is ${formData.totalMarks}.`);
+            return;
+        }
+
         try {
             await createBulkExam({
                 ...formData,
                 subject: selectedClassroom?.subjects?.[0] || "General",
                 classLevel: selectedClassroom?.className || "10",
                 classroom: selectedClassroom?._id,
+                negativeMarks: formData.hasNegativeMarking ? formData.negativeMarks : 0,
             });
             setShowCreateModal(false);
             setFormData({
@@ -118,11 +140,17 @@ const Exams = () => {
                 duration: 30,
                 date: "",
                 examType: "subject-wise",
+                totalMarks: 20,
+                totalQuestions: 20,
+                marksPerQuestion: 1,
+                hasNegativeMarking: false,
+                negativeMarks: 0,
                 questions: [
                     { questionText: "", options: ["", "", "", ""], correctAnswer: 0 },
                 ],
             });
             fetchExams(selectedClassroom._id);
+            toast.success("Exam created and published!");
         } catch (error) {
             toast.error(error.message || "Failed to create exam");
         }
@@ -346,10 +374,90 @@ const Exams = () => {
 
                             <hr className="border-slate-100" />
 
+                            {/* Marking Config */}
+                            <div>
+                                <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">Marking Configuration</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Questions</label>
+                                        <input
+                                            type="number" min="1" required
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 focus:ring-4 focus:ring-cyan-50 focus:border-cyan-200 outline-none transition-all text-sm"
+                                            placeholder="e.g. 20"
+                                            value={formData.totalQuestions}
+                                            onChange={(e) => setFormData({ ...formData, totalQuestions: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Marks</label>
+                                        <input
+                                            type="number" min="1" required
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 focus:ring-4 focus:ring-cyan-50 focus:border-cyan-200 outline-none transition-all text-sm"
+                                            placeholder="e.g. 20"
+                                            value={formData.totalMarks}
+                                            onChange={(e) => setFormData({ ...formData, totalMarks: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Marks / Question</label>
+                                        <input
+                                            type="number" min="0" step="0.25" required
+                                            className="w-full px-4 py-2.5 rounded-xl border border-slate-100 bg-slate-50 focus:ring-4 focus:ring-cyan-50 focus:border-cyan-200 outline-none transition-all text-sm"
+                                            placeholder="e.g. 1"
+                                            value={formData.marksPerQuestion}
+                                            onChange={(e) => setFormData({ ...formData, marksPerQuestion: e.target.value })}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Negative Marking</label>
+                                        <div className="flex items-center gap-3 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({...formData, hasNegativeMarking: !formData.hasNegativeMarking, negativeMarks: !formData.hasNegativeMarking ? 1 : 0})}
+                                                className={`relative w-10 h-5 rounded-full transition-colors duration-200 focus:outline-none ${formData.hasNegativeMarking ? 'bg-rose-500' : 'bg-slate-300'}`}
+                                            >
+                                                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all duration-200 ${formData.hasNegativeMarking ? 'left-5' : 'left-0.5'}`} />
+                                            </button>
+                                            <span className="text-xs font-semibold text-slate-500">{formData.hasNegativeMarking ? 'On' : 'Off'}</span>
+                                        </div>
+                                        {formData.hasNegativeMarking && (
+                                            <input
+                                                type="number" step="0.25" min="0"
+                                                className="w-full px-4 py-2 rounded-xl border border-rose-200 bg-rose-50 focus:ring-2 focus:ring-rose-300 outline-none text-sm mt-1"
+                                                placeholder="Deduction per wrong (e.g. 1)"
+                                                value={formData.negativeMarks}
+                                                onChange={(e) => setFormData({...formData, negativeMarks: e.target.value})}
+                                            />
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Live Validation Panel */}
+                                {formData.totalQuestions > 0 && formData.marksPerQuestion > 0 && (() => {
+                                    const maxScore = parseInt(formData.totalQuestions) * parseFloat(formData.marksPerQuestion);
+                                    const tm = parseFloat(formData.totalMarks);
+                                    const isOk = maxScore >= tm;
+                                    return (
+                                        <div className={`mt-3 flex items-center gap-3 px-4 py-2.5 rounded-xl border text-xs font-medium ${
+                                            isOk ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-rose-50 border-rose-200 text-rose-700'
+                                        }`}>
+                                            {isOk ? <CheckCircle2 className="w-4 h-4 shrink-0" /> : <AlertCircle className="w-4 h-4 shrink-0" />}
+                                            <span>
+                                                {formData.totalQuestions} Qs × {formData.marksPerQuestion} mark = <strong>{maxScore} max score</strong>
+                                                {formData.hasNegativeMarking && ` · −${formData.negativeMarks} per wrong`}
+                                                {isOk ? ` ≥ ${tm} Total Marks ✓` : ` — exceeds ${tm} Total Marks. Adjust values.`}
+                                            </span>
+                                        </div>
+                                    );
+                                })()}
+                            </div>
+
+                            <hr className="border-slate-100" />
+
                             {/* Questions Section */}
                             <div className="space-y-6">
                                 <div className="flex items-center justify-between">
-                                    <h3 className="text-xl font-bold text-slate-900">Questions</h3>
+                                    <h3 className="text-xl font-bold text-slate-900">Questions ({formData.questions.length}/{formData.totalQuestions})</h3>
                                     <button
                                         type="button"
                                         onClick={handleAddQuestion}

@@ -8,7 +8,7 @@ export const getExamsByClassroom = (subject, classLevel, examType = "") =>
   );
 export const getExamsBySpecificClassroom = (classroomId) =>
   apiClient(`/exams?classroomId=${classroomId}`);
-export const getQuestions = (examId) => apiClient(`/exams/${examId}/questions`);
+export const getQuestions = (examId) => apiClient(`/exams/${examId}/questions?includeDrafts=true`);
 export const submitExamResult = (examId, resultData) =>
   apiClient(`/exams/${examId}/submit`, { body: resultData });
 export const createBulkExam = (examData) =>

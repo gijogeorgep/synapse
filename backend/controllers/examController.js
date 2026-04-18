@@ -54,6 +54,12 @@ export const getExams = async (req, res) => {
     const { subject, classLevel, examType, classroomId } = req.query;
     try {
         let query = { isActive: true };
+        
+        // Students should only see published exams
+        if (req.user.role === 'student') {
+            query.status = 'published';
+        }
+
         if (subject) query.subject = subject;
         if (classLevel) query.classLevel = classLevel;
         if (examType) query.examType = examType;
@@ -87,7 +93,9 @@ export const getExams = async (req, res) => {
             }
         }
 
-        let exams = await Exam.find(query).populate("teacher", "name");
+        let exams = await Exam.find(query)
+            .populate("teacher", "name")
+            .populate("classroom", "name className board");
 
         if (req.user.role === 'student') {
             const submittedResults = await Result.find({ student: req.user._id }).select("exam");
@@ -105,18 +113,51 @@ export const getExams = async (req, res) => {
 // @route   POST /api/exams/bulk
 // @access  Private (Teacher/Admin)
 export const createExamWithQuestions = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks } = req.body;
+    const { title, description, duration, subject, classLevel, date, examCategory, examType, programType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks, totalQuestions, status, sections } = req.body;
 
-    if (!title || !duration || !subject || !classroom) {
-        return res.status(400).json({ message: "Please provide all required fields: title, duration, subject, and classroom." });
-    }
-    
-    if (examCategory !== "practice" && !date) {
-        return res.status(400).json({ message: "Date is required for scheduled exams." });
+    const isDraft = status === 'draft';
+
+    if (!title) {
+        return res.status(400).json({ message: "Exam title is required even for drafts." });
     }
 
-    if (!Array.isArray(questions) || questions.length === 0) {
-        return res.status(400).json({ message: "Add at least one question before publishing the exam." });
+    if (!isDraft && (!duration || !subject || !classroom)) {
+        return res.status(400).json({ message: "Please provide all required fields: duration, subject, and classroom." });
+    }
+
+    // Skip strict validation for drafts
+    if (!isDraft) {
+        // New validation for score consistency - handles optional questions/sections
+        let qCountForScoring = parseInt(totalQuestions) || (questions ? questions.length : 0);
+        
+        // If sections exist, use the sum of attendQuestions for scoring
+        if (sections && Array.isArray(sections) && sections.length > 0) {
+            const sumAttend = sections.reduce((acc, s) => acc + (parseInt(s.attendQuestions) || 0), 0);
+            if (sumAttend > 0) {
+                qCountForScoring = sumAttend;
+            }
+        }
+
+        const mPerQ = parseFloat(marksPerQuestion) || 0;
+        const tMarks = parseFloat(totalMarks) || 0;
+
+        if (mPerQ <= 0 || tMarks <= 0) {
+            return res.status(400).json({ message: "Marks per question and Total marks must be greater than zero when publishing." });
+        }
+
+        if (qCountForScoring * mPerQ !== tMarks) {
+            return res.status(400).json({ 
+                message: `Score mismatch: ${qCountForScoring} questions to attend × ${mPerQ} marks/question = ${qCountForScoring * mPerQ}, but Total Marks is ${tMarks}.` 
+            });
+        }
+        
+        if (examCategory !== "practice" && !date) {
+            return res.status(400).json({ message: "Date is required for scheduled exams." });
+        }
+
+        if (!Array.isArray(questions) || questions.length === 0) {
+            return res.status(400).json({ message: "Add at least one question before publishing the exam." });
+        }
     }
 
     const normalizedQuestions = questions.map((question) => ({
@@ -129,22 +170,24 @@ export const createExamWithQuestions = async (req, res) => {
         imageUrl: question?.imageUrl || undefined,
     }));
 
-    const invalidQuestionIndex = normalizedQuestions.findIndex((question) => {
-        const hasValidQuestionText = Boolean(question.questionText);
-        const hasFourOptions = Array.isArray(question.options) && question.options.length === 4;
-        const hasAllOptionsFilled = hasFourOptions && question.options.every((option) => Boolean(option));
-        const hasValidCorrectAnswer =
-            Number.isInteger(question.correctAnswer) &&
-            question.correctAnswer >= 0 &&
-            question.correctAnswer < question.options.length;
+    if (!isDraft && questions && questions.length > 0) {
+        const invalidQuestionIndex = normalizedQuestions.findIndex((question) => {
+            const hasValidQuestionText = Boolean(question.questionText);
+            const hasFourOptions = Array.isArray(question.options) && question.options.length === 4;
+            const hasAllOptionsFilled = hasFourOptions && question.options.every((option) => Boolean(option));
+            const hasValidCorrectAnswer =
+                Number.isInteger(question.correctAnswer) &&
+                question.correctAnswer >= 0 &&
+                question.correctAnswer < question.options.length;
 
-        return !hasValidQuestionText || !hasAllOptionsFilled || !hasValidCorrectAnswer;
-    });
-
-    if (invalidQuestionIndex !== -1) {
-        return res.status(400).json({
-            message: `Question ${invalidQuestionIndex + 1} is incomplete. Please fill the question text, all 4 options, and choose the correct answer.`,
+            return !hasValidQuestionText || !hasAllOptionsFilled || !hasValidCorrectAnswer;
         });
+
+        if (invalidQuestionIndex !== -1) {
+            return res.status(400).json({
+                message: `Question ${invalidQuestionIndex + 1} is incomplete. Please fill the question text, all 4 options, and choose the correct answer.`,
+            });
+        }
     }
 
     try {
@@ -160,9 +203,13 @@ export const createExamWithQuestions = async (req, res) => {
             totalMarks: totalMarks || 100,
             examCategory: examCategory || "scheduled",
             examType: examType || "subject-wise",
-            marksPerQuestion: marksPerQuestion ?? 1,
-            negativeMarks: negativeMarks ?? 0,
+            programType: programType || "PrimeOne",
+            totalQuestions: parseInt(totalQuestions) || (Array.isArray(questions) ? questions.length : 0),
+            marksPerQuestion: parseFloat(marksPerQuestion) || 0,
+            negativeMarks: parseFloat(negativeMarks) || 0,
             teacher: req.user._id,
+            status: status || "draft",
+            sections: sections || [],
         });
 
         const questionsWithExamId = normalizedQuestions.map((question) => ({
@@ -170,6 +217,7 @@ export const createExamWithQuestions = async (req, res) => {
             exam: exam._id,
             status: 'published',
             createdBy: req.user._id,
+            sectionName: question.sectionName,
         }));
         await Question.insertMany(questionsWithExamId);
 
@@ -251,20 +299,22 @@ export const deleteQuestion = async (req, res) => {
 // @route   POST /api/exams/questions/draft
 // @access  Private (Teacher/Admin)
 export const saveDraftQuestion = async (req, res) => {
-    const { exam, classroom, questionText, options, correctAnswer, explanation } = req.body;
+    const { exam, classroom, questionText, options, correctAnswer, explanation, imageUrl } = req.body;
 
-    if (!questionText || !Array.isArray(options) || options.length !== 4) {
-        return res.status(400).json({ message: "Question text and 4 options are required." });
+    // Relaxed validation for drafts - allow saving even if incomplete
+    if (!questionText && (!options || options.length === 0)) {
+        return res.status(400).json({ message: "Provide at least a question text or options to save a draft." });
     }
 
     try {
         const question = await Question.create({
             exam: exam || null,
             classroom: classroom || null,
-            questionText,
-            options,
-            correctAnswer,
-            explanation,
+            questionText: questionText || "",
+            options: Array.isArray(options) ? options : ["", "", "", ""],
+            correctAnswer: correctAnswer !== undefined ? correctAnswer : 0,
+            explanation: explanation || "",
+            imageUrl: imageUrl || "",
             status: "draft",
             createdBy: req.user._id,
         });
@@ -360,10 +410,11 @@ export const publishQuestion = async (req, res) => {
 // @access  Private (All)
 export const getExamQuestions = async (req, res) => {
     try {
-        const includeDrafts = req.query.includeDrafts === 'true';
+        const isAdminOrTeacher = req.user.role === 'admin' || req.user.role === 'superadmin' || req.user.role === 'teacher';
+        const includeDrafts = req.query.includeDrafts === 'true' || isAdminOrTeacher;
         const query = { exam: req.params.id };
 
-        if (req.user.role === 'student' || !includeDrafts) {
+        if (!includeDrafts) {
             query.status = 'published';
         }
 
@@ -479,7 +530,7 @@ export const deleteExam = async (req, res) => {
 // @access  Private (Teacher/Admin)
 export const updateExam = async (req, res) => {
     try {
-        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType } = req.body;
+        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType, programType, totalQuestions, marksPerQuestion, negativeMarks, status, sections } = req.body;
         const exam = await Exam.findById(req.params.id);
 
         if (!exam) {
@@ -491,14 +542,45 @@ export const updateExam = async (req, res) => {
             return res.status(401).json({ message: "Not authorized to update this exam" });
         }
 
+        const isDraft = (status || exam.status) === 'draft';
+
+        // Score consistency validation for updates (skip for drafts)
+        if (!isDraft) {
+            let qCountForScoring = parseInt(totalQuestions || exam.totalQuestions || (questions ? questions.length : 0));
+            
+            // If sections exist in update or existing exam, use the sum of attendQuestions
+            const currentSections = sections || exam.sections;
+            if (currentSections && Array.isArray(currentSections) && currentSections.length > 0) {
+                const sumAttend = currentSections.reduce((acc, s) => acc + (parseInt(s.attendQuestions) || 0), 0);
+                if (sumAttend > 0) {
+                    qCountForScoring = sumAttend;
+                }
+            }
+
+            const mPerQ = parseFloat(marksPerQuestion !== undefined ? marksPerQuestion : exam.marksPerQuestion);
+            const tMarks = parseFloat(totalMarks || exam.totalMarks);
+
+            if (qCountForScoring * mPerQ !== tMarks) {
+                return res.status(400).json({ 
+                    message: `Score mismatch: ${qCountForScoring} questions to attend × ${mPerQ} marks/question = ${qCountForScoring * mPerQ}, but Total Marks is ${tMarks}.` 
+                });
+            }
+        }
+
         exam.title = title || exam.title;
-        exam.subject = subject || exam.subject;
-        exam.duration = duration || exam.duration;
-        exam.totalMarks = totalMarks || exam.totalMarks;
+        exam.subject = subject || exam.subject;        exam.duration = duration !== undefined ? (parseInt(duration) || 0) : exam.duration;
+        exam.totalMarks = totalMarks !== undefined ? (parseFloat(totalMarks) || 0) : exam.totalMarks;
         exam.date = date || exam.date;
         exam.classroom = classroom || exam.classroom;
         exam.examCategory = examCategory || exam.examCategory;
         exam.examType = examType || exam.examType;
+        exam.programType = programType || exam.programType;
+        exam.totalQuestions = totalQuestions !== undefined ? (parseInt(totalQuestions) || 0) : exam.totalQuestions;
+        exam.marksPerQuestion = marksPerQuestion !== undefined ? (parseFloat(marksPerQuestion) || 0) : exam.marksPerQuestion;
+        exam.negativeMarks = negativeMarks !== undefined ? (parseFloat(negativeMarks) || 0) : exam.negativeMarks;
+        exam.status = status || exam.status;
+        exam.sections = sections || exam.sections;
+
 
         const updatedExam = await exam.save();
 
@@ -508,6 +590,7 @@ export const updateExam = async (req, res) => {
             const questionsWithExam = questions.map((q) => ({
                 ...q,
                 exam: updatedExam._id,
+                sectionName: q.sectionName,
             }));
             await Question.insertMany(questionsWithExam);
         }

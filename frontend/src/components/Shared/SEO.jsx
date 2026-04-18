@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
-const SITE_NAME = "Synapse edu Hub";
+const SITE_NAME = "Synapse Edu Hub";
 const DEFAULT_DESCRIPTION =
-  "Synapse edu Hub is India's most focused learning ecosystem, specializing in programs like PRIME ONE, CLUSTER, and DEEP ROOTS. We provide expert mock tests and assessments for NEET, JEE, and PSC.";
+  "Synapse Edu Hub offers personalized coaching, study materials, multilingual support, and online assessments to help students achieve academic success.";
 const DEFAULT_KEYWORDS =
-  "Synapse edu Hub, PRIME ONE tuition, CLUSTER coaching, DEEP ROOTS program, mock tests NEET, JEE mock assessments, PSC mock tests, India's most focused learning ecosystem";
+  "Synapse Edu Hub, online coaching Kerala, study materials, mock tests, student learning platform, multilingual education";
 
 const setOrRemoveMetaTag = (attr, key, content) => {
   const selector = `meta[${attr}="${key}"]`;

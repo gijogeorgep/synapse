@@ -137,7 +137,7 @@ function RouteSeo() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Synapse edu Hub",
+    name: "Synapse Edu Hub",
     url: siteUrl || undefined,
     potentialAction: {
       "@type": "SearchAction",
@@ -149,7 +149,7 @@ function RouteSeo() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
-    name: "Synapse edu Hub",
+    name: "Synapse Edu Hub",
     url: siteUrl || undefined,
     email: "synapseeduhub@gmail.com",
     telephone: "+91 81579 30567",
@@ -167,46 +167,15 @@ function RouteSeo() {
       "https://youtube.com/@synapseeduhub",
     ],
   };
- 
-  const faqSchema = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Does Synapse edu Hub provide mock tests for NEET and JEE?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, we provide expert-led mock assessments and test series for NEET, JEE, and PSC to help students gauge their readiness and improve their performance."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "What are the main programs at Synapse edu Hub?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Our core academic programs include PRIME ONE (Personalized 1-on-1 Tuition), CLUSTER (Batch Intensive sessions), and DEEP ROOTS (Comprehensive Bridge Course) for school-level excellence."
-        }
-      },
-      {
-        "@type": "Question",
-        "name": "Are study materials provided for mock tests?",
-        "acceptedAnswer": {
-          "@type": "Answer",
-          "text": "Yes, we provide high-quality study materials and detailed performance analysis for all our mock assessment series."
-        }
-      }
-    ]
-  };
 
   const seoByPath = {
     "/": {
-      title: "Synapse edu Hub | India's Most Focused Learning Ecosystem",
+      title: "Synapse Edu Hub | Personalized Coaching, Study Materials & Online Exams",
       description:
-        "Rank #1 with Synapse edu Hub. India's most focused learning ecosystem for PRIME ONE, CLUSTER, and DEEP ROOTS. Expert mock tests for NEET, JEE, and PSC.",
+        "Achieve academic success with Synapse Edu Hub through expert mentors, multilingual learning support, mock tests, study materials, and performance tracking.",
       keywords:
-        "Synapse edu Hub, PRIME ONE tuition, CLUSTER batch, DEEP ROOTS bridge course, mock tests NEET, JEE mock assessments, PSC test series",
-      structuredData: [websiteSchema, organizationSchema, faqSchema],
+        "Synapse Edu Hub, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition",
+      structuredData: [websiteSchema, organizationSchema],
     },
     "/about": {
       title: "About Synapse Edu Hub | Student-first academic coaching",
@@ -281,7 +250,7 @@ function AppContent() {
           <Route path="/terms-conditions" element={<TermsConditions />} />
           <Route path="/blogs" element={<Blogs />} />
           <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
-          <Route path="/programs/:idOrSlug" element={<ProgramDetail />} />
+          <Route path="/programs/:id" element={<ProgramDetail />} />
 
           {/* General Protected Routes */}
           <Route element={<ProtectedRoute />}>

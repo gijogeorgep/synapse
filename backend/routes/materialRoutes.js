@@ -10,8 +10,8 @@ import { protect, authorize } from "../middleware/authMiddleware.js";
 const router = express.Router();
 
 router.get("/", protect, getMaterials);
-router.get("/view/:id", viewMaterialProxy);
-router.get("/view/:id/:filename", viewMaterialProxy); // suffix support for better previewing
+router.get("/view/:id", protect, viewMaterialProxy);
+router.get("/view/:id/:filename", protect, viewMaterialProxy); // suffix support for better previewing
 router.get("/:id", protect, getMaterialById);
 router.post("/", protect, authorize("teacher", "admin", "superadmin"), uploadMaterial);
 

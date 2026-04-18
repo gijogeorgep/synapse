@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Award, PlusCircle, User, BookOpen, Clock, CheckCircle2, AlertCircle, X, Search, Filter, Plus, Trash2, ChevronRight, ChevronLeft, Image as ImageIcon, Loader2, Users, BarChart2, TrendingUp, MoreVertical, Edit2 } from 'lucide-react';
-import { createBulkExam, deleteExam, updateBulkExam, getQuestions, getAdminExams, getAdminClassrooms, getExamDetails, submitAdminResult, uploadImage, saveDraftQuestion, getDraftQuestions, updateQuestion, publishQuestion } from '../../../api/services';
+import { Award, PlusCircle, User, BookOpen, Clock, CheckCircle2, AlertCircle, X, Search, Filter, Plus, Trash2, ChevronRight, ChevronLeft, Image as ImageIcon, Loader2, Users, BarChart2, TrendingUp, MoreVertical, Edit2, Save } from 'lucide-react';
+import { createBulkExam, deleteExam, updateBulkExam, getQuestions, getAdminExams, getAdminClassrooms, getExamDetails, submitAdminResult, uploadImage, saveDraftQuestion, getDraftQuestions, updateQuestion, publishQuestion, deleteQuestion } from '../../../api/services';
 
 const ExamsManagement = () => {
     const [exams, setExams] = useState([]);
@@ -24,10 +23,17 @@ const ExamsManagement = () => {
         date: '',
         duration: 90,
         totalMarks: 100,
+        totalQuestions: 25,
+        marksPerQuestion: 4,
+        negativeMarks: 1,
+        hasNegativeMarking: true,
         classroom: '',
         examCategory: 'scheduled',
         examType: 'subject-wise',
-        questions: [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
+        programType: 'PrimeOne',
+        officialPattern: 'none',
+        sections: [],
+        questions: [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '', sectionName: '' }]
     });
 
     // Form for results
@@ -56,6 +62,56 @@ const ExamsManagement = () => {
             fetchDraftQuestions(formData.classroom);
         }
     }, [formData.classroom]);
+
+    useEffect(() => {
+        if (formData.programType === 'E-Zone' && formData.officialPattern !== 'none') {
+            const patterns = {
+                'NEET': { 
+                    duration: 200, 
+                    totalMarks: 720, 
+                    totalQuestions: 200, 
+                    marksPerQuestion: 4, 
+                    negativeMarks: 1, 
+                    hasNegativeMarking: true,
+                    sections: [
+                        { name: 'Physics', totalQuestions: 50, attendQuestions: 45 },
+                        { name: 'Chemistry', totalQuestions: 50, attendQuestions: 45 },
+                        { name: 'Biology', totalQuestions: 100, attendQuestions: 90 }
+                    ]
+                },
+                'JEE': { 
+                    duration: 180, 
+                    totalMarks: 300, 
+                    totalQuestions: 90, 
+                    marksPerQuestion: 4, 
+                    negativeMarks: 1, 
+                    hasNegativeMarking: true,
+                    sections: [
+                        { name: 'Physics', totalQuestions: 30, attendQuestions: 25 },
+                        { name: 'Chemistry', totalQuestions: 30, attendQuestions: 25 },
+                        { name: 'Mathematics', totalQuestions: 30, attendQuestions: 25 }
+                    ]
+                },
+                'PSC': { 
+                    duration: 75, 
+                    totalMarks: 100, 
+                    totalQuestions: 100, 
+                    marksPerQuestion: 1, 
+                    negativeMarks: 0.33, 
+                    hasNegativeMarking: true,
+                    sections: []
+                }
+            };
+            const pattern = patterns[formData.officialPattern];
+            if (pattern) {
+                setFormData(prev => ({
+                    ...prev,
+                    ...pattern,
+                    examType: 'official'
+                }));
+            }
+        }
+    }, [formData.officialPattern, formData.programType]);
 
     const fetchData = async () => {
         try {
@@ -96,29 +152,33 @@ const ExamsManagement = () => {
     };
 
     const handleSaveExamDraft = async () => {
-        if (!formData.questions || !formData.questions.length) {
-            setStatus({ type: 'error', message: 'Add one or more questions before saving draft.' });
+        if (!formData.title) {
+            setStatus({ type: 'error', message: 'Exam title is required to save a draft.' });
             return;
         }
 
         setIsSavingDraft(true);
         try {
-            await Promise.all(formData.questions.map((q) =>
-                saveDraftQuestion({
-                    exam: null,
-                    classroom: formData.classroom,
-                    questionText: q.questionText,
-                    options: q.options,
-                    correctAnswer: q.correctAnswer,
-                    explanation: q.explanation,
-                    imageUrl: q.imageUrl || '',
-                    status: 'draft',
-                })
-            ));
-            setStatus({ type: 'success', message: 'Questions saved as draft successfully.' });
-            fetchDraftQuestions();
+            const draftData = {
+                ...formData,
+                status: 'draft',
+                // Ensure number conversion
+                totalQuestions: parseInt(formData.totalQuestions),
+                totalMarks: parseFloat(formData.totalMarks),
+                marksPerQuestion: parseFloat(formData.marksPerQuestion),
+                negativeMarks: parseFloat(formData.negativeMarks),
+            };
+
+            if (isEditing && editingExamId) {
+                await updateBulkExam(editingExamId, draftData);
+            } else {
+                await createBulkExam(draftData);
+            }
+
+            setStatus({ type: 'success', message: 'Exam progress saved as draft successfully!' });
+            fetchData(); // Refresh the main exam list
         } catch (error) {
-            console.error('Error saving draft questions:', error);
+            console.error('Error saving exam draft:', error);
             setStatus({ type: 'error', message: error.response?.data?.message || 'Failed to save exam draft.' });
         } finally {
             setIsSavingDraft(false);
@@ -144,7 +204,7 @@ const ExamsManagement = () => {
     const handleDeleteDraftQuestion = async (draftId) => {
         if (!window.confirm('Delete draft question?')) return;
         try {
-            await axios.delete(`/exams/questions/${draftId}`, { headers: { Authorization: `Bearer ${userInfo.token}` }});
+            await deleteQuestion(draftId);
             fetchDraftQuestions();
             setStatus({ type: 'success', message: 'Draft deleted.' });
         } catch (error) {
@@ -157,21 +217,34 @@ const ExamsManagement = () => {
     const handleCreateExam = async (e) => {
         e.preventDefault();
         try {
-            if (isEditing) {
-                await updateBulkExam(editingExamId, formData);
-                setStatus({ type: 'success', message: 'Exam updated successfully!' });
+            const finalData = { ...formData, status: 'published' };
+            
+            if (isEditing && editingExamId) {
+                await updateBulkExam(editingExamId, finalData);
+                setStatus({ type: 'success', message: 'Exam published successfully!' });
             } else {
-                await createBulkExam(formData);
-                setStatus({ type: 'success', message: 'Exam created successfully with questions!' });
+                await createBulkExam(finalData);
+                setStatus({ type: 'success', message: 'Exam created and published successfully!' });
             }
             setIsModalOpen(false);
             resetForm();
             fetchData();
             fetchDraftQuestions();
-
         } catch (error) {
+            console.error('Error processing exam:', error);
             setStatus({ type: 'error', message: error.response?.data?.message || 'Failed to process exam.' });
         }
+    };
+
+    const addQuestion = () => {
+        if (formData.questions.length >= formData.totalQuestions) {
+            setStatus({ type: 'error', message: `You have already added the maximum number of questions (${formData.totalQuestions}).` });
+            return;
+        }
+        setFormData({
+            ...formData,
+            questions: [...formData.questions, { questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '', sectionName: '' }]
+        });
     };
 
     const resetForm = () => {
@@ -182,10 +255,17 @@ const ExamsManagement = () => {
             date: '',
             duration: 90,
             totalMarks: 100,
+            totalQuestions: 25,
+            marksPerQuestion: 4,
+            negativeMarks: 1,
+            hasNegativeMarking: true,
             classroom: classrooms[0]?._id || '',
             examCategory: 'scheduled',
             examType: 'subject-wise',
-            questions: [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
+            programType: 'PrimeOne',
+            officialPattern: 'none',
+            sections: [],
+            questions: [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '', sectionName: '' }]
         });
         setIsEditing(false);
         setEditingExamId(null);
@@ -194,7 +274,9 @@ const ExamsManagement = () => {
     const openEditModal = async (exam) => {
         try {
             setLoading(true);
-            const questRes = await getQuestions(exam._id);
+            const questions = await getQuestions(exam._id);
+            const classroomId = exam.classroom?._id || exam.classroom; // Handle both populated and unpopulated
+
             setFormData({
                 title: exam.title,
                 subject: exam.subject,
@@ -202,10 +284,26 @@ const ExamsManagement = () => {
                 date: exam.date ? new Date(exam.date).toISOString().slice(0, 16) : '',
                 duration: exam.duration,
                 totalMarks: exam.totalMarks,
-                classroom: exam.classroom._id,
+                totalQuestions: exam.totalQuestions || (Array.isArray(questions) ? questions.length : 0),
+                marksPerQuestion: exam.marksPerQuestion || 1,
+                negativeMarks: exam.negativeMarks || 0,
+                hasNegativeMarking: (exam.negativeMarks || 0) > 0,
+                classroom: classroomId,
                 examCategory: exam.examCategory || 'scheduled',
                 examType: exam.examType || 'subject-wise',
-                questions: questRes.data.length > 0 ? questRes.data : [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
+                programType: exam.programType || 'PrimeOne',
+                officialPattern: 'none', 
+                sections: exam.sections || [],
+                questions: Array.isArray(questions) && questions.length > 0 
+                    ? questions.map(q => ({
+                        questionText: q.questionText || '',
+                        options: (Array.isArray(q.options) && q.options.length === 4) ? q.options : ['', '', '', ''],
+                        correctAnswer: q.correctAnswer || 0,
+                        explanation: q.explanation || '',
+                        imageUrl: q.imageUrl || '',
+                        sectionName: q.sectionName || ''
+                    }))
+                    : [{ questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '', sectionName: '' }]
             });
             setIsEditing(true);
             setEditingExamId(exam._id);
@@ -213,6 +311,7 @@ const ExamsManagement = () => {
             setCurrentStep(1);
             setActiveMenu(null);
         } catch (error) {
+            console.error("Error loading exam for editing:", error);
             setStatus({ type: 'error', message: 'Failed to load exam questions for editing.' });
         } finally {
             setLoading(false);
@@ -229,13 +328,6 @@ const ExamsManagement = () => {
         } catch (error) {
             setStatus({ type: 'error', message: 'Failed to delete exam.' });
         }
-    };
-
-    const addQuestion = () => {
-        setFormData({
-            ...formData,
-            questions: [...formData.questions, { questionText: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '', imageUrl: '' }]
-        });
     };
 
     const removeQuestion = (index) => {
@@ -391,7 +483,21 @@ const ExamsManagement = () => {
                                     </div>
                                  </div>
                              </div>
-                             <h3 className="text-xl font-bold text-slate-800 mb-2">{exam.title}</h3>
+                             <div className="flex items-center gap-2 mb-2 flex-wrap">
+                                 <h3 className="text-xl font-bold text-slate-800">{exam.title}</h3>
+                                 <div className="flex gap-1">
+                                    {exam.status === 'draft' && (
+                                        <span className="px-2 py-0.5 bg-amber-50 text-amber-600 text-[10px] font-bold rounded-full border border-amber-100 uppercase tracking-wider">Draft</span>
+                                    )}
+                                    <span className={`px-2 py-0.5 text-[10px] font-bold rounded-full border uppercase tracking-wider ${
+                                        exam.programType === 'E-Zone' ? 'bg-indigo-50 text-indigo-600 border-indigo-100' : 
+                                        exam.programType === 'Cluster' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                                        'bg-slate-50 text-slate-500 border-slate-100'
+                                    }`}>
+                                        {exam.programType || 'PrimeOne'}
+                                    </span>
+                                 </div>
+                             </div>
                              <div className="space-y-2 mb-6">
                                  <div className="flex items-center text-sm text-slate-500 gap-2">
                                      <Clock className="w-4 h-4" />
@@ -403,20 +509,30 @@ const ExamsManagement = () => {
                                  </div>
                              </div>
                              <div className="flex gap-2">
-                                <button 
-                                    onClick={() => fetchExamDetails(exam._id)}
-                                    className="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center justify-center gap-2"
-                                >
-                                    <BarChart2 className="w-4 h-4" /> 
-                                    View Report
-                                </button>
-                                <button 
-                                    onClick={() => openResultModal(exam)}
-                                    className="p-2.5 bg-slate-50 text-slate-400 font-bold rounded-xl hover:bg-slate-100 transition-all border border-slate-200"
-                                    title="Add Manual Result"
-                                >
-                                    <Plus className="w-5 h-5" />
-                                </button>
+                                 {exam.status === 'draft' ? (
+                                     <button 
+                                         onClick={() => openEditModal(exam)}
+                                         className="flex-1 py-2.5 bg-amber-500 text-white font-bold rounded-xl hover:bg-amber-600 transition-all shadow-md shadow-amber-100 flex items-center justify-center gap-2"
+                                     >
+                                         <Edit2 className="w-4 h-4" /> 
+                                         Resume Editing
+                                     </button>
+                                 ) : (
+                                     <button 
+                                         onClick={() => fetchExamDetails(exam._id)}
+                                         className="flex-1 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100 flex items-center justify-center gap-2"
+                                     >
+                                         <BarChart2 className="w-4 h-4" /> 
+                                         View Report
+                                     </button>
+                                 )}
+                                 <button 
+                                     onClick={() => openResultModal(exam)}
+                                     className="p-2.5 bg-slate-50 text-slate-400 font-bold rounded-xl hover:bg-slate-100 transition-all border border-slate-200"
+                                     title="Add Manual Result"
+                                 >
+                                     <Plus className="w-5 h-5" />
+                                 </button>
                              </div>
                         </div>
                     ))}
@@ -580,26 +696,61 @@ const ExamsManagement = () => {
             )}
 
             {isModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
-                    <div className="bg-white rounded-3xl p-8 w-full max-w-2xl shadow-2xl animate-in zoom-in-95 duration-200 my-8">
-                        <div className="flex justify-between items-center mb-6">
-                            <div>
-                                <h2 className="text-2xl font-bold text-slate-800">
-                                    {isEditing ? 'Edit Exam' : (currentStep === 1 ? 'Step 1: Exam Details' : 'Step 2: Add Questions')}
-                                </h2>
-                                <p className="text-sm text-slate-500 font-medium">
-                                    {isEditing ? `Modifying ${formData.title}` : (currentStep === 1 ? 'Configure basic exam settings' : 'Create MCQ questions for the exam')}
-                                </p>
+                <div className="fixed inset-0 z-[100] flex justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-7xl shadow-2xl animate-in zoom-in-95 duration-200 my-auto h-fit max-h-[90vh] overflow-hidden">
+                        <form onSubmit={handleCreateExam} className="flex flex-col max-h-[90vh]">
+                            {/* Sticky Header */}
+                            <div className="flex justify-between items-center p-8 bg-white border-b border-slate-50 shrink-0">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800">
+                                        {isEditing ? 'Edit Exam' : (currentStep === 1 ? 'Step 1: Exam Details' : 'Step 2: Add Questions')}
+                                    </h2>
+                                    <p className="text-sm text-slate-500 font-medium">
+                                        {isEditing ? `Modifying ${formData.title}` : (currentStep === 1 ? 'Configure basic exam settings' : 'Create MCQ questions for the exam')}
+                                    </p>
+                                </div>
+                                <button type="button" onClick={() => {
+                                    setIsModalOpen(false);
+                                    resetForm();
+                                }} className="p-2 hover:bg-slate-100 rounded-xl transition-all"><X className="w-6 h-6 text-slate-400" /></button>
                             </div>
-                            <button onClick={() => {
-                                setIsModalOpen(false);
-                                resetForm();
-                            }} className="p-2 hover:bg-slate-100 rounded-xl transition-all"><X className="w-6 h-6 text-slate-400" /></button>
-                        </div>
 
-                        <form onSubmit={handleCreateExam} className="space-y-6">
                             {currentStep === 1 ? (
+                                <>
+                                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                                 <div className="grid grid-cols-2 gap-6">
+                                    <div className="col-span-2 grid grid-cols-2 gap-4 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-2">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-indigo-400 mb-1 uppercase tracking-widest">Educational Program</label>
+                                            <select 
+                                                value={formData.programType} 
+                                                onChange={(e)=>setFormData({...formData, programType: e.target.value, officialPattern: 'none'})} 
+                                                className="w-full px-4 py-2.5 bg-white border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-slate-700"
+                                            >
+                                                <option value="PrimeOne">PrimeOne</option>
+                                                <option value="Cluster">Cluster</option>
+                                                <option value="PlanB">PlanB</option>
+                                                <option value="Deep Roots">Deep Roots</option>
+                                                <option value="E-Zone">E-Zone (Competitive)</option>
+                                            </select>
+                                        </div>
+                                        {formData.programType === 'E-Zone' && (
+                                            <div className="animate-in fade-in slide-in-from-left-4 duration-300">
+                                                <label className="block text-[10px] font-bold text-indigo-400 mb-1 uppercase tracking-widest">Official Pattern</label>
+                                                <select 
+                                                    value={formData.officialPattern} 
+                                                    onChange={(e)=>setFormData({...formData, officialPattern: e.target.value})} 
+                                                    className="w-full px-4 py-2.5 bg-white border border-indigo-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-slate-700"
+                                                >
+                                                    <option value="none">Custom Pattern</option>
+                                                    <option value="NEET">NEET Pattern</option>
+                                                    <option value="JEE">JEE Pattern</option>
+                                                    <option value="PSC">PSC Pattern</option>
+                                                </select>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className="col-span-2">
                                         <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Exam Title</label>
                                         <input name="title" value={formData.title} onChange={(e)=>setFormData({...formData, title:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required placeholder="Unit Test 1" />
@@ -637,37 +788,151 @@ const ExamsManagement = () => {
                                         </div>
                                     )}
                                     <div>
-                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Duration (Mins)</label>
-                                        <input type="number" name="duration" value={formData.duration} onChange={(e)=>setFormData({...formData, duration:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required />
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Number of Questions</label>
+                                        <input type="number" name="totalQuestions" value={formData.totalQuestions} onChange={(e)=>setFormData({...formData, totalQuestions: parseInt(e.target.value) || 0})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required />
                                     </div>
                                     <div>
                                         <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Total Marks</label>
-                                        <input type="number" name="totalMarks" value={formData.totalMarks} onChange={(e)=>setFormData({...formData, totalMarks:e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required />
+                                        <input type="number" name="totalMarks" value={formData.totalMarks} onChange={(e)=>setFormData({...formData, totalMarks: parseInt(e.target.value) || 0})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" required />
                                     </div>
-                                    <div className="col-span-2 pt-4">
+
+                                    <div className="col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <div className={`p-2 rounded-lg ${formData.hasNegativeMarking ? 'bg-indigo-100 text-indigo-600' : 'bg-slate-200 text-slate-400'}`}>
+                                                    <AlertCircle className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-slate-800">Negative Marking</p>
+                                                    <p className="text-xs text-slate-500 font-medium">Enable for competitive exam patterns</p>
+                                                </div>
+                                            </div>
+                                            <button 
+                                                type="button"
+                                                onClick={() => setFormData(prev => ({ ...prev, hasNegativeMarking: !prev.hasNegativeMarking, negativeMarks: !prev.hasNegativeMarking ? 1 : 0 }))}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.hasNegativeMarking ? 'bg-indigo-600' : 'bg-slate-300'}`}
+                                            >
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.hasNegativeMarking ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-4 pt-2">
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Correct Answer Mark</label>
+                                                <input 
+                                                    type="number" 
+                                                    step="0.1"
+                                                    value={formData.marksPerQuestion} 
+                                                    onChange={(e)=>setFormData({...formData, marksPerQuestion: parseFloat(e.target.value) || 0})} 
+                                                    className="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold" 
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-bold text-slate-400 mb-1 uppercase tracking-widest">Wrong Answer Mark</label>
+                                                <input 
+                                                    type="number" 
+                                                    step="0.1"
+                                                    disabled={!formData.hasNegativeMarking}
+                                                    value={formData.negativeMarks} 
+                                                    onChange={(e)=>setFormData({...formData, negativeMarks: parseFloat(e.target.value) || 0})} 
+                                                    className={`w-full px-4 py-2 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold ${!formData.hasNegativeMarking ? 'opacity-50 cursor-not-allowed' : ''}`} 
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {(() => {
+                                            const totalAttend = formData.sections && formData.sections.length > 0
+                                                ? formData.sections.reduce((acc, s) => acc + (parseInt(s.attendQuestions) || 0), 0)
+                                                : formData.totalQuestions;
+                                            
+                                            const hasMismatch = totalAttend * formData.marksPerQuestion !== formData.totalMarks;
+
+                                            return hasMismatch && (
+                                                <div className="p-3 bg-amber-50 border border-amber-100 rounded-xl flex items-center gap-2 text-[11px] font-bold text-amber-700 animate-pulse">
+                                                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                                                    <span>Calculation Mismatch: {totalAttend} Questions to Attend × {formData.marksPerQuestion} Marks = {totalAttend * formData.marksPerQuestion} Total Marks. Please correct the fields.</span>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                                </div>
+                                
+                                {/* Sticky Footer for Step 1 */}
+                                <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex gap-4 justify-end shrink-0 mt-4 rounded-b-[2rem]">
+                                    <button 
+                                        type="button"
+                                        onClick={handleSaveExamDraft}
+                                        disabled={isSavingDraft}
+                                        className="px-6 py-4 text-amber-600 font-bold border border-amber-200 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {isSavingDraft ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                        Save Draft
+                                    </button>
+                                    <div className="w-full max-w-xs">
                                         <button 
                                             type="button" 
-                                            onClick={() => setCurrentStep(2)}
+                                            onClick={() => {
+                                                const totalAttend = formData.sections && formData.sections.length > 0
+                                                    ? formData.sections.reduce((acc, s) => acc + (parseInt(s.attendQuestions) || 0), 0)
+                                                    : formData.totalQuestions;
+
+                                                if (totalAttend * formData.marksPerQuestion !== formData.totalMarks) {
+                                                    setStatus({ type: 'error', message: `Please correct the total marks calculation. Based on sections, students must attend ${totalAttend} questions.` });
+                                                    return;
+                                                }
+                                                setCurrentStep(2);
+                                            }}
                                             className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                                         >
                                             Next: Add Questions <ChevronRight className="w-5 h-5" />
                                         </button>
                                     </div>
                                 </div>
+                                </>
                             ) : (
                                 <>
+                                <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
                                 <div className="space-y-6">
+                                    <div className="flex items-center justify-between">
+                                        <h4 className="text-sm font-semibold text-slate-700">Exam Questions</h4>
+                                        <button 
+                                            type="button" 
+                                            onClick={addQuestion}
+                                            disabled={formData.questions.length >= formData.totalQuestions}
+                                            className="flex items-center gap-2 text-indigo-600 font-bold text-sm bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                        >
+                                            <Plus className="w-4 h-4" /> Add Question
+                                        </button>
+                                    </div>
+
+                                    {formData.sections && formData.sections.length > 0 && (
+                                        <div className="flex flex-wrap gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                                            {formData.sections.map(section => {
+                                                const sectionCount = formData.questions.filter(q => q.sectionName === section.name).length;
+                                                return (
+                                                    <div key={section.name} className="flex flex-col gap-1 min-w-[120px]">
+                                                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{section.name}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="h-1.5 flex-1 bg-slate-200 rounded-full overflow-hidden">
+                                                                <div 
+                                                                    className={`h-full transition-all duration-500 ${sectionCount > section.totalQuestions ? 'bg-rose-500' : 'bg-indigo-500'}`}
+                                                                    style={{ width: `${Math.min(100, (sectionCount / section.totalQuestions) * 100)}%` }}
+                                                                ></div>
+                                                            </div>
+                                                            <span className={`text-[10px] font-black ${sectionCount > section.totalQuestions ? 'text-rose-600' : 'text-slate-600'}`}>
+                                                                {sectionCount}/{section.totalQuestions}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+
                                     <div className="flex items-center justify-between gap-3">
                                         <h4 className="text-sm font-semibold text-slate-700">Draft Actions</h4>
                                         <div className="flex items-center gap-2">
-                                            <button
-                                                type="button"
-                                                onClick={handleSaveExamDraft}
-                                                disabled={isSavingDraft}
-                                                className="px-3 py-2 text-xs font-bold rounded-lg bg-amber-500 text-white hover:bg-amber-600 disabled:opacity-50"
-                                            >
-                                                {isSavingDraft ? 'Saving...' : 'Save as Draft'}
-                                            </button>
                                             <button
                                                 type="button"
                                                 onClick={fetchDraftQuestions}
@@ -700,19 +965,21 @@ const ExamsManagement = () => {
                                             </ul>
                                         )}
                                     </div>
+                                </div>
                                 <div className="space-y-6">
                                     <div className="flex justify-between items-center">
                                         <h3 className="font-bold text-slate-800 uppercase tracking-wider text-sm">MCQ Questions ({formData.questions.length})</h3>
                                         <button 
                                             type="button" 
                                             onClick={addQuestion}
-                                            className="flex items-center gap-2 text-indigo-600 font-bold text-sm bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-all"
+                                            disabled={formData.questions.length >= formData.totalQuestions}
+                                            className="flex items-center gap-2 text-indigo-600 font-bold text-sm bg-indigo-50 px-3 py-1.5 rounded-lg hover:bg-indigo-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                                         >
                                             <Plus className="w-4 h-4" /> Add Question
                                         </button>
                                     </div>
                                     
-                                    <div className="space-y-6 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
+                                    <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2 custom-scrollbar">
                                         {formData.questions.map((q, qIndex) => (
                                             <div key={qIndex} className="p-5 bg-slate-50 rounded-2xl border border-slate-200 space-y-4 relative group">
                                                 {formData.questions.length > 1 && (
@@ -725,15 +992,33 @@ const ExamsManagement = () => {
                                                     </button>
                                                 )}
                                                 <div className="flex gap-4 items-start">
-                                                    <div className="flex-1">
-                                                        <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Question {qIndex + 1}</label>
-                                                        <textarea 
-                                                            value={q.questionText} 
-                                                            onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
-                                                            className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none min-h-[80px]"
-                                                            placeholder="Enter question here..."
-                                                            required
-                                                        />
+                                                    <div className="flex-1 space-y-3">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="flex-1">
+                                                                <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Question {qIndex + 1}</label>
+                                                                <textarea 
+                                                                    value={q.questionText} 
+                                                                    onChange={(e) => handleQuestionChange(qIndex, 'questionText', e.target.value)}
+                                                                    className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none min-h-[80px]"
+                                                                    placeholder="Enter question here..."
+                                                                    required
+                                                                />
+                                                            </div>
+                                                            {formData.sections && formData.sections.length > 0 && (
+                                                                <div className="w-40">
+                                                                    <label className="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">Subject/Section</label>
+                                                                    <select 
+                                                                        value={q.sectionName} 
+                                                                        onChange={(e) => handleQuestionChange(qIndex, 'sectionName', e.target.value)}
+                                                                        className="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-xs font-bold"
+                                                                        required
+                                                                    >
+                                                                        <option value="">Select Section</option>
+                                                                        {formData.sections.map(s => <option key={s.name} value={s.name}>{s.name}</option>)}
+                                                                    </select>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
                                                     <div className="w-32 flex flex-col items-center gap-2">
                                                         <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">Image</label>
@@ -805,24 +1090,34 @@ const ExamsManagement = () => {
                                             </div>
                                         ))}
                                     </div>
-
-                                    <div className="flex gap-4 pt-4 border-t border-slate-100">
-                                        <button 
-                                            type="button" 
-                                            onClick={() => setCurrentStep(1)} 
-                                            className="flex-1 py-3.5 text-slate-600 font-bold border border-slate-200 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
-                                        >
-                                            <ChevronLeft className="w-5 h-5" /> Back
-                                        </button>
-                                        <button 
-                                            type="submit" 
-                                            className="flex-[2] py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
-                                        >
-                                            Create Exam
-                                        </button>
-                                    </div>
                                 </div>
-                            </div>
+                                </div>
+
+                                {/* Sticky Footer for Step 2 */}
+                                <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex gap-4 shrink-0 rounded-b-[2rem]">
+                                    <button 
+                                        type="button" 
+                                        onClick={() => setCurrentStep(1)} 
+                                        className="flex-1 py-3.5 text-slate-600 font-bold border border-slate-200 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        <ChevronLeft className="w-5 h-5" /> Back
+                                    </button>
+                                    <button 
+                                        type="button"
+                                        onClick={handleSaveExamDraft}
+                                        disabled={isSavingDraft}
+                                        className="flex-1 py-3.5 text-amber-600 font-bold border border-amber-200 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {isSavingDraft ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                        Save Progress
+                                    </button>
+                                    <button 
+                                        type="submit" 
+                                        className="flex-[2] py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                                    >
+                                        {isEditing ? 'Update & Publish' : 'Create & Publish'}
+                                    </button>
+                                </div>
                                 </>
                             )}
                         </form>

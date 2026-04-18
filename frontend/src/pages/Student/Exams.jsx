@@ -28,8 +28,8 @@ const StudentExams = () => {
     const [isInstructionsOpen, setIsInstructionsOpen] = useState(false);
     const [pendingExam, setPendingExam] = useState(null);
 
-    // NEET Player State
-    const [activeSubject, setActiveSubject] = useState("Physics");
+    // Patterned Exam Player State
+    const [activeSectionName, setActiveSectionName] = useState("");
 
     useEffect(() => {
         const fetchExams = async () => {
@@ -116,9 +116,11 @@ const StudentExams = () => {
             setExamResult(null);
             setViolationCount(0);
 
-            // Set initial NEET focus if applicable
-            if (exam.isNeetPattern) {
-                setActiveSubject("Physics");
+            // Set initial Section focus if applicable
+            if (exam.sections && exam.sections.length > 0) {
+                setActiveSectionName(exam.sections[0].name);
+            } else if (exam.isNeetPattern) {
+                setActiveSectionName("Physics"); // Fallback
             }
 
             // Request Fullscreen
@@ -234,19 +236,19 @@ const StudentExams = () => {
     };
 
     const handleAnswerSelect = (questionId, optionIndex) => {
-        // NEET Section B logic: prevent more than 10 attempts
-        if (activeExam?.isNeetPattern) {
-            const question = questions.find(q => q._id === questionId);
-            if (question && selectedAnswers[questionId] === undefined) {
-                const sub = question.subject;
-                const subjectAnswersCount = Object.keys(selectedAnswers).filter(qId => {
+        // Section limit enforcement (e.g., NEET 45/50)
+        const question = questions.find(q => q._id === questionId);
+        if (question && selectedAnswers[questionId] === undefined) {
+            const section = activeExam.sections?.find(s => s.name === question.sectionName);
+            
+            if (section && section.attendQuestions) {
+                const attemptedInSection = Object.keys(selectedAnswers).filter(qId => {
                     const q = questions.find(qu => qu._id === qId);
-                    return q && q.subject === sub;
+                    return q && q.sectionName === section.name;
                 }).length;
 
-                const limit = sub === 'Biology' ? 90 : 45;
-                if (subjectAnswersCount >= limit) {
-                    toast.error(`In NEET, you can only attempt ${limit} questions for ${sub}.`);
+                if (attemptedInSection >= section.attendQuestions) {
+                    toast.error(`You can only attempt ${section.attendQuestions} questions in ${section.name}.`);
                     return;
                 }
             }
@@ -300,12 +302,10 @@ const StudentExams = () => {
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
-    // Filter questions based on NEET subject and section
-    const displayQuestions = activeExam?.isNeetPattern 
-        ? questions.filter(q => q.subject === activeSubject)
+    // Filter questions based on current section
+    const displayQuestions = (activeExam?.sections && activeExam.sections.length > 0)
+        ? questions.filter(q => q.sectionName === activeSectionName)
         : questions;
-
-    const subjects = ["Physics", "Chemistry", "Biology"];
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -492,29 +492,27 @@ const StudentExams = () => {
                             </div>
                         </div>
 
-                        {activeExam.isNeetPattern && !examResult && (
+                        {activeExam.sections && activeExam.sections.length > 0 && !examResult && (
                             <div className="px-8 py-4 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center gap-4">
-                                {subjects.map((sub) => {
+                                {activeExam.sections.map((section) => {
                                     const attemptedCount = Object.keys(selectedAnswers).filter(qId => {
                                         const q = questions.find(qu => qu._id === qId);
-                                        return q && q.subject === sub;
+                                        return q && q.sectionName === section.name;
                                     }).length;
-                                    const limit = sub === 'Biology' ? 90 : 45;
-                                    const totalQs = sub === 'Biology' ? 100 : 50;
 
                                     return (
                                         <button
-                                            key={sub}
+                                            key={section.name}
                                             onClick={() => {
-                                                setActiveSubject(sub);
-                                                const firstQIndex = questions.findIndex(q => q.subject === sub);
+                                                setActiveSectionName(section.name);
+                                                const firstQIndex = questions.findIndex(q => q.sectionName === section.name);
                                                 if (firstQIndex !== -1) setCurrentQuestionIndex(firstQIndex);
                                             }}
-                                            className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-xs font-black transition-all ${activeSubject === sub ? 'bg-cyan-600 text-white shadow-xl shadow-cyan-100 scale-105' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
+                                            className={`flex items-center gap-3 px-6 py-3 rounded-2xl text-xs font-black transition-all ${activeSectionName === section.name ? 'bg-cyan-600 text-white shadow-xl shadow-cyan-100 scale-105' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'}`}
                                         >
-                                            <span>{sub}</span>
-                                            <span className={`px-2 py-0.5 rounded-lg text-[10px] ${activeSubject === sub ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
-                                                {attemptedCount}/{limit}
+                                            <span>{section.name}</span>
+                                            <span className={`px-2 py-0.5 rounded-lg text-[10px] ${activeSectionName === section.name ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-400'}`}>
+                                                {attemptedCount}/{section.attendQuestions || section.totalQuestions}
                                             </span>
                                         </button>
                                     );
@@ -602,35 +600,11 @@ const StudentExams = () => {
                                 </div>
                             ) : (
                                 <div className="space-y-8">
-                                    {/* Question navigation dots - Filtered by Subject/Section if NEET */}
+                                    {/* Question navigation dots - Filtered by activeSectionName */}
                                     <div className="flex flex-wrap gap-2">
-                                        {activeExam.isNeetPattern && (
-                                            <div className="w-full flex items-center gap-2 mb-2">
-                                                <button 
-                                                    onClick={() => setActiveSection("A")}
-                                                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all ${activeSection === 'A' ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-400'}`}
-                                                >
-                                                    Section A
-                                                </button>
-                                                <button 
-                                                    onClick={() => setActiveSection("B")}
-                                                    className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border-2 transition-all ${activeSection === 'B' ? 'bg-slate-900 border-slate-900 text-white' : 'border-slate-200 text-slate-400'}`}
-                                                >
-                                                    Section B
-                                                </button>
-                                                {activeSection === 'B' && (
-                                                    <span className="ml-auto text-[10px] font-black text-cyan-600 bg-cyan-50 px-3 py-1 rounded-full">
-                                                        Attempted: {Object.keys(selectedAnswers).filter(qId => {
-                                                            const q = questions.find(qu => qu._id === qId);
-                                                            return q && q.subject === activeSubject && q.section === 'B';
-                                                        }).length} / 10
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
                                         {questions.map((q, idx) => {
-                                            // Only show dots for current focused subject/section if NEET
-                                            if (activeExam.isNeetPattern && (q.subject !== activeSubject || q.section !== activeSection)) return null;
+                                            // Only show dots for questions in the active section (if sections exist)
+                                            if (activeExam.sections?.length > 0 && q.sectionName !== activeSectionName) return null;
                                             
                                             return (
                                                 <button
@@ -653,9 +627,9 @@ const StudentExams = () => {
                                     {questions[currentQuestionIndex] && (
                                         <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
                                             <div className="flex items-center gap-2">
-                                                {activeExam.isNeetPattern && (
+                                                {activeExam.sections?.length > 0 && (
                                                     <span className="px-3 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-black rounded-full uppercase tracking-widest">
-                                                        {questions[currentQuestionIndex].subject} • Section {questions[currentQuestionIndex].section}
+                                                        {questions[currentQuestionIndex].sectionName}
                                                     </span>
                                                 )}
                                                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Question {currentQuestionIndex + 1}</span>
@@ -764,7 +738,26 @@ const StudentExams = () => {
                                         </button>
                                     ) : (
                                         <button
-                                            onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                                            onClick={() => {
+                                                // Find next question in current section or prompt to move to next section
+                                                const nextIdx = questions.findIndex((q, i) => i > currentQuestionIndex && (activeExam.sections?.length === 0 || q.sectionName === activeSectionName));
+                                                if (nextIdx !== -1) {
+                                                    setCurrentQuestionIndex(nextIdx);
+                                                } else if (activeExam.sections?.length > 0) {
+                                                    // Move to next section
+                                                    const currentSecIdx = activeExam.sections.findIndex(s => s.name === activeSectionName);
+                                                    if (currentSecIdx < activeExam.sections.length - 1) {
+                                                        const nextSec = activeExam.sections[currentSecIdx + 1];
+                                                        setActiveSectionName(nextSec.name);
+                                                        const firstQOfNextSec = questions.findIndex(q => q.sectionName === nextSec.name);
+                                                        if (firstQOfNextSec !== -1) setCurrentQuestionIndex(firstQOfNextSec);
+                                                    } else {
+                                                        setCurrentQuestionIndex(questions.length - 1); // Go to last item (or show submit)
+                                                    }
+                                                } else {
+                                                    setCurrentQuestionIndex(prev => prev + 1);
+                                                }
+                                            }}
                                             className="flex items-center gap-2 px-8 py-3 rounded-full bg-slate-900 text-white font-black hover:bg-cyan-600 transition-all shadow-xl"
                                         >
                                             Next Question

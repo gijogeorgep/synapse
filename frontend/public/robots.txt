@@ -11,4 +11,4 @@ Disallow: /notifications
 Disallow: /admin-portal-auth
 Disallow: /maintenance
 
-Sitemap: https://synapseeduhub.com/api/sitemap/sitemap.xml
+Sitemap: /sitemap.xml

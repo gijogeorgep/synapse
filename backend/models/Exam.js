@@ -11,12 +11,10 @@ const examSchema = new mongoose.Schema(
         },
         date: {
             type: Date,
-            required: true,
             default: Date.now
         },
         duration: {
             type: Number, // in minutes
-            required: true,
         },
         totalMarks: {
             type: Number,
@@ -25,11 +23,9 @@ const examSchema = new mongoose.Schema(
         },
         subject: {
             type: String,
-            required: true,
         },
         classLevel: {
             type: String,
-            required: true,
         },
         examCategory: {
             type: String,
@@ -40,6 +36,22 @@ const examSchema = new mongoose.Schema(
             type: String,
             enum: ["official", "subject-wise", "mock"],
             default: "subject-wise",
+        },
+        programType: {
+            type: String,
+            enum: ["PrimeOne", "Cluster", "PlanB", "Deep Roots", "E-Zone"],
+            default: "PrimeOne",
+        },
+        sections: [
+            {
+                name: String, // e.g., 'Physics', 'Chemistry', 'Botany', 'Zoology'
+                totalQuestions: Number,
+                attendQuestions: Number,
+            }
+        ],
+        totalQuestions: {
+            type: Number,
+            default: 0,
         },
         marksPerQuestion: {
             type: Number,
@@ -52,7 +64,6 @@ const examSchema = new mongoose.Schema(
         classroom: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Classroom",
-            required: true,
         },
         teacher: {
             type: mongoose.Schema.Types.ObjectId,

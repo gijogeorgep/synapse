@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { BookCopy, PlusCircle, FileText, Video, Link, Trash2, CheckCircle2, AlertCircle, X, Eye, Download } from 'lucide-react';
 import { getAdminResources, getAdminClassrooms, createAdminResource, deleteAdminResource, uploadImage, uploadFile } from '../../../api/services';
+import { getApiUrl } from '../../../api/apiClient';
 
 const LibraryManagement = () => {
     const [resources, setResources] = useState([]);
@@ -179,7 +180,7 @@ const LibraryManagement = () => {
                                     </button>
                                     <div className="flex items-center space-x-2 border-l border-slate-100 pl-2">
                                         <a
-                                            href={(res.fileType === 'pdf' || res.fileUrl?.toLowerCase().includes('.pdf')) ? `/api/materials/view/${res._id}/preview.pdf` : (res.fileUrl || "#")}
+                                            href={(res.fileType === 'pdf' || res.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${res._id}/preview.pdf` : (res.fileUrl || "#")}
                                             target="_blank"
                                             rel="noreferrer"
                                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-slate-800 text-[10px] font-bold hover:bg-slate-50 transition-all shadow-sm"
@@ -189,7 +190,7 @@ const LibraryManagement = () => {
                                             <span>VIEW</span>
                                         </a>
                                         <a
-                                            href={(res.fileType === 'pdf' || res.fileUrl?.toLowerCase().includes('.pdf')) ? `/api/materials/view/${res._id}?download=true` : (res.fileUrl ? res.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
+                                            href={(res.fileType === 'pdf' || res.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${res._id}?download=true` : (res.fileUrl ? res.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
                                             download
                                             rel="noreferrer"
                                             className="p-1.5 rounded-lg bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 transition-all"

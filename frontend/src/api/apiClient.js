@@ -17,7 +17,14 @@ export const getApiUrl = () => {
     // If it already ends with /api, use it as is
     if (base.endsWith("/api") || base.endsWith("/api/")) return base.replace(/\/$/, "");
     // Otherwise, append /api
-    return `${base.replace(/\/$/, "")}/api`;
+    const resolvedUrl = `${base.replace(/\/$/, "")}/api`;
+    
+    // Log for debugging in development only
+    if (import.meta.env.DEV) {
+        // console.log(`[API_CLIENT] API URL resolved to: ${resolvedUrl}`);
+    }
+
+    return resolvedUrl;
 };
 
 const apiClient = async (endpoint, { body, ...customConfig } = {}) => {
