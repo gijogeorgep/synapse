@@ -275,13 +275,25 @@ const Navbar = () => {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button */}
-                    <button
-                        className="relative z-10 rounded-full border border-white/35 bg-white/18 p-2.5 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-xl transition-all duration-300 hover:bg-white/28 hover:text-cyan-800 md:hidden"
-                        onClick={() => setIsOpen(!isOpen)}
-                    >
-                        {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-                    </button>
+                    {/* Mobile Menu Button + Install Icon */}
+                    <div className="flex items-center gap-2 md:hidden">
+                        {installPrompt && (
+                            <button
+                                onClick={handleInstallClick}
+                                className="relative z-10 rounded-full border border-cyan-200/40 bg-cyan-50/50 p-2.5 text-cyan-700 shadow-sm transition-all duration-300"
+                                title="Install App"
+                            >
+                                <Download className="w-5 h-5" />
+                            </button>
+                        )}
+                        <button
+                            className="relative z-10 rounded-full border border-white/35 bg-white/18 p-2.5 text-slate-700 shadow-[inset_0_1px_0_rgba(255,255,255,0.4)] backdrop-blur-xl transition-all duration-300 hover:bg-white/28 hover:text-cyan-800"
+                            onClick={() => setIsOpen(!isOpen)}
+                        >
+                            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
+
                     </div>
                 </div>
 
@@ -307,15 +319,7 @@ const Navbar = () => {
                             </button>
                         </div>
 
-                        {installPrompt && (
-                            <button
-                                onClick={handleInstallClick}
-                                className="mb-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-200/60 bg-cyan-50/50 py-3 text-sm font-semibold text-cyan-700 shadow-sm"
-                            >
-                                <Download className="h-5 w-5" />
-                                <span>Install App</span>
-                            </button>
-                        )}
+
 
 
                         {!isDashboard && navItems.map((item) => (
