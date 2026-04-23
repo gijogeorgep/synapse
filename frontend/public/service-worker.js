@@ -1,14 +1,12 @@
-const CACHE_NAME = 'synapse-cache-v4';
+const CACHE_NAME = 'synapse-cache-v5';
 const urlsToCache = [
   '/',
   '/index.html',
   '/manifest.json',
   '/app-icon-192.png',
-  '/app-icon-512.png',
-
-
-  '/synapse_favicon.png'
+  '/app-icon-512.png'
 ];
+
 
 // Install a service worker
 self.addEventListener('install', (event) => {
