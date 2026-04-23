@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Menu, X, LogIn, LogOut, Layout, ChevronDown, Bell } from "lucide-react";
+import { Menu, X, LogIn, LogOut, Layout, ChevronDown, Bell, Download } from "lucide-react";
+
 import logo from "../../assets/synapse_logo.png";
 import AuthModal from "../Shared/AuthModal";
 import LogoutConfirmModal from "../Shared/LogoutConfirmModal";
@@ -16,6 +17,8 @@ const Navbar = () => {
     const [authMode, setAuthMode] = useState("login");
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [installPrompt, setInstallPrompt] = useState(null);
+
     const isAdminUser = ["admin", "superadmin"].includes(user?.role);
     const isAdminRoute = location.pathname.startsWith("/admin");
     const logoTarget = isAdminUser && isAdminRoute ? "/admin/dashboard" : "/";
@@ -32,6 +35,25 @@ const Navbar = () => {
             });
         }
     }, [user]);
+
+    useEffect(() => {
+        const handleBeforeInstallPrompt = (e) => {
+            e.preventDefault();
+            setInstallPrompt(e);
+        };
+        window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+        return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    }, []);
+
+    const handleInstallClick = async () => {
+        if (!installPrompt) return;
+        installPrompt.prompt();
+        const { outcome } = await installPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setInstallPrompt(null);
+        }
+    };
+
 
     const handleLogoutConfirm = () => {
         setShowLogoutModal(false);
@@ -155,6 +177,16 @@ const Navbar = () => {
 
                     {/* Desktop Auth Area */}
                     <div className="relative z-10 hidden items-center gap-4 md:flex">
+                        {installPrompt && (
+                            <button
+                                onClick={handleInstallClick}
+                                className="flex items-center gap-2 rounded-full border border-cyan-200/60 bg-cyan-50/50 px-4 py-2 text-sm font-semibold text-cyan-700 shadow-sm transition-all duration-300 hover:bg-cyan-100/60"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>Install App</span>
+                            </button>
+                        )}
+
                         {/* Admin Minimal Portal View */}
                         {user && isAdminUser && isDashboard ? (
                             <div className="flex items-center gap-6">
@@ -274,6 +306,17 @@ const Navbar = () => {
                                 <X className="h-5 w-5" />
                             </button>
                         </div>
+
+                        {installPrompt && (
+                            <button
+                                onClick={handleInstallClick}
+                                className="mb-6 flex w-full items-center justify-center gap-2 rounded-2xl border border-cyan-200/60 bg-cyan-50/50 py-3 text-sm font-semibold text-cyan-700 shadow-sm"
+                            >
+                                <Download className="h-5 w-5" />
+                                <span>Install App</span>
+                            </button>
+                        )}
+
 
                         {!isDashboard && navItems.map((item) => (
                             item.isDropdown ? (
