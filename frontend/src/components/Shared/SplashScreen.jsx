@@ -1,20 +1,31 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 const SplashScreen = ({ onComplete }) => {
   const [isFadingOut, setIsFadingOut] = useState(false);
+  // Store onComplete in a ref so the effect never re-runs when parent re-renders
+  const onCompleteRef = useRef(onComplete);
+  useEffect(() => { onCompleteRef.current = onComplete; });
 
   useEffect(() => {
     // Show splash for 2 seconds then start fade out
-    const timer = setTimeout(() => {
+    const fadeTimer = setTimeout(() => {
       setIsFadingOut(true);
       // After fade out animation (500ms), call onComplete
       setTimeout(() => {
-        onComplete();
+        onCompleteRef.current?.();
       }, 500);
     }, 2000);
 
-    return () => clearTimeout(timer);
-  }, [onComplete]);
+    // Safety: force dismiss after 4s even if something goes wrong
+    const safetyTimer = setTimeout(() => {
+      onCompleteRef.current?.();
+    }, 4000);
+
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(safetyTimer);
+    };
+  }, []); // ← empty deps: runs ONCE on mount only
 
   return (
     <div 
