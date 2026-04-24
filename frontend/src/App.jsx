@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Link } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import "./App.css";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
@@ -8,6 +8,7 @@ import Footer from "./components/Footer";
 import ProtectedRoute from "./components/Shared/ProtectedRoute";
 import SEO from "./components/Shared/SEO";
 import DashboardLayout from "./components/Layout/DashboardLayout";
+import SplashScreen from "./components/Shared/SplashScreen";
 
 // Landing Page Sections (Still in root components for now, can move later)
 import Hero from "./components/Hero";
@@ -316,10 +317,15 @@ function AppContent() {
 }
 
 function App() {
+  const [showSplash, setShowSplash] = useState(true);
+
   return (
-    <Router>
-      <AppContent />
-    </Router>
+    <>
+      {showSplash && <SplashScreen onComplete={() => setShowSplash(false)} />}
+      <Router>
+        <AppContent />
+      </Router>
+    </>
   );
 }
 
