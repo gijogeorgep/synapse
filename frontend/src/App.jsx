@@ -225,7 +225,10 @@ function RouteSeo() {
 
 function AppContent() {
   const location = useLocation();
-  const isAdminAuth = location.pathname === "/admin-portal-auth";
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
+  const isHostAdmin = hostname.includes('admin.synapseeduhub.com') || hostname.startsWith('admin.');
+  
+  const isAdminAuth = location.pathname === "/admin-portal-auth" || (isHostAdmin && location.pathname === "/");
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isDashboardRoute =
     location.pathname.startsWith("/student") ||
@@ -241,7 +244,7 @@ function AppContent() {
       {showFloatingWhatsApp && <FloatingWhatsApp />}
       <div className={`flex-1 ${!isAdminAuth ? "mt-20 md:mt-24" : ""}`}>
         <Routes>
-          <Route path="/" element={<LandingPage />} />
+          <Route path="/" element={isHostAdmin ? <AdminAuth /> : <LandingPage />} />
           <Route path="/admin-portal-auth" element={<AdminAuth />} />
 
           {/* Public Pages */}

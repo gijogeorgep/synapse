@@ -1,41 +1,29 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 const SplashScreen = ({ onComplete }) => {
   const [isFadingOut, setIsFadingOut] = useState(false);
-  // Store onComplete in a ref so the effect never re-runs when parent re-renders
-  const onCompleteRef = useRef(onComplete);
-  useEffect(() => { onCompleteRef.current = onComplete; });
 
   useEffect(() => {
     // Show splash for 2 seconds then start fade out
-    const fadeTimer = setTimeout(() => {
+    const timer = setTimeout(() => {
       setIsFadingOut(true);
       // After fade out animation (500ms), call onComplete
       setTimeout(() => {
-        onCompleteRef.current?.();
+        onComplete();
       }, 500);
     }, 2000);
 
-    // Safety: force dismiss after 4s even if something goes wrong
-    const safetyTimer = setTimeout(() => {
-      onCompleteRef.current?.();
-    }, 4000);
-
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(safetyTimer);
-    };
-  }, []); // ← empty deps: runs ONCE on mount only
+    return () => clearTimeout(timer);
+  }, [onComplete]);
 
   return (
-    <div 
-      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-white transition-opacity duration-500 ease-in-out ${
-        isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
-      }`}
+    <div
+      className={`fixed inset-0 z-[9999] flex items-center justify-center bg-white transition-opacity duration-500 ease-in-out ${isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
     >
       {/* Background Gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-50/50 via-white to-sky-50/50" />
-      
+
       {/* Animated Shapes for Premium Feel */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-200/20 rounded-full blur-[120px] animate-pulse" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-sky-200/20 rounded-full blur-[120px] animate-pulse" />
@@ -44,9 +32,9 @@ const SplashScreen = ({ onComplete }) => {
         {/* Logo with Animation */}
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-3xl animate-pulse scale-150" />
-          <img 
-            src="/app-icon-512.png" 
-            alt="Synapse Logo" 
+          <img
+            src="/app-icon-512.png"
+            alt="Synapse Logo"
             className="h-32 md:h-48 w-auto object-contain relative animate-logo-in"
           />
         </div>
