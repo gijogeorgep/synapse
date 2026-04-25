@@ -1,5 +1,5 @@
 import express from "express";
-import { getMyClassrooms, updateClassroomResources, getPublicClassrooms, enrollInClassroom } from "../controllers/classroomController.js";
+import { getMyClassrooms, updateClassroomResources, getPublicClassrooms, enrollInClassroom, deleteClassroomResource, viewClassroomResourceProxy } from "../controllers/classroomController.js";
 import { protect } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
@@ -10,13 +10,10 @@ router.get("/public", getPublicClassrooms);
 // Private routes
 router.use(protect);
 
-router.route("/my-classrooms")
-    .get(getMyClassrooms);
-
-router.route("/:id/resources")
-    .put(updateClassroomResources);
-
-router.route("/:id/enroll")
-    .post(enrollInClassroom);
+router.get("/view-note/:id/:noteId", viewClassroomResourceProxy);
+router.get("/my-classrooms", getMyClassrooms);
+router.put("/:id/resources", updateClassroomResources);
+router.delete("/:id/resources/:noteId", deleteClassroomResource);
+router.post("/:id/enroll", enrollInClassroom);
 
 export default router;

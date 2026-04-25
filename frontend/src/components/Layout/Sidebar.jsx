@@ -20,11 +20,12 @@ import {
     Sparkles,
     ChevronLeft,
     ChevronRight,
+    X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 
-const Sidebar = ({ role, collapsed = false, onToggleCollapse }) => {
+const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setIsMobileOpen }) => {
     const { logout } = useAuth();
     const navigate = useNavigate();
     const [showLogoutModal, setShowLogoutModal] = useState(false);
@@ -92,32 +93,47 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse }) => {
                 onConfirm={handleLogoutConfirm}
                 onCancel={() => setShowLogoutModal(false)}
             />
+            {/* Mobile Overlay */}
+            {isMobileOpen && (
+                <div
+                    className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden"
+                    onClick={() => setIsMobileOpen(false)}
+                />
+            )}
             <aside
-                className={`sticky top-24 flex h-[calc(100vh-6rem)] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-all duration-300 ${
-                    collapsed ? "w-20" : "w-64"
-                }`}
+                className={`fixed lg:sticky top-20 md:top-24 z-50 flex h-[calc(100vh-5rem)] md:h-[calc(100vh-6rem)] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-all duration-300 ${
+                    isMobileOpen ? "translate-x-0 w-56 left-0 shadow-2xl" : "-translate-x-full lg:translate-x-0 left-0 lg:left-auto"
+                } ${collapsed ? "lg:w-20 w-0" : "lg:w-60 w-0"}`}
             >
-                <div className={`flex items-center ${collapsed ? "justify-center px-3 py-5" : "justify-end px-6 py-5"}`}>
+                <div className={`flex items-center ${collapsed ? "lg:justify-center px-3 py-5" : "justify-end px-6 py-5"} ${isMobileOpen ? 'justify-between' : ''}`}>
                     <button
                         type="button"
                         onClick={onToggleCollapse}
-                        className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-cyan-600"
+                        className="hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-cyan-600"
                         aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                         title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                     >
                         {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
                     </button>
+                    <button
+                        type="button"
+                        onClick={() => setIsMobileOpen(false)}
+                        className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-cyan-600"
+                    >
+                        <X className="h-5 w-5" />
+                    </button>
                 </div>
 
-                <div className={collapsed ? "px-3 pb-6" : "px-6 pb-6"}>
+                <div className={collapsed ? "lg:px-3 pb-6 px-6" : "px-6 pb-6"}>
                     <nav className="space-y-2">
                         {currentLinks.map((link) => (
                             <NavLink
                                 key={link.path}
                                 to={link.path}
+                                onClick={() => setIsMobileOpen?.(false)}
                                 className={({ isActive }) =>
                                     `group flex items-center rounded-xl font-semibold transition-all ${
-                                        collapsed ? "justify-center px-3 py-3" : "space-x-3 px-4 py-3"
+                                        collapsed ? "lg:justify-center lg:px-3 lg:py-3 space-x-3 px-4 py-3" : "space-x-3 px-4 py-3"
                                     } ${isActive
                                         ? "bg-cyan-50 text-cyan-600 shadow-sm"
                                         : "text-slate-600 hover:bg-slate-50 hover:text-cyan-600"
@@ -126,22 +142,22 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse }) => {
                                 title={collapsed ? link.name : undefined}
                             >
                                 <link.icon className="w-5 h-5" />
-                                {!collapsed && <span>{link.name}</span>}
+                                <span className={collapsed ? "lg:hidden" : ""}>{link.name}</span>
                             </NavLink>
                         ))}
                     </nav>
                 </div>
 
-                <div className={`mt-auto border-t border-slate-100 ${collapsed ? "p-3" : "p-6"}`}>
+                <div className={`mt-auto border-t border-slate-100 ${collapsed ? "lg:p-3 p-6" : "p-6"}`}>
                     <button
                         onClick={() => setShowLogoutModal(true)}
                         className={`w-full flex items-center rounded-xl font-semibold text-red-600 transition-all group hover:bg-red-50 ${
-                            collapsed ? "justify-center px-3 py-3" : "space-x-3 px-4 py-3"
+                            collapsed ? "lg:justify-center lg:px-3 lg:py-3 space-x-3 px-4 py-3" : "space-x-3 px-4 py-3"
                         }`}
                         title={collapsed ? "Logout" : undefined}
                     >
                         <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                        {!collapsed && <span>Logout</span>}
+                        <span className={collapsed ? "lg:hidden" : ""}>Logout</span>
                     </button>
                 </div>
             </aside>

@@ -234,3 +234,33 @@ export const viewSubmissionFile = async (req, res) => {
         });
     }
 };
+
+// @desc    Delete assignment
+// @route   DELETE /api/assignments/:id
+// @access  Private (Teacher/Admin)
+export const deleteAssignment = async (req, res) => {
+    try {
+        const assignment = await Assignment.findById(req.params.id);
+        if (!assignment) {
+            return res.status(404).json({ message: "Assignment not found" });
+        }
+
+        const classroom = await Classroom.findById(assignment.classroom);
+        if (!classroom) {
+            return res.status(404).json({ message: "Classroom not found" });
+        }
+
+        const isTeacher = classroom.teachers.some(t => t.toString() === req.user._id.toString());
+        const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
+        if (!isAdmin && !isTeacher) {
+            return res.status(403).json({ message: "Not authorized to delete assignments here" });
+        }
+
+        await Submission.deleteMany({ assignment: assignment._id });
+        await Assignment.findByIdAndDelete(req.params.id);
+
+        res.status(200).json({ message: "Assignment deleted successfully" });
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};

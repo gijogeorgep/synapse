@@ -93,6 +93,9 @@ export const updateClassroomResources = (id, resourceData) =>
     body: resourceData,
   });
 
+export const deleteClassroomResource = (classroomId, noteId) =>
+  apiClient(`/classrooms/${classroomId}/resources/${noteId}`, { method: "DELETE" });
+
 // Admin Services
 export const getAdminClassrooms = () => apiClient("/admin/classrooms");
 export const getAdminClassroomById = (id) => apiClient(`/admin/classrooms/${id}`);
@@ -156,6 +159,8 @@ export const getAssignments = (classroomId) =>
   apiClient(`/assignments/classroom/${classroomId}`);
 export const createAssignment = (assignmentData) =>
   apiClient("/assignments", { method: "POST", body: assignmentData });
+export const deleteAssignment = (assignmentId) =>
+  apiClient(`/assignments/${assignmentId}`, { method: "DELETE" });
 export const getAssignmentSubmissions = (assignmentId) =>
   apiClient(`/assignments/${assignmentId}/submissions`);
 export const submitHomework = (assignmentId, submissionData) =>

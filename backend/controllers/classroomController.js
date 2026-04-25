@@ -1,6 +1,7 @@
 import Classroom from "../models/Classroom.js";
 import { generateUniqueId } from "../utils/idGenerator.js";
 import User from "../models/User.js";
+import cloudinary from "../config/cloudinary.js";
 
 // @desc    Get user's allocated classrooms
 // @route   GET /api/classrooms/my-classrooms
@@ -63,6 +64,35 @@ export const updateClassroomResources = async (req, res) => {
             classroom.lectureNotes.push(lectureNote);
         }
 
+        await classroom.save();
+        res.status(200).json(classroom);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+// @desc    Delete classroom resource (lecture note)
+// @route   DELETE /api/classrooms/:id/resources/:noteId
+// @access  Private (Teacher/Admin)
+export const deleteClassroomResource = async (req, res) => {
+    try {
+        const { noteId } = req.params;
+        const classroom = await Classroom.findById(req.params.id);
+
+        if (!classroom) {
+            return res.status(404).json({ message: "Classroom not found" });
+        }
+
+        // Check if user is an admin/superadmin or a teacher assigned to this classroom
+        const isTeacher = classroom.teachers.some(t => t.toString() === req.user._id.toString());
+        const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
+        if (!isAdmin && !isTeacher) {
+            return res.status(403).json({ message: "Not authorized to update this classroom" });
+        }
+
+        classroom.lectureNotes = classroom.lectureNotes.filter(note => note._id.toString() !== noteId);
+        
         await classroom.save();
         res.status(200).json(classroom);
     } catch (error) {
@@ -144,6 +174,67 @@ export const enrollInClassroom = async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+// @desc    View classroom resource (lecture note) via proxy
+// @route   GET /api/classrooms/:id/resources/:noteId/view
+// @access  Private (Student/Teacher/Admin)
+export const viewClassroomResourceProxy = async (req, res) => {
+    const { id, noteId } = req.params;
+    console.log(`[VIEW_RESOURCE_PROXY] Request received for classroom ${id}, note ${noteId}`);
+
+    try {
+        const classroom = await Classroom.findById(id);
+        if (!classroom) return res.status(404).json({ message: "Classroom not found" });
+
+        const note = classroom.lectureNotes.id(noteId);
+        if (!note) return res.status(404).json({ message: "Lecture note not found" });
+
+        if (!note.url) return res.status(404).json({ message: "No URL found" });
+
+        // Access check: Student must be in the classroom, or user is teacher/admin
+        const isStudent = classroom.students.some(s => s.toString() === req.user._id.toString());
+        const isTeacher = classroom.teachers.some(t => t.toString() === req.user._id.toString());
+        const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
+
+        if (!isStudent && !isTeacher && !isAdmin) {
+            return res.status(403).json({ message: "Not authorized to view this resource" });
+        }
+
+        let publicId = null;
+        if (note.url) {
+            const parts = note.url.split('/');
+            const uploadIndex = parts.indexOf('upload');
+            if (uploadIndex !== -1) {
+                // public_id is everything after the version (v12345...)
+                publicId = parts.slice(uploadIndex + 2).join('/').split('.')[0];
+            }
+        }
+
+        const secureUrl = cloudinary.url(publicId || note.url, {
+            resource_type: 'raw',
+            sign_url: true,
+            secure: true
+        });
+
+        console.log(`[VIEW_RESOURCE_PROXY] Fetching: ${secureUrl}`);
+
+        const response = await fetch(secureUrl);
+        if (!response.ok) {
+            throw new Error(`Cloudinary responded with ${response.status}`);
+        }
+
+        // We assume lecture notes uploaded to 'raw' are typically PDFs
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+
+        const arrayBuffer = await response.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+    } catch (error) {
+        console.error("[VIEW_RESOURCE_PROXY] Error:", error);
+        res.status(500).json({ message: "Error viewing document" });
     }
 };
 

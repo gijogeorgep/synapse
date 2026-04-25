@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 
 import {
     Video,
@@ -15,7 +16,8 @@ import {
     Calendar,
     Plus,
     CheckCircle2,
-    Loader2
+    Loader2,
+    Trash2
 } from "lucide-react";
 import { 
     updateClassroomResources, 
@@ -23,11 +25,14 @@ import {
     getAssignments, 
     createAssignment, 
     getAssignmentSubmissions, 
-    gradeHomework 
+    gradeHomework,
+    deleteAssignment,
+    deleteClassroomResource
 } from "../../api/services";
 import { getApiUrl } from "../../api/apiClient";
 
 const TeacherClassroom = () => {
+    const { user } = useAuth();
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -84,6 +89,7 @@ const TeacherClassroom = () => {
     const [gradingSubmission, setGradingSubmission] = useState(null);
     const [gradeData, setGradeData] = useState({ score: "", feedback: "" });
     const [isGrading, setIsGrading] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, type: null, id: null });
 
     const getSubmissionScore = (submission) => {
         if (submission?.score !== null && submission?.score !== undefined) {
@@ -280,6 +286,36 @@ const TeacherClassroom = () => {
         }
     };
 
+    const executeDeleteLecture = async (noteId) => {
+        try {
+            const updatedClassroom = await deleteClassroomResource(classroom._id, noteId);
+            setLectures(updatedClassroom.lectureNotes);
+            toast.success("Lecture note deleted");
+        } catch (error) {
+            console.error("Error deleting lecture:", error);
+            toast.error("Failed to delete lecture note");
+        } finally {
+            setDeleteConfirm({ isOpen: false, type: null, id: null });
+        }
+    };
+
+    const executeDeleteAssignment = async (assignmentId) => {
+        try {
+            await deleteAssignment(assignmentId);
+            const remaining = assignments.filter(a => a._id !== assignmentId);
+            setAssignments(remaining);
+            if (selectedAssignment?._id === assignmentId) {
+                setSelectedAssignment(remaining.length > 0 ? remaining[0] : null);
+            }
+            toast.success("Assignment deleted");
+        } catch (error) {
+            console.error("Error deleting assignment:", error);
+            toast.error("Failed to delete assignment");
+        } finally {
+            setDeleteConfirm({ isOpen: false, type: null, id: null });
+        }
+    };
+
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
             <button
@@ -424,14 +460,23 @@ const TeacherClassroom = () => {
                                             {new Date(lec.createdAt).toLocaleDateString()}
                                         </p>
                                     </div>
-                                    <a
-                                        href={lec.url}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-xs font-semibold text-cyan-600 hover:text-cyan-700 shrink-0"
-                                    >
-                                        View
-                                    </a>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                        <a
+                                            href={lec._id ? `${getApiUrl()}/classrooms/view-note/${classroom._id}/${lec._id}?token=${user?.token}` : lec.url || "#"}
+                                            target="_blank"
+                                            rel="noreferrer"
+                                            className="text-xs font-semibold text-cyan-600 hover:text-cyan-700"
+                                        >
+                                            View
+                                        </a>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDeleteConfirm({ isOpen: true, type: 'lecture', id: lec._id })}
+                                            className="text-xs font-semibold text-rose-600 hover:text-rose-700"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -548,6 +593,14 @@ const TeacherClassroom = () => {
                                             <span>•</span>
                                             <span>{submissions.length} submissions</span>
                                         </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setDeleteConfirm({ isOpen: true, type: 'assignment', id: selectedAssignment._id })}
+                                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-semibold hover:bg-rose-100 transition-colors"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                            Delete
+                                        </button>
                                     </div>
 
                                     <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
@@ -687,6 +740,48 @@ const TeacherClassroom = () => {
                             </div>
                         </div>
                     )}
+                    
+                    {/* Delete Confirmation Modal */}
+                    {deleteConfirm.isOpen && (
+                        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                            <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl p-6 md:p-8 space-y-6 animate-in zoom-in-95 duration-300 text-center">
+                                <div className="w-16 h-16 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <AlertCircle className="w-8 h-8" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-bold text-slate-900">Confirm Deletion</h3>
+                                    <p className="text-sm text-slate-500 mt-2">
+                                        {deleteConfirm.type === 'lecture' 
+                                            ? "Are you sure you want to delete this lecture note? This action cannot be undone."
+                                            : "Are you sure you want to delete this assignment? All associated student submissions will also be permanently deleted."}
+                                    </p>
+                                </div>
+                                <div className="flex gap-3 pt-4">
+                                    <button
+                                        type="button"
+                                        onClick={() => setDeleteConfirm({ isOpen: false, type: null, id: null })}
+                                        className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-700 font-bold text-sm hover:bg-slate-200 transition-colors"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (deleteConfirm.type === 'lecture') {
+                                                executeDeleteLecture(deleteConfirm.id);
+                                            } else {
+                                                executeDeleteAssignment(deleteConfirm.id);
+                                            }
+                                        }}
+                                        className="flex-1 py-3 rounded-xl bg-rose-600 text-white font-bold text-sm shadow-lg shadow-rose-600/20 hover:bg-rose-700 transition-colors"
+                                    >
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {previewSubmission && (
                         <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
                             <div className="w-full max-w-5xl h-[85vh] rounded-[2rem] bg-white shadow-2xl overflow-hidden flex flex-col">
