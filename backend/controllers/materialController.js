@@ -213,13 +213,15 @@ export const viewMaterialProxy = async (req, res) => {
 
         const isPdf = material.fileType === 'pdf';
         const contentType = isPdf ? 'application/pdf' : (response.headers.get('content-type') || 'image/jpeg');
-        res.setHeader('Content-Type', contentType);
+        // Content headers will be set in the if/else block below
         
         if (req.query.download === 'true') {
-            res.setHeader('Content-Disposition', `attachment; filename="${material.title || 'document'}.pdf"`);
+            const extension = isPdf ? 'pdf' : (contentType.split('/')[1] || 'bin');
+            res.setHeader('Content-Type', contentType);
+            res.setHeader('Content-Disposition', `attachment; filename="${material.title || 'document'}.${extension}"`);
         } else {
             // Force inline headers to ensure browser previewing
-            res.setHeader('Content-Type', 'application/pdf');
+            res.setHeader('Content-Type', contentType);
             res.setHeader('Content-Disposition', 'inline');
             res.setHeader('X-Content-Type-Options', 'nosniff');
         }

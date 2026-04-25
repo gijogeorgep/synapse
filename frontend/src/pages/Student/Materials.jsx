@@ -1,6 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { BookOpen, FileText, Search, Download, ExternalLink, Filter, Loader2, Eye } from "lucide-react";
+import { BookOpen, FileText, Search, Download, ExternalLink, Filter, Loader2, Eye, X } from "lucide-react";
 import { getMaterials } from "../../api/services";
 import { getApiUrl } from "../../api/apiClient";
 
@@ -15,6 +15,7 @@ const StudentMaterials = () => {
     const [subjectFilter, setSubjectFilter] = useState("All");
     const [materials, setMaterials] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [selectedMaterial, setSelectedMaterial] = useState(null);
 
     useEffect(() => {
         const fetchMaterials = async () => {
@@ -170,16 +171,14 @@ const StudentMaterials = () => {
                                     </div>
 
                                     <div className="flex items-center gap-2 justify-end">
-                                        <a
-                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}/preview.pdf?token=${user?.token}` : (it.fileUrl || "#")}
-                                            target="_blank"
-                                            rel="noreferrer"
+                                        <button
+                                            onClick={() => setSelectedMaterial(it)}
                                             className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-colors"
                                             title="Preview File"
                                         >
                                             <Eye className="w-4 h-4" />
                                             <span>View</span>
-                                        </a>
+                                        </button>
                                         <a
                                             href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}?download=true&token=${user?.token}` : (it.fileUrl ? it.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
                                             download
@@ -215,6 +214,70 @@ const StudentMaterials = () => {
                     </aside>
                 </div>
             </div>
+
+            {/* Preview Modal */}
+            {selectedMaterial && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+                        <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-2xl bg-cyan-50 flex items-center justify-center">
+                                    {selectedMaterial.fileType === 'pdf' ? (
+                                        <BookOpen className="w-6 h-6 text-cyan-600" />
+                                    ) : (
+                                        <FileText className="w-6 h-6 text-emerald-600" />
+                                    )}
+                                </div>
+                                <div>
+                                    <h3 className="font-bold text-lg text-slate-900 leading-tight">{selectedMaterial.title}</h3>
+                                    <p className="text-sm text-slate-500">{selectedMaterial.subject}</p>
+                                </div>
+                            </div>
+                            <button 
+                                onClick={() => setSelectedMaterial(null)}
+                                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                            >
+                                <X className="w-6 h-6" />
+                            </button>
+                        </div>
+                        
+                        <div className="flex-1 bg-slate-50 relative overflow-hidden">
+                            {selectedMaterial.fileType === 'pdf' || selectedMaterial.fileUrl?.toLowerCase().includes('.pdf') ? (
+                                <iframe
+                                    src={`${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`}
+                                    className="w-full h-full border-none"
+                                    title={selectedMaterial.title}
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto">
+                                    <img 
+                                        src={`${getApiUrl()}/materials/view/${selectedMaterial._id}?token=${user?.token}`}
+                                        alt={selectedMaterial.title}
+                                        className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+                                    />
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="p-4 md:p-6 border-t border-slate-100 flex items-center justify-end gap-3 bg-white">
+                            <a
+                                href={`${getApiUrl()}/materials/view/${selectedMaterial._id}?download=true&token=${user?.token}`}
+                                download
+                                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 transition-colors shadow-sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                Download
+                            </a>
+                            <button
+                                onClick={() => setSelectedMaterial(null)}
+                                className="px-6 py-3 rounded-2xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors"
+                            >
+                                Close
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
