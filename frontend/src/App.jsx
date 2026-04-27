@@ -36,6 +36,8 @@ import TeacherClassrooms from "./pages/Teacher/Classrooms";
 import TeacherClassroom from "./pages/Teacher/Classroom";
 import TeacherExams from "./pages/Teacher/Exams";
 import TeacherSettings from "./pages/Teacher/Settings";
+import TeacherAnalytics from "./pages/Teacher/Analytics";
+import TeacherMaterials from "./pages/Teacher/Materials";
 import AdminDashboard from "./pages/Admin/dashboard/Dashboard";
 import AdminUserManagement from "./pages/Admin/users/UserManagement";
 import AdminClassroomManagement from "./pages/Admin/classrooms/ClassroomManagement";
@@ -278,11 +280,12 @@ function AppContent() {
           {/* Teacher Routes */}
           <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
             <Route element={<DashboardLayout />}>
+              <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
               <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
               <Route path="/teacher/classrooms" element={<TeacherClassrooms />} />
               <Route path="/teacher/classroom" element={<TeacherClassroom />} />
               <Route path="/teacher/exams" element={<TeacherExams />} />
-              <Route path="/teacher/materials" element={<div className="p-8"><h1>Manage Materials</h1></div>} />
+              <Route path="/teacher/materials" element={<TeacherMaterials />} />
               <Route path="/teacher/settings" element={<TeacherSettings />} />
             </Route>
           </Route>

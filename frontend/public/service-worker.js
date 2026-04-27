@@ -26,6 +26,9 @@ self.addEventListener('install', (event) => {
 self.addEventListener('fetch', (event) => {
   // Only handle GET requests
   if (event.request.method !== 'GET') return;
+  
+  // Do not cache API requests or chrome extensions
+  if (event.request.url.includes('/api/') || !event.request.url.startsWith('http')) return;
 
   event.respondWith(
     caches.match(event.request)

@@ -146,16 +146,16 @@ const StudentMaterials = () => {
                                     key={it._id}
                                     className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-cyan-50/60 border border-slate-100 hover:border-cyan-100 transition-colors"
                                 >
-                                    <div className="flex items-start gap-3">
-                                        <div className="w-11 h-11 rounded-2xl bg-white border border-slate-200 flex items-center justify-center">
+                                    <div className="flex items-start gap-3 flex-1 cursor-pointer" onClick={() => setSelectedMaterial(it)}>
+                                        <div className="w-11 h-11 rounded-2xl bg-white border border-slate-200 flex items-center justify-center shrink-0">
                                             {activeTab === "materials" ? (
                                                 <BookOpen className="w-5 h-5 text-indigo-600" />
                                             ) : (
                                                 <FileText className="w-5 h-5 text-emerald-600" />
                                             )}
                                         </div>
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-semibold text-slate-900">
+                                        <div className="space-y-1 min-w-0">
+                                            <p className="text-sm font-semibold text-slate-900 truncate hover:text-cyan-600 transition-colors">
                                                 {it.title}
                                             </p>
                                             <p className="text-xs text-slate-500">
@@ -172,23 +172,14 @@ const StudentMaterials = () => {
 
                                     <div className="flex items-center gap-2 justify-end">
                                         <button
-                                            onClick={() => setSelectedMaterial(it)}
-                                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-slate-800 text-xs font-semibold hover:bg-slate-50 transition-colors"
-                                            title="Preview File"
+                                            type="button"
+                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedMaterial(it); }}
+                                            className="inline-flex items-center justify-center gap-2 px-6 py-2 rounded-full bg-cyan-600 text-white text-xs font-bold shadow-sm hover:bg-cyan-700 transition-all hover:scale-105"
+                                            title="View File"
                                         >
                                             <Eye className="w-4 h-4" />
-                                            <span>View</span>
+                                            <span>View Document</span>
                                         </button>
-                                        <a
-                                            href={(it.fileType === 'pdf' || it.fileUrl?.toLowerCase().includes('.pdf')) ? `${getApiUrl()}/materials/view/${it._id}?download=true&token=${user?.token}` : (it.fileUrl ? it.fileUrl.replace('/upload/', '/upload/fl_attachment/') : "#")}
-                                            download
-                                            rel="noreferrer"
-                                            className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-cyan-600 text-white text-xs font-semibold shadow-sm hover:bg-cyan-700 transition-colors"
-                                            title="Download File"
-                                        >
-                                            <Download className="w-4 h-4" />
-                                            <span>Download</span>
-                                        </a>
                                     </div>
                                 </div>
                             ))
@@ -217,62 +208,59 @@ const StudentMaterials = () => {
 
             {/* Preview Modal */}
             {selectedMaterial && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+                <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    {(() => {
+                        const previewUrl = `${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`;
+                        console.warn("[DEBUG_LIBRARY] Selected Material:", selectedMaterial);
+                        console.warn("[DEBUG_LIBRARY] Generated URL:", previewUrl);
+                        return null;
+                    })()}
+                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
                         <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-2xl bg-cyan-50 flex items-center justify-center">
-                                    {selectedMaterial.fileType === 'pdf' ? (
-                                        <BookOpen className="w-6 h-6 text-cyan-600" />
-                                    ) : (
-                                        <FileText className="w-6 h-6 text-emerald-600" />
-                                    )}
+                                <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
+                                    <FileText className="w-6 h-6 text-cyan-600" />
                                 </div>
                                 <div>
-                                    <h3 className="font-bold text-lg text-slate-900 leading-tight">{selectedMaterial.title}</h3>
-                                    <p className="text-sm text-slate-500">{selectedMaterial.subject}</p>
+                                    <h3 className="text-lg font-bold text-slate-900 line-clamp-1">{selectedMaterial.title}</h3>
+                                    <p className="text-xs text-slate-500">Study Material</p>
                                 </div>
                             </div>
                             <button 
                                 onClick={() => setSelectedMaterial(null)}
-                                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                                className="w-10 h-10 rounded-full bg-slate-50 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all flex items-center justify-center"
                             >
                                 <X className="w-6 h-6" />
                             </button>
                         </div>
                         
                         <div className="flex-1 bg-slate-50 relative overflow-hidden">
-                            {selectedMaterial.fileType === 'pdf' || selectedMaterial.fileUrl?.toLowerCase().includes('.pdf') ? (
-                                <iframe
-                                    src={`${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`}
-                                    className="w-full h-full border-none"
-                                    title={selectedMaterial.title}
-                                />
+                            {(selectedMaterial.fileType || "").toLowerCase() === 'pdf' || (selectedMaterial.fileUrl || "").toLowerCase().includes('.pdf') ? (
+                                <div className="w-full h-full bg-white relative">
+                                    <iframe
+                                        src={`${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`}
+                                        title={selectedMaterial.title}
+                                        style={{ width: '100%', height: '100%', border: 'none' }}
+                                    />
+                                </div>
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto">
+                                <div className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto bg-white">
                                     <img 
                                         src={`${getApiUrl()}/materials/view/${selectedMaterial._id}?token=${user?.token}`}
                                         alt={selectedMaterial.title}
-                                        className="max-w-full max-h-full object-contain rounded-lg shadow-sm"
+                                        className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                                        onError={() => setSelectedMaterial(prev => ({ ...prev, fileType: 'pdf' }))}
                                     />
                                 </div>
                             )}
                         </div>
 
                         <div className="p-4 md:p-6 border-t border-slate-100 flex items-center justify-end gap-3 bg-white">
-                            <a
-                                href={`${getApiUrl()}/materials/view/${selectedMaterial._id}?download=true&token=${user?.token}`}
-                                download
-                                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 transition-colors shadow-sm"
-                            >
-                                <Download className="w-4 h-4" />
-                                Download
-                            </a>
                             <button
                                 onClick={() => setSelectedMaterial(null)}
-                                className="px-6 py-3 rounded-2xl bg-slate-100 text-slate-700 text-sm font-bold hover:bg-slate-200 transition-colors"
+                                className="px-8 py-3 rounded-2xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 transition-colors shadow-md"
                             >
-                                Close
+                                Close Preview
                             </button>
                         </div>
                     </div>

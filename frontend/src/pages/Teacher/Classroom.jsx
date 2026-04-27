@@ -17,7 +17,10 @@ import {
     Plus,
     CheckCircle2,
     Loader2,
-    Trash2
+    Trash2,
+    X,
+    BookOpen,
+    Download
 } from "lucide-react";
 import { 
     updateClassroomResources, 
@@ -90,6 +93,7 @@ const TeacherClassroom = () => {
     const [gradeData, setGradeData] = useState({ score: "", feedback: "" });
     const [isGrading, setIsGrading] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, type: null, id: null });
+    const [selectedMaterial, setSelectedMaterial] = useState(null);
 
     const getSubmissionScore = (submission) => {
         if (submission?.score !== null && submission?.score !== undefined) {
@@ -461,14 +465,13 @@ const TeacherClassroom = () => {
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-3 shrink-0">
-                                        <a
-                                            href={lec._id ? `${getApiUrl()}/classrooms/view-note/${classroom._id}/${lec._id}?token=${user?.token}` : lec.url || "#"}
-                                            target="_blank"
-                                            rel="noreferrer"
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedMaterial({ ...lec, isLecture: true })}
                                             className="text-xs font-semibold text-cyan-600 hover:text-cyan-700"
                                         >
                                             View
-                                        </a>
+                                        </button>
                                         <button
                                             type="button"
                                             onClick={() => setDeleteConfirm({ isOpen: true, type: 'lecture', id: lec._id })}
@@ -821,6 +824,99 @@ const TeacherClassroom = () => {
                                             </div>
                                         </object>
                                     )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Lecture/Resource Preview Modal */}
+                    {selectedMaterial && (
+                        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+                            <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+                                <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
+                                            <BookOpen className="w-5 h-5 text-cyan-600" />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-slate-900 leading-tight">{selectedMaterial.title}</h3>
+                                            <p className="text-xs text-slate-500">{selectedMaterial.isLecture ? "Lecture Note" : "Resource"}</p>
+                                        </div>
+                                    </div>
+                                    <button 
+                                        onClick={() => setSelectedMaterial(null)}
+                                        className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                                    >
+                                        <X className="w-6 h-6" />
+                                    </button>
+                                </div>
+                                
+                                <div className="flex-1 bg-slate-50 relative overflow-hidden">
+                                    {(() => {
+                                        const url = selectedMaterial.url || "";
+                                        const isPdf = url.toLowerCase().includes('.pdf');
+                                        const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                                        const isOffice = url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc');
+                                        
+                                        if (isPdf) {
+                                            return (
+                                                <iframe
+                                                    src={`${getApiUrl()}/classrooms/view-note/${classroom._id}/${selectedMaterial._id}?token=${user?.token}`}
+                                                    title={selectedMaterial.title}
+                                                    className="w-full h-full border-none bg-white"
+                                                />
+                                            );
+                                        } else if (isImg) {
+                                            return (
+                                                <div className="w-full h-full flex items-center justify-center p-8 bg-white overflow-auto">
+                                                    <img 
+                                                        src={`${getApiUrl()}/classrooms/view-note/${classroom._id}/${selectedMaterial._id}?token=${user?.token}`}
+                                                        alt={selectedMaterial.title}
+                                                        className="max-w-full max-h-full object-contain rounded-xl shadow-lg"
+                                                    />
+                                                </div>
+                                            );
+                                        } else if (isOffice) {
+                                            const googleUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+                                            return (
+                                                <iframe
+                                                    src={googleUrl}
+                                                    title={selectedMaterial.title}
+                                                    className="w-full h-full border-none bg-white"
+                                                />
+                                            );
+                                        } else {
+                                            return (
+                                                <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-white text-center">
+                                                    <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-4">
+                                                        <FileCheck className="w-10 h-10 text-cyan-600" />
+                                                    </div>
+                                                    <h4 className="text-lg font-bold text-slate-900">Preview Not Supported</h4>
+                                                    <p className="text-sm text-slate-500 max-w-xs mt-2">
+                                                        This file type cannot be previewed directly. 
+                                                        You can download it to view the content.
+                                                    </p>
+                                                    <a 
+                                                        href={url} 
+                                                        target="_blank" 
+                                                        rel="noreferrer"
+                                                        className="mt-6 px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm"
+                                                    >
+                                                        Download File
+                                                    </a>
+                                                </div>
+                                            );
+                                        }
+                                    })()}
+                                </div>
+
+                                <div className="p-4 md:p-6 border-t border-slate-100 flex items-center justify-end gap-3 bg-white">
+                                    <button
+                                        onClick={() => setSelectedMaterial(null)}
+                                        className="px-6 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg"
+                                    >
+                                        Close Preview
+                                    </button>
                                 </div>
                             </div>
                         </div>

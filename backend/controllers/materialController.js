@@ -173,46 +173,16 @@ export const viewMaterialProxy = async (req, res) => {
                 return res.status(403).json({ message: "Payment required to access this material" });
             }
         }
+        const fetchUrl = material.fileUrl.replace("http://", "https://");
+        console.log(`[VIEW_PROXY] Proxying: ${fetchUrl}`);
 
-
-        let publicId = material.public_id;
-        
-        // Fallback: Extract public_id from fileUrl if missing (for old uploads)
-        if (!publicId && material.fileUrl) {
-            const parts = material.fileUrl.split('/');
-            const uploadIndex = parts.indexOf('upload');
-            if (uploadIndex !== -1) {
-                // public_id is everything after the version (v12345...)
-                publicId = parts.slice(uploadIndex + 2).join('/').split('.')[0];
-            }
-        }
-
-        // Guess resource_type from URL if possible (fallback for older uploads)
-        let resourceType = material.fileType === 'pdf' ? 'image' : 'raw';
-        if (material.fileUrl && material.fileUrl.includes('/raw/')) {
-            resourceType = 'raw';
-        } else if (material.fileUrl && material.fileUrl.includes('/image/')) {
-            resourceType = 'image';
-        }
-
-        // Generate a signed URL. If we still don't have a publicId, use the fileUrl directly as fallback.
-        const secureUrl = cloudinary.url(publicId || material.fileUrl, {
-            resource_type: resourceType,
-            sign_url: true,
-            secure: true
-        });
-
-        console.log(`[VIEW_PROXY] Proxying view for: ${material.title} -> ${secureUrl}`);
-
-        const response = await fetch(secureUrl);
+        const response = await fetch(fetchUrl);
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`[VIEW_PROXY] Cloudinary fetch failed (${response.status}):`, errorText);
             throw new Error(`Cloudinary responded with ${response.status}`);
         }
 
-        const isPdf = material.fileType === 'pdf';
-        const contentType = isPdf ? 'application/pdf' : (response.headers.get('content-type') || 'image/jpeg');
+        const isPdf = material.fileType === 'pdf' || (material.fileUrl || "").toLowerCase().includes(".pdf");
+        const contentType = isPdf ? 'application/pdf' : (response.headers.get('content-type')?.includes('application/octet-stream') ? 'image/jpeg' : (response.headers.get('content-type') || 'image/jpeg'));
         // Content headers will be set in the if/else block below
         
         if (req.query.download === 'true') {
@@ -224,6 +194,7 @@ export const viewMaterialProxy = async (req, res) => {
             res.setHeader('Content-Type', contentType);
             res.setHeader('Content-Disposition', 'inline');
             res.setHeader('X-Content-Type-Options', 'nosniff');
+            res.setHeader('Cache-Control', 'no-cache');
         }
         
         const arrayBuffer = await response.arrayBuffer();
@@ -234,5 +205,56 @@ export const viewMaterialProxy = async (req, res) => {
             message: "Error viewing document", 
             details: process.env.NODE_ENV === 'development' ? error.message : undefined 
         });
+    }
+};// @desc    Delete material
+// @route   DELETE /api/materials/:id
+// @access  Private (Teacher/Admin)
+export const deleteMaterial = async (req, res) => {
+    try {
+        const material = await StudyMaterial.findById(req.params.id);
+
+        if (!material) {
+            return res.status(404).json({ message: "Material not found" });
+        }
+
+        // Only allow uploader or admin to delete
+        if (material.uploadedBy?.toString() !== req.user._id.toString() && req.user.role === 'teacher') {
+            return res.status(401).json({ message: "Not authorized to delete this material" });
+        }
+
+        // Delete from Cloudinary if public_id exists
+        if (material.public_id) {
+            await cloudinary.uploader.destroy(material.public_id);
+        }
+
+        await material.deleteOne();
+        res.json({ message: "Material removed" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Proxy any file URL to force inline viewing
+// @route   GET /api/materials/proxy?url=...
+export const proxyFile = async (req, res) => {
+    const { url } = req.query;
+    if (!url) return res.status(400).json({ message: "URL is required" });
+
+    try {
+        const fetchUrl = url.startsWith('http') ? url.replace('http://', 'https://') : url;
+        const response = await fetch(fetchUrl);
+        
+        if (!response.ok) throw new Error("Failed to fetch remote file");
+
+        const contentType = response.headers.get('content-type') || 'application/pdf';
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Cache-Control', 'public, max-age=3600');
+
+        const arrayBuffer = await response.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+    } catch (error) {
+        res.status(500).json({ message: error.message });
     }
 };

@@ -2,6 +2,9 @@ import Classroom from "../models/Classroom.js";
 import User from "../models/User.js";
 import Exam from "../models/Exam.js";
 import Result from "../models/Result.js";
+import Assignment from "../models/Assignment.js";
+import Submission from "../models/Submission.js";
+import StudyMaterial from "../models/StudyMaterial.js";
 import { Payment } from "../models/Financial.js";
 
 // @desc    Get overall stats for the reports dashboard
@@ -49,7 +52,37 @@ export const getOverallStats = async (req, res) => {
             { $sort: { "_id": 1 } }
         ]);
 
-        // 2. Classroom Benchmarking
+        // 2. User Growth (Last 6 Months)
+        const userGrowth = await User.aggregate([
+            { $match: { 
+                createdAt: { $gte: sixMonthsAgo },
+                role: { $in: ['student', 'teacher'] }
+            }},
+            { $group: {
+                _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+                students: { $sum: { $cond: [{ $eq: ["$role", "student"] }, 1, 0] } },
+                teachers: { $sum: { $cond: [{ $eq: ["$role", "teacher"] }, 1, 0] } }
+            }},
+            { $sort: { "_id": 1 } }
+        ]);
+
+        // 3. Board Distribution
+        const boardDistribution = await Classroom.aggregate([
+            { $match: classroomOwnershipQuery },
+            { $group: {
+                _id: "$board",
+                count: { $sum: 1 }
+            }},
+            { $project: { name: "$_id", value: "$count", _id: 0 } }
+        ]);
+
+        // 4. Assignment Engagement
+        const totalAssignments = await Assignment.countDocuments(isSuperAdmin ? {} : { createdBy: req.user._id });
+        const totalSubmissions = await Submission.countDocuments(isSuperAdmin ? {} : { 
+            assignment: { $in: await Assignment.find({ createdBy: req.user._id }).select('_id') } 
+        });
+
+        // 5. Classroom Benchmarking
         const classroomComparison = await Promise.all(classrooms.map(async (cls) => {
             const clsExams = await Exam.find({ classroom: cls._id });
             const clsResults = await Result.find({ exam: { $in: clsExams.map(e => e._id) } });
@@ -59,7 +92,7 @@ export const getOverallStats = async (req, res) => {
             return { name: cls.name, average: Math.round(clsAvg) };
         }));
 
-        // 3. Subject Mastery (Aggregated)
+        // 6. Subject Mastery (Aggregated)
         const subjectMastery = await Result.aggregate([
             { $match: { exam: { $in: exams.map(e => e._id) } } },
             { $lookup: { from: 'exams', localField: 'exam', foreignField: '_id', as: 'examInfo' } },
@@ -71,7 +104,7 @@ export const getOverallStats = async (req, res) => {
             { $project: { subject: '$_id', average: { $round: ['$average', 0] }, _id: 0 } }
         ]);
 
-        // 4. Engagement Funnel
+        // 7. Engagement Funnel
         const activeStudents = await Result.distinct('student', { exam: { $in: exams.map(e => e._id) } });
         const passedStudents = await Result.aggregate([
             { $match: { exam: { $in: exams.map(e => e._id) } } },
@@ -88,6 +121,12 @@ export const getOverallStats = async (req, res) => {
             totalRevenue: combinedRevenue[0]?.total || 0,
             avgPerformance: Math.round(avgScore),
             revenueTrends: revenueTrends.map(r => ({ month: r._id, amount: r.amount })),
+            userGrowth: userGrowth.map(u => ({ month: u._id, students: u.students, teachers: u.teachers })),
+            boardDistribution,
+            assignmentStats: {
+                total: totalAssignments,
+                submissions: totalSubmissions
+            },
             classroomComparison: classroomComparison.sort((a,b) => b.average - a.average).slice(0, 5),
             subjectMastery,
             engagementFunnel: [
@@ -346,6 +385,130 @@ export const getAdminStats = async (req, res) => {
             examCount: exams.length
         });
     } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get dashboard stats for logged-in teacher
+// @route   GET /api/reports/my-teacher-stats
+// @access  Private (Teacher)
+export const getMyTeacherStats = async (req, res) => {
+    try {
+        const teacherId = req.user._id;
+
+        // 1. Classrooms assigned to this teacher
+        const classrooms = await Classroom.find({ teachers: teacherId })
+            .populate('students', 'name email')
+            .lean();
+
+        const classroomIds = classrooms.map(c => c._id);
+
+        // 2. Unique students across all classrooms
+        const studentIdSet = new Set();
+        classrooms.forEach(c => (c.students || []).forEach(s => studentIdSet.add(s._id.toString())));
+        const totalStudents = studentIdSet.size;
+
+        // 3. Assignments created by this teacher
+        const assignments = await Assignment.find({ teacher: teacherId }).lean();
+        const assignmentIds = assignments.map(a => a._id);
+
+        // 4. Submissions for teacher's assignments
+        const submissions = await Submission.find({ assignment: { $in: assignmentIds } })
+            .populate('student', 'name email')
+            .populate('assignment', 'title classroom dueDate')
+            .sort({ createdAt: -1 })
+            .lean();
+
+        const pendingSubmissions = submissions.filter(s => s.status === 'Submitted').length;
+        const gradedSubmissions = submissions.filter(s => s.status === 'Graded').length;
+
+        // 5. Exams created by this teacher
+        const exams = await Exam.find({ teacher: teacherId }).lean();
+        const activeExams = exams.filter(e => e.isActive);
+
+        // 6. Study materials uploaded by this teacher
+        const materialsCount = await StudyMaterial.countDocuments({ uploadedBy: teacherId });
+
+        // 7. Results for teacher's exams
+        const examIds = exams.map(e => e._id);
+        const results = await Result.find({ exam: { $in: examIds } })
+            .populate('exam', 'title subject totalMarks date')
+            .lean();
+
+        const avgPerformance = results.length > 0
+            ? Math.round(results.reduce((acc, r) => {
+                const total = r.exam?.totalMarks || 100;
+                return acc + ((r.marksObtained || 0) / total) * 100;
+            }, 0) / results.length)
+            : 0;
+
+        // 8. Classroom breakdown
+        const classroomBreakdown = await Promise.all(classrooms.map(async (cls) => {
+            const clsExams = exams.filter(e => e.classroom?.toString() === cls._id.toString());
+            const clsExamIds = clsExams.map(e => e._id);
+            const clsResults = results.filter(r => clsExamIds.some(id => id.toString() === r.exam?._id?.toString()));
+            const clsAssignments = assignments.filter(a => a.classroom?.toString() === cls._id.toString());
+            const clsSubmissions = submissions.filter(s => clsAssignments.some(a => a._id.toString() === s.assignment?._id?.toString()));
+            const clsPending = clsSubmissions.filter(s => s.status === 'Submitted').length;
+            const clsAvg = clsResults.length > 0
+                ? Math.round(clsResults.reduce((acc, r) => acc + ((r.marksObtained || 0) / (r.exam?.totalMarks || 100)) * 100, 0) / clsResults.length)
+                : 0;
+
+            return {
+                _id: cls._id,
+                name: cls.name,
+                className: cls.className,
+                board: cls.board,
+                studentCount: cls.students?.length || 0,
+                examCount: clsExams.length,
+                assignmentCount: clsAssignments.length,
+                pendingCount: clsPending,
+                avgPerformance: clsAvg,
+            };
+        }));
+
+        // 9. Subject performance
+        const subjectMap = {};
+        results.forEach(r => {
+            const sub = r.exam?.subject;
+            if (!sub) return;
+            if (!subjectMap[sub]) subjectMap[sub] = { total: 0, count: 0 };
+            subjectMap[sub].total += ((r.marksObtained || 0) / (r.exam?.totalMarks || 100)) * 100;
+            subjectMap[sub].count += 1;
+        });
+        const subjectPerformance = Object.entries(subjectMap).map(([subject, data]) => ({
+            subject,
+            average: Math.round(data.total / data.count),
+            examsTaken: data.count,
+        }));
+
+        // 10. Recent submissions (last 8)
+        const recentSubmissions = submissions.slice(0, 8).map(s => ({
+            _id: s._id,
+            studentName: s.student?.name || 'Unknown',
+            assignmentTitle: s.assignment?.title || 'Assignment',
+            status: s.status,
+            submittedAt: s.submittedAt || s.createdAt,
+            grade: s.grade || null,
+            score: s.score ?? null,
+        }));
+
+        res.json({
+            totalClassrooms: classrooms.length,
+            totalStudents,
+            pendingSubmissions,
+            gradedSubmissions,
+            totalSubmissions: submissions.length,
+            totalExams: exams.length,
+            activeExams: activeExams.length,
+            materialsUploaded: materialsCount,
+            avgPerformance,
+            classroomBreakdown,
+            subjectPerformance,
+            recentSubmissions,
+        });
+    } catch (error) {
+        console.error("[MY_TEACHER_STATS] Error:", error);
         res.status(500).json({ message: error.message });
     }
 };

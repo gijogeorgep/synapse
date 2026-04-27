@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
-    LineChart, Line, AreaChart, Area, PieChart, Pie, Cell,
+    LineChart, Line, AreaChart, Area, PieChart, Pie, Cell, Legend,
     Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis 
 } from 'recharts';
 import { 
@@ -417,6 +417,93 @@ const Reports = () => {
                                         <Area type="monotone" dataKey="amount" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#colorRev)" />
                                     </AreaChart>
                                 </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* User Growth */}
+                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                             <div className="flex items-center justify-between mb-8">
+                                <h2 className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                                    <Users className="text-cyan-500" />
+                                    User Acquisition
+                                </h2>
+                                <span className="text-xs font-bold text-slate-400">Monthly Growth</span>
+                            </div>
+                            <div className="h-[350px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={overallStats?.userGrowth || []}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10}} />
+                                        <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748b', fontSize: 10}} />
+                                        <Tooltip 
+                                            contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                                        />
+                                        <Legend verticalAlign="top" height={36}/>
+                                        <Line type="monotone" dataKey="students" stroke="#6366f1" strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} />
+                                        <Line type="monotone" dataKey="teachers" stroke="#10b981" strokeWidth={3} dot={{r: 4}} activeDot={{r: 6}} />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* Board Distribution */}
+                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                             <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-2">
+                                <BookOpen className="text-indigo-600" />
+                                Academic Boards
+                            </h2>
+                            <div className="h-[350px]">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <PieChart>
+                                        <Pie
+                                            data={overallStats?.boardDistribution || []}
+                                            innerRadius={60}
+                                            outerRadius={100}
+                                            paddingAngle={5}
+                                            dataKey="value"
+                                        >
+                                            {(overallStats?.boardDistribution || []).map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <Tooltip 
+                                            contentStyle={{borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)'}}
+                                        />
+                                        <Legend />
+                                    </PieChart>
+                                </ResponsiveContainer>
+                            </div>
+                        </div>
+
+                        {/* Assignment Engagement */}
+                        <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                             <h2 className="text-xl font-bold text-slate-800 mb-8 flex items-center gap-2">
+                                <FileText className="text-amber-500" />
+                                Homework Engagement
+                            </h2>
+                            <div className="mt-10 space-y-8">
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <p className="text-3xl font-black text-slate-900">{overallStats?.assignmentStats?.submissions || 0}</p>
+                                        <p className="text-sm font-bold text-slate-500 uppercase">Submissions</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-3xl font-black text-slate-400">{overallStats?.assignmentStats?.total || 0}</p>
+                                        <p className="text-sm font-bold text-slate-500 uppercase">Total Assignments</p>
+                                    </div>
+                                </div>
+                                <div className="w-full h-4 bg-slate-50 rounded-full overflow-hidden">
+                                    <div 
+                                        className="h-full bg-amber-500 rounded-full transition-all duration-1000" 
+                                        style={{width: `${(overallStats?.assignmentStats?.submissions / (overallStats?.assignmentStats?.total || 1)) * 100}%`}}
+                                    ></div>
+                                </div>
+                                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 text-center">
+                                    <p className="text-[10px] font-black text-amber-600 uppercase tracking-widest mb-1">Completion Rate</p>
+                                    <p className="text-2xl font-black text-amber-700">
+                                        {Math.round((overallStats?.assignmentStats?.submissions / (overallStats?.assignmentStats?.total || 1)) * 100)}%
+                                    </p>
+                                </div>
                             </div>
                         </div>
 

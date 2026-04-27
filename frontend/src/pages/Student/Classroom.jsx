@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, Award, Download, Upload, Loader2, CheckCircle2, Calendar } from "lucide-react";
+import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, Award, Download, Upload, Loader2, CheckCircle2, Calendar, X } from "lucide-react";
 import { getExams, getExamsBySpecificClassroom, getMyResults, getMaterials, getAssignments, submitHomework, uploadFile } from "../../api/services";
 import { getApiUrl } from "../../api/apiClient";
+import { toast } from "react-hot-toast";
 import ClassroomAIChat from "../../components/ClassroomAIChat";
 
 const StudentClassroom = () => {
@@ -28,6 +29,7 @@ const StudentClassroom = () => {
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewLoading, setPreviewLoading] = useState(false);
   const [previewError, setPreviewError] = useState("");
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
 
   useEffect(() => { if (!classroom) navigate("/student/classrooms"); }, [classroom, navigate]);
 
@@ -156,6 +158,17 @@ const StudentClassroom = () => {
   }, [previewSubmission?._id]);
 
   useEffect(() => {
+    if (previewUrl && previewSubmission) {
+        setSelectedMaterial({
+            title: previewSubmission.fileName || "Submission Preview",
+            fileUrl: previewUrl,
+            isSubmission: true,
+            isPdf: true
+        });
+    }
+  }, [previewUrl, previewSubmission]);
+
+  useEffect(() => {
     const load = async () => {
       if (!classroom?._id) return;
       try { setLoadingAssignments(true); const data = await getAssignments(classroom._id); setAssignments(Array.isArray(data) ? data : []); }
@@ -165,10 +178,11 @@ const StudentClassroom = () => {
     load();
   }, [classroom?._id]);
   const openSubmitModal = (assignment) => { setSelectedAssignment(assignment); setSelectedFile(null); setIsSubmitModalOpen(true); };
+  const ALLOWED_TYPES = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
   const handleFileChange = (e) => {
     const file = e.target.files?.[0]; if (!file) return;
-    if (file.type !== "application/pdf") return alert("Please upload a PDF file.");
-    if (file.size > 5 * 1024 * 1024) return alert("File size should be less than 5MB.");
+    if (!ALLOWED_TYPES.includes(file.type)) return toast.error("Only PDF, JPG, and PNG files are allowed.");
+    if (file.size > 5 * 1024 * 1024) return toast.error("File size should be less than 5MB.");
     setSelectedFile(file);
   };
   const handleSubmitHomework = async (e) => {
@@ -179,8 +193,8 @@ const StudentClassroom = () => {
       const uploadData = await uploadFile(formData);
       await submitHomework(selectedAssignment._id, { fileUrl: uploadData.url, fileName: selectedFile.name });
       const updated = await getAssignments(classroom._id); setAssignments(Array.isArray(updated) ? updated : []);
-      alert("Homework submitted successfully!"); setIsSubmitModalOpen(false); setSelectedAssignment(null); setSelectedFile(null);
-    } catch (e) { console.error(e); alert(e?.message || "Failed to submit homework."); }
+      toast.success("Homework submitted successfully! 🎉"); setIsSubmitModalOpen(false); setSelectedAssignment(null); setSelectedFile(null);
+    } catch (e) { console.error(e); toast.error(e?.message || "Failed to submit homework."); }
     finally { setSubmitting(false); }
   };
 
@@ -206,13 +220,65 @@ const StudentClassroom = () => {
         <section className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
           <h2 className="text-lg font-semibold text-slate-900 flex items-center gap-2"><BookOpen className="w-5 h-5 text-indigo-600" />Study materials & resources</h2>
           <p className="text-sm text-slate-500">View lecture notes and other study materials shared by your teachers.</p>
-          <div className="space-y-3">
-            {materialsLoading ? <div className="flex justify-center py-10"><div className="w-10 h-10 border-4 border-slate-200 border-t-cyan-500 rounded-full animate-spin" /></div> : classroomMaterials.length > 0 ? classroomMaterials.map((material) => {
-              const isPdf = material.fileType?.toLowerCase() === "pdf" || (material.fileUrl || "").toLowerCase().includes(".pdf");
-              const previewUrl = isPdf && material._id ? `${getApiUrl()}/materials/view/${material._id}/preview.pdf?token=${user?.token}` : material.fileUrl || "#";
-              const downloadUrl = isPdf && material._id ? `${getApiUrl()}/materials/view/${material._id}?download=true&token=${user?.token}` : material.fileUrl ? material.fileUrl.replace("/upload/", "/upload/fl_attachment/") : "#";
-              return <div key={material._id} className="flex items-center justify-between gap-4 p-3 rounded-2xl bg-slate-50 hover:bg-cyan-50/70 border border-slate-100 hover:border-cyan-100 transition-colors"><div className="space-y-2 max-w-[65%]"><p className="text-sm font-semibold text-slate-900 truncate">{material.title}</p><p className="text-xs text-slate-500">{(material.subject || fallbackSubject)} • {(material.fileType || "Resource").toUpperCase()}{material.createdAt ? ` • Uploaded ${new Date(material.createdAt).toLocaleDateString()}` : ""}</p>{material.description && <p className="text-xs text-slate-400 truncate">{material.description}</p>}</div><div className="flex flex-col items-end gap-2 shrink-0"><a href={previewUrl} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full bg-white text-xs font-semibold text-slate-700 border border-slate-200 hover:border-cyan-300 transition-colors"><ExternalLink className="w-3 h-3" /><span>Preview</span></a><a href={downloadUrl} download rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-full bg-cyan-600 text-white text-xs font-semibold shadow-sm hover:bg-cyan-500 transition-colors"><Download className="w-3 h-3" /><span>Download</span></a></div></div>;
-            }) : lectures.length > 0 ? lectures.map((lecture, index) => <div key={lecture._id || index} className="flex items-center justify-between gap-4 p-3 rounded-2xl bg-slate-50 hover:bg-cyan-50/70 border border-slate-100 hover:border-cyan-100 transition-colors"><div className="space-y-1 overflow-hidden"><p className="text-sm font-semibold text-slate-900 truncate">{lecture.title}</p><p className="text-xs text-slate-500">{lecture.createdAt ? new Date(lecture.createdAt).toLocaleDateString() : "Recent"}</p></div><a href={lecture._id ? `${getApiUrl()}/classrooms/view-note/${classroom._id}/${lecture._id}?token=${user?.token}` : lecture.url || "#"} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-xs font-semibold text-cyan-700 border border-cyan-100 hover:bg-cyan-600 hover:text-white hover:border-cyan-600 transition-colors shrink-0"><ExternalLink className="w-3 h-3" /><span>View</span></a></div>) : <div className="text-center py-4 text-slate-400 text-sm">No classroom materials yet. Check the Student Library tab or ask your tutor to upload resources.</div>}
+          <div className="space-y-4">
+            {materialsLoading ? (
+              <div className="flex justify-center py-10">
+                <div className="w-10 h-10 border-4 border-slate-200 border-t-cyan-500 rounded-full animate-spin" />
+              </div>
+            ) : (classroomMaterials.length > 0 || lectures.length > 0) ? (
+              <div className="grid grid-cols-1 gap-4">
+                {/* Priority 1: Direct Lecture Notes from Teachers */}
+                {lectures.map((lecture, index) => (
+                  <div key={`lecture-${lecture._id || index}`} className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-slate-100 hover:border-cyan-200 hover:bg-cyan-50/30 transition-all shadow-sm group">
+                    <div className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer" onClick={() => setSelectedMaterial({ ...lecture, isLecture: true, _id: lecture._id || lecture.id })}>
+                      <div className="w-10 h-10 rounded-xl bg-indigo-50 flex items-center justify-center shrink-0 group-hover:bg-indigo-100 transition-colors">
+                        <FileText className="w-5 h-5 text-indigo-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-slate-900 truncate group-hover:text-cyan-700 transition-colors">{lecture.title}</p>
+                        <p className="text-[11px] text-slate-500 font-medium">Lecture Note • {lecture.createdAt ? new Date(lecture.createdAt).toLocaleDateString() : "Recent"}</p>
+                      </div>
+                    </div>
+                    <button 
+                      type="button" 
+                      onClick={() => setSelectedMaterial({ ...lecture, isLecture: true, _id: lecture._id || lecture.id })}
+                      className="px-4 py-2 rounded-xl bg-slate-50 text-cyan-700 text-xs font-bold hover:bg-cyan-600 hover:text-white transition-all border border-cyan-100"
+                    >
+                      View
+                    </button>
+                  </div>
+                ))}
+
+                {/* Priority 2: Matching Study Materials from Library */}
+                {classroomMaterials.map((material) => {
+                  const isPdf = material.fileType?.toLowerCase() === "pdf" || (material.fileUrl || "").toLowerCase().includes(".pdf");
+                  return (
+                    <div key={`material-${material._id}`} className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white border border-slate-100 hover:border-cyan-200 hover:bg-cyan-50/30 transition-all shadow-sm group">
+                      <div className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer" onClick={() => setSelectedMaterial(material)}>
+                        <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center shrink-0 group-hover:bg-cyan-100 transition-colors">
+                          <BookOpen className="w-5 h-5 text-cyan-600" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold text-slate-900 truncate group-hover:text-cyan-700 transition-colors">{material.title}</p>
+                          <p className="text-[11px] text-slate-500 font-medium">Study Material • {(material.fileType || "Resource").toUpperCase()}</p>
+                        </div>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setSelectedMaterial(material)}
+                        className="px-4 py-2 rounded-xl bg-slate-50 text-cyan-700 text-xs font-bold hover:bg-cyan-600 hover:text-white transition-all border border-cyan-100"
+                      >
+                        View
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-10 bg-slate-50 rounded-3xl border border-dashed border-slate-200">
+                <p className="text-sm text-slate-400">No classroom materials yet. Check back soon!</p>
+              </div>
+            )}
           </div>
           <div className="mt-8 border-t border-slate-100 pt-6 space-y-4">
             <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-slate-900 flex items-center gap-2"><FileText className="w-4 h-4 text-emerald-600" />Upcoming & active exams</h3><span className="text-xs font-medium text-slate-400">{availableExams?.length || 0} exams</span></div>
@@ -224,7 +290,7 @@ const StudentClassroom = () => {
           </div>
           <div className="mt-8 border-t border-slate-100 pt-6 space-y-4">
             <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-slate-900 flex items-center gap-2"><BookOpen className="w-4 h-4 text-cyan-600" />Assignments & classwork</h3><span className="text-xs font-medium text-slate-400">{assignments?.length || 0} items</span></div>
-            <div className="space-y-4">{loadingAssignments ? <div className="text-center py-4 text-slate-400 text-sm">Loading assignments...</div> : assignments.length === 0 ? <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-100"><p className="text-sm text-slate-400">No assignments posted for this classroom.</p></div> : assignments.map((work) => { const submission = work.userSubmission; const isSubmitted = !!submission; const isGraded = submission?.status === "Graded"; const attachment = Array.isArray(work.attachments) ? work.attachments[0] : null; return <div key={work._id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3"><div className="flex items-start justify-between gap-4"><div className="space-y-1"><p className="text-sm font-bold text-slate-900">{work.title}</p><p className="text-xs text-slate-500 flex items-center gap-1.5"><Calendar className="w-3 h-3" />Due {new Date(work.dueDate).toLocaleDateString()}</p>{typeof work.maxPoints === "number" && <p className="text-[11px] text-slate-400 font-semibold">{work.maxPoints} points</p>}</div><div className="flex items-center gap-2">{isSubmitted ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isGraded ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100 text-indigo-700"}`}>{isGraded ? "Graded" : "Submitted"}</span> : <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">Pending</span>}{attachment && <a href={attachment.url || "#"} target="_blank" rel="noreferrer" className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[11px] font-semibold text-cyan-700 border border-cyan-100 hover:bg-cyan-50 transition-colors"><ExternalLink className="w-3.5 h-3.5" /><span>View work</span></a>}</div></div>{work.description && <p className="text-xs text-slate-600 line-clamp-2">{work.description}</p>}<div className="flex items-center justify-between pt-1"><div className="flex items-center gap-2">{isGraded && <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-emerald-100 shadow-sm"><Award className="w-3.5 h-3.5 text-emerald-600" /><span className="text-xs font-bold text-emerald-700">Result: {submission.grade}</span></div>}</div>{!isSubmitted ? <button type="button" onClick={() => openSubmitModal(work)} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700 transition-all shadow-sm"><PlayCircle className="w-3.5 h-3.5" /><span>Submit Homework</span></button> : <div className="flex items-center gap-2"><button type="button" onClick={() => setPreviewSubmission(submission)} className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors"><ExternalLink className="w-3.5 h-3.5" /><span>View submission</span></button>{!isGraded && <button type="button" onClick={() => openSubmitModal(work)} className="p-2 rounded-xl bg-slate-200 text-slate-600 hover:bg-slate-300 transition-colors" title="Update Submission"><PlayCircle className="w-3.5 h-3.5" /></button>}</div>}</div>{isGraded && submission.feedback && <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-50 text-[11px] text-emerald-800 italic"><strong>Teacher's feedback:</strong> "{submission.feedback}"</div>}</div>; })}</div>
+            <div className="space-y-4">{loadingAssignments ? <div className="text-center py-4 text-slate-400 text-sm">Loading assignments...</div> : assignments.length === 0 ? <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-100"><p className="text-sm text-slate-400">No assignments posted for this classroom.</p></div> : assignments.map((work) => { const submission = work.userSubmission; const isSubmitted = !!submission; const isGraded = submission?.status === "Graded"; const attachment = Array.isArray(work.attachments) ? work.attachments[0] : null; return <div key={work._id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3"><div className="flex items-start justify-between gap-4"><div className="space-y-1"><p className="text-sm font-bold text-slate-900">{work.title}</p><p className="text-xs text-slate-500 flex items-center gap-1.5"><Calendar className="w-3 h-3" />Due {new Date(work.dueDate).toLocaleDateString()}</p>{typeof work.maxPoints === "number" && <p className="text-[11px] text-slate-400 font-semibold">{work.maxPoints} points</p>}</div><div className="flex items-center gap-2">{isGraded ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isGraded ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100 text-indigo-700"}`}>{isGraded ? "Graded" : "Submitted"}</span> : <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">Pending</span>}{attachment && <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedMaterial({ title: work.title + " - Attachment", fileUrl: attachment.url, isAttachment: true }); }} className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[11px] font-semibold text-cyan-700 border border-cyan-100 hover:bg-cyan-50 transition-colors"><ExternalLink className="w-3.5 h-3.5" /><span>View work</span></button>}</div></div>{work.description && <p className="text-xs text-slate-600 line-clamp-2">{work.description}</p>}<div className="flex items-center justify-between pt-1"><div className="flex items-center gap-2">{isGraded && <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-emerald-100 shadow-sm"><Award className="w-3.5 h-3.5 text-emerald-600" /><span className="text-xs font-bold text-emerald-700">Result: {submission.grade}</span></div>}</div>{!isSubmitted ? <button type="button" onClick={() => openSubmitModal(work)} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700 transition-all shadow-sm"><PlayCircle className="w-3.5 h-3.5" /><span>Submit Homework</span></button> : <div className="flex items-center gap-2"><button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewSubmission(submission); }} className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors"><ExternalLink className="w-3.5 h-3.5" /><span>View submission</span></button>{!isGraded && <button type="button" onClick={() => openSubmitModal(work)} className="p-2 rounded-xl bg-slate-200 text-slate-600 hover:bg-slate-300 transition-colors" title="Update Submission"><PlayCircle className="w-3.5 h-3.5" /></button>}</div>}</div>{isGraded && submission.feedback && <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-50 text-[11px] text-emerald-800 italic"><strong>Teacher's feedback:</strong> "{submission.feedback}"</div>}</div>; })}</div>
           </div>
         </section>
 
@@ -247,11 +313,11 @@ const StudentClassroom = () => {
             </div>
             <form onSubmit={handleSubmitHomework} className="space-y-6">
               <div className="space-y-2">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Upload PDF Document</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Upload Document or Image</label>
                 <div className="relative group">
-                  <input type="file" accept="application/pdf" onChange={handleFileChange} className="hidden" id="homework-file" />
+                  <input type="file" accept="application/pdf,image/jpeg,image/jpg,image/png" onChange={handleFileChange} className="hidden" id="homework-file" />
                   <label htmlFor="homework-file" className={`flex flex-col items-center justify-center w-full h-32 px-4 bg-slate-50 border-2 border-dashed rounded-[2rem] cursor-pointer group-hover:bg-slate-100 transition-all ${selectedFile ? "border-emerald-300 bg-emerald-50/30" : "border-slate-200 group-hover:border-indigo-300"}`}>
-                    <div className="flex flex-col items-center justify-center py-6">{selectedFile ? <><CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" /><p className="text-xs font-bold text-emerald-700 truncate max-w-[200px]">{selectedFile.name}</p><p className="text-[10px] text-emerald-600/60 mt-1 uppercase font-black">Ready to submit</p></> : <><FileText className="w-8 h-8 text-slate-400 mb-2 group-hover:text-indigo-500 transition-colors" /><p className="text-xs font-bold text-slate-600">Click to browse</p><p className="text-[10px] text-slate-400 mt-1">PDF Only (Max 5MB)</p></>}</div>
+                    <div className="flex flex-col items-center justify-center py-6">{selectedFile ? <><CheckCircle2 className="w-8 h-8 text-emerald-500 mb-2" /><p className="text-xs font-bold text-emerald-700 truncate max-w-[200px]">{selectedFile.name}</p><p className="text-[10px] text-emerald-600/60 mt-1 uppercase font-black">Ready to submit</p></> : <><FileText className="w-8 h-8 text-slate-400 mb-2 group-hover:text-indigo-500 transition-colors" /><p className="text-xs font-bold text-slate-600">Click to browse</p><p className="text-[10px] text-slate-400 mt-1">PDF, JPG or PNG (Max 5MB)</p></>}</div>
                   </label>
                 </div>
               </div>
@@ -263,45 +329,104 @@ const StudentClassroom = () => {
           </div>
         </div>
       )}
-      {previewSubmission && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-          <div className="w-full max-w-5xl h-[85vh] rounded-[2rem] bg-white shadow-2xl overflow-hidden flex flex-col">
-            <div className="flex items-center justify-between gap-4 px-5 py-4 border-b border-slate-100">
-              <div className="min-w-0">
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Preview submission</p>
-                <p className="text-sm font-semibold text-slate-900 truncate">
-                  {previewSubmission.fileName || previewSubmission.student?.name || "Submission"}
-                </p>
+      {/* Submission Preview - Reusing the same logic but triggering unified modal */}
+      {previewLoading && !selectedMaterial && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl p-8 flex flex-col items-center gap-4">
+             <Loader2 className="w-10 h-10 animate-spin text-cyan-600" />
+             <p className="text-sm font-bold text-slate-700">Loading submission preview...</p>
+          </div>
+        </div>
+      )}
+
+      {/* Material/Lecture Preview Modal */}
+      {selectedMaterial && (
+        <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+          {(() => {
+            const previewUrl = selectedMaterial.isLecture 
+                  ? `${getApiUrl()}/classrooms/view-note/${classroom?._id}/${selectedMaterial._id}?token=${user?.token}` 
+                  : (selectedMaterial.isAttachment || selectedMaterial.isSubmission)
+                  ? selectedMaterial.fileUrl
+                  : `${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`;
+            console.warn("[DEBUG_PREVIEW] Selected Material:", selectedMaterial);
+            console.warn("[DEBUG_PREVIEW] Generated URL:", previewUrl);
+            return null;
+          })()}
+          <div className="bg-white w-full max-w-5xl h-[85vh] rounded-[2.5rem] shadow-2xl flex flex-col overflow-hidden animate-in zoom-in-95 duration-300">
+            <div className="flex items-center justify-between p-4 md:p-6 border-b border-slate-100">
+              <div className="flex items-center gap-4">
+                <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
+                  <BookOpen className="w-5 h-5 text-cyan-600" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 leading-tight">{selectedMaterial.title}</h3>
+                  <p className="text-xs text-slate-500">{selectedMaterial.isLecture ? "Lecture Note" : selectedMaterial.isSubmission ? "Assignment Submission" : selectedMaterial.isAttachment ? "Attachment" : (selectedMaterial.subject || fallbackSubject)}</p>
+                </div>
               </div>
-              <button
-                type="button"
-                onClick={() => setPreviewSubmission(null)}
-                className="px-3 py-2 rounded-xl bg-slate-100 text-slate-700 text-sm font-semibold hover:bg-slate-200 transition-colors"
+              <button 
+                onClick={() => { setSelectedMaterial(null); setPreviewSubmission(null); }}
+                className="p-2 rounded-xl hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
               >
-                Close
+                <X className="w-6 h-6" />
               </button>
             </div>
-            <div className="flex-1 relative bg-slate-50">
-              {previewLoading ? (
-                <div className="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">
-                  Loading preview...
-                </div>
-              ) : previewError ? (
-                <div className="absolute inset-0 flex items-center justify-center p-6 text-center text-rose-600 text-sm">
-                  {previewError}
-                </div>
-              ) : (
-                <object
-                    title="Submission preview"
-                    data={previewUrl || undefined}
-                    type="application/pdf"
-                    className="w-full h-full"
-                >
-                  <div className="p-6 text-center text-slate-500 text-sm">
-                    Your browser can't display this file inline. Use the close button and try again.
+            
+            <div className="flex-1 bg-slate-50 relative overflow-hidden">
+              {(() => {
+                const fileUrl = selectedMaterial.fileUrl || selectedMaterial.url || "";
+                const isImage = /\.(jpe?g|png|gif|webp)(\?|$)/i.test(fileUrl) || 
+                                (selectedMaterial.isSubmission && !fileUrl.toLowerCase().includes('.pdf') && 
+                                 (fileUrl.includes('image') || /\.(jpe?g|png)/i.test(fileUrl)));
+                
+                if (isImage && (selectedMaterial.isSubmission || selectedMaterial.isAttachment)) {
+                  return (
+                    <div className="w-full h-full flex items-center justify-center p-6 bg-white overflow-auto">
+                      <img
+                        src={fileUrl}
+                        alt={selectedMaterial.title}
+                        className="max-w-full max-h-full object-contain rounded-xl shadow-lg"
+                      />
+                    </div>
+                  );
+                }
+                
+                if (selectedMaterial.isLecture || selectedMaterial.isAttachment || selectedMaterial.isSubmission || (selectedMaterial.fileType || "").toLowerCase() === 'pdf' || fileUrl.toLowerCase().includes('.pdf')) {
+                  return (
+                    <div className="w-full h-full bg-white relative">
+                      <iframe
+                        src={selectedMaterial.isLecture
+                          ? (selectedMaterial.url || `${getApiUrl()}/classrooms/view-note/${classroom?._id}/${selectedMaterial._id}?token=${user?.token}`)
+                          : (selectedMaterial.isAttachment || selectedMaterial.isSubmission)
+                          ? fileUrl
+                          : (selectedMaterial.fileUrl || `${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`)
+                        }
+                        title={selectedMaterial.title}
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                      />
+                    </div>
+                  );
+                }
+                
+                return (
+                  <div className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto bg-white">
+                    <img
+                      src={fileUrl || `${getApiUrl()}/materials/view/${selectedMaterial._id}?token=${user?.token}`}
+                      alt={selectedMaterial.title}
+                      className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                      onError={() => setSelectedMaterial(prev => ({ ...prev, isAttachment: true }))}
+                    />
                   </div>
-                </object>
-              )}
+                );
+              })()}
+            </div>
+
+            <div className="p-4 md:p-6 border-t border-slate-100 flex items-center justify-end gap-3 bg-white">
+              <button
+                onClick={() => { setSelectedMaterial(null); setPreviewSubmission(null); }}
+                className="px-8 py-3 rounded-2xl bg-cyan-600 text-white text-sm font-bold hover:bg-cyan-700 transition-colors shadow-md"
+              >
+                Close Preview
+              </button>
             </div>
           </div>
         </div>

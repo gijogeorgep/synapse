@@ -191,46 +191,25 @@ export const viewClassroomResourceProxy = async (req, res) => {
         const note = classroom.lectureNotes.id(noteId);
         if (!note) return res.status(404).json({ message: "Lecture note not found" });
 
-        if (!note.url) return res.status(404).json({ message: "No URL found" });
+        const fetchUrl = note.url.replace("http://", "https://");
+        console.log(`[VIEW_RESOURCE_PROXY] Proxying: ${fetchUrl}`);
 
-        // Access check: Student must be in the classroom, or user is teacher/admin
-        const isStudent = classroom.students.some(s => s.toString() === req.user._id.toString());
-        const isTeacher = classroom.teachers.some(t => t.toString() === req.user._id.toString());
-        const isAdmin = ['admin', 'superadmin'].includes(req.user.role);
-
-        if (!isStudent && !isTeacher && !isAdmin) {
-            return res.status(403).json({ message: "Not authorized to view this resource" });
-        }
-
-        let publicId = null;
-        if (note.url) {
-            const parts = note.url.split('/');
-            const uploadIndex = parts.indexOf('upload');
-            if (uploadIndex !== -1) {
-                // public_id is everything after the version (v12345...)
-                publicId = parts.slice(uploadIndex + 2).join('/').split('.')[0];
-            }
-        }
-
-        const secureUrl = cloudinary.url(publicId || note.url, {
-            resource_type: 'raw',
-            sign_url: true,
-            secure: true
-        });
-
-        console.log(`[VIEW_RESOURCE_PROXY] Fetching: ${secureUrl}`);
-
-        const response = await fetch(secureUrl);
+        const response = await fetch(fetchUrl);
         if (!response.ok) {
             throw new Error(`Cloudinary responded with ${response.status}`);
         }
 
-        // We assume lecture notes uploaded to 'raw' are typically PDFs
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', 'inline');
-        res.setHeader('X-Content-Type-Options', 'nosniff');
-
+        const isPdf = note.url?.toLowerCase().includes('.pdf');
+        const contentType = isPdf ? 'application/pdf' : (response.headers.get('content-type')?.includes('application/octet-stream') ? 'image/jpeg' : (response.headers.get('content-type') || 'image/jpeg'));
+        
         const arrayBuffer = await response.arrayBuffer();
+        
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Content-Length', arrayBuffer.byteLength);
+        res.setHeader('X-Content-Type-Options', 'nosniff');
+        res.setHeader('Cache-Control', 'no-cache');
+
         res.send(Buffer.from(arrayBuffer));
     } catch (error) {
         console.error("[VIEW_RESOURCE_PROXY] Error:", error);

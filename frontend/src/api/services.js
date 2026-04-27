@@ -84,6 +84,10 @@ export const uploadImage = (formData) => {
 export const getMyClassrooms = () => apiClient("/classrooms/my-classrooms");
 export const getTeacherClassrooms = () =>
   apiClient("/classrooms/my-classrooms");
+export const getMyTeacherStats = () =>
+  apiClient("/reports/my-teacher-stats");
+export const deleteMaterial = (id) =>
+  apiClient(`/materials/${id}`, { method: "DELETE" });
 export const getClassroomById = (id) => apiClient(`/classrooms/${id}`);
 export const getPublicClassrooms = () => apiClient("/classrooms/public");
 

@@ -8,13 +8,18 @@ import {
     getAdminsList,
     getTeacherStats,
     getAdminStats,
-    getStudentDeepDive 
+    getStudentDeepDive,
+    getMyTeacherStats
 } from "../controllers/reportController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.use(protect);
+
+// Teacher self-stats (accessible by teachers, before admin-only gate)
+router.get("/my-teacher-stats", authorize("teacher", "admin", "superadmin"), getMyTeacherStats);
+
 router.use(authorize("admin", "superadmin"));
 
 router.get("/overall", getOverallStats);
