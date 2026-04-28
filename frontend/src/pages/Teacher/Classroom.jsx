@@ -854,9 +854,10 @@ const TeacherClassroom = () => {
                                 <div className="flex-1 bg-slate-50 relative overflow-hidden">
                                     {(() => {
                                         const url = selectedMaterial.url || "";
-                                        const isPdf = url.toLowerCase().includes('.pdf');
-                                        const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
-                                        const isOffice = url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc');
+                                        const urlExt = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+                                        const isPdf = urlExt === 'pdf' || url.toLowerCase().includes('.pdf');
+                                        const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(urlExt) || /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                                        const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(urlExt);
                                         
                                         if (isPdf) {
                                             return (
@@ -876,7 +877,7 @@ const TeacherClassroom = () => {
                                                     />
                                                 </div>
                                             );
-                                        } else if (isOffice) {
+                                        } else if (isOffice || url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc')) {
                                             const googleUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
                                             return (
                                                 <iframe
@@ -894,16 +895,24 @@ const TeacherClassroom = () => {
                                                     <h4 className="text-lg font-bold text-slate-900">Preview Not Supported</h4>
                                                     <p className="text-sm text-slate-500 max-w-xs mt-2">
                                                         This file type cannot be previewed directly. 
-                                                        You can download it to view the content.
+                                                        You can try opening it in a new tab or downloading it.
                                                     </p>
-                                                    <a 
-                                                        href={url} 
-                                                        target="_blank" 
-                                                        rel="noreferrer"
-                                                        className="mt-6 px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm"
-                                                    >
-                                                        Download File
-                                                    </a>
+                                                    <div className="flex gap-4">
+                                                        <a 
+                                                            href={url} 
+                                                            target="_blank" 
+                                                            rel="noreferrer"
+                                                            className="mt-6 px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm"
+                                                        >
+                                                            Open In Tab
+                                                        </a>
+                                                        <a 
+                                                            href={`${getApiUrl()}/classrooms/view-note/${classroom._id}/${selectedMaterial._id}?token=${user?.token}&download=true`} 
+                                                            className="mt-6 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm"
+                                                        >
+                                                            Download
+                                                        </a>
+                                                    </div>
                                                 </div>
                                             );
                                         }

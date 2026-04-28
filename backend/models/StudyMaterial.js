@@ -11,7 +11,7 @@ const studyMaterialSchema = new mongoose.Schema(
         },
         fileType: {
             type: String,
-            enum: ["pdf", "video", "note", "jpeg", "image"],
+            enum: ["pdf", "video", "note", "jpeg", "image", "ppt", "pptx", "doc", "docx", "xls", "xlsx"],
             required: true,
         },
         category: {

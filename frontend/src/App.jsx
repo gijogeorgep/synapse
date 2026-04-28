@@ -237,14 +237,15 @@ function AppContent() {
     location.pathname.startsWith("/teacher") ||
     isAdminRoute;
   const showFloatingWhatsApp = !isAdminAuth && !isDashboardRoute;
-  const showFooter = !isAdminAuth && !isAdminRoute;
+  const showFooter = !isAdminAuth && !isDashboardRoute;
+  const showNavbar = !isAdminAuth && !isDashboardRoute;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
       <RouteSeo />
-      {!isAdminAuth && <Navbar />}
+      {showNavbar && <Navbar />}
       {showFloatingWhatsApp && <FloatingWhatsApp />}
-      <div className={`flex-1 ${!isAdminAuth ? "mt-20 md:mt-24" : ""}`}>
+      <div className={`flex-1 ${showNavbar ? "mt-20 md:mt-24" : ""}`}>
         <Routes>
           <Route path="/" element={isHostAdmin ? <AdminAuth /> : <LandingPage />} />
           <Route path="/admin-portal-auth" element={<AdminAuth />} />

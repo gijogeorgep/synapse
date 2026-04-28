@@ -306,8 +306,10 @@ const TeacherMaterials = () => {
                         <div className="flex-1 bg-slate-100 relative overflow-hidden">
                             {(() => {
                                 const url = selectedMaterial.fileUrl || selectedMaterial.url;
-                                const isPdf = url.toLowerCase().includes('.pdf');
-                                const isImg = /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                                const urlExt = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+                                const isPdf = urlExt === 'pdf' || url.toLowerCase().includes('.pdf');
+                                const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(urlExt) || /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
+                                const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(urlExt);
                                 
                                 if (isPdf) {
                                     const previewUrl = selectedMaterial.type === 'lecture_note' 
@@ -335,8 +337,10 @@ const TeacherMaterials = () => {
                                             />
                                         </div>
                                     );
-                                } else if (url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc')) {
-                                    // Use Google Docs Viewer for Office files to prevent download
+                                } else if (isOffice || url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc')) {
+                                    // Use Google Docs Viewer for Office files. 
+                                    // Note: Google needs a PUBLIC URL. If Cloudinary is private, this will fail.
+                                    // But since these are lecture notes, they are usually public Cloudinary URLs.
                                     const googleUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
                                     return (
                                         <iframe
@@ -353,8 +357,8 @@ const TeacherMaterials = () => {
                                             </div>
                                             <h4 className="text-lg font-bold text-slate-900">Document Preview Not Supported</h4>
                                             <p className="text-sm text-slate-500 max-w-xs mt-2">
-                                                This file type (PPT/DOC) cannot be previewed directly in the browser. 
-                                                Please open the classroom to manage this file.
+                                                This file type cannot be previewed directly in the browser. 
+                                                You can try opening it in a new tab or downloading it.
                                             </p>
                                             <a 
                                                 href={url} 

@@ -199,10 +199,28 @@ export const viewClassroomResourceProxy = async (req, res) => {
             throw new Error(`Cloudinary responded with ${response.status}`);
         }
 
-        const isPdf = note.url?.toLowerCase().includes('.pdf');
-        const contentType = isPdf ? 'application/pdf' : (response.headers.get('content-type')?.includes('application/octet-stream') ? 'image/jpeg' : (response.headers.get('content-type') || 'image/jpeg'));
-        
         const arrayBuffer = await response.arrayBuffer();
+        const urlExt = (note.url || "").split('?')[0].split('.').pop().toLowerCase();
+        const isPdf = urlExt === 'pdf' || (note.url || "").toLowerCase().includes(".pdf");
+        
+        let contentType = response.headers.get('content-type');
+        if (!contentType || contentType === 'application/octet-stream') {
+            const mimeTypes = {
+                'pdf': 'application/pdf',
+                'ppt': 'application/vnd.ms-powerpoint',
+                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+                'doc': 'application/msword',
+                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'xls': 'application/vnd.ms-excel',
+                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                'png': 'image/png',
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'gif': 'image/gif',
+                'webp': 'image/webp'
+            };
+            contentType = mimeTypes[urlExt] || (isPdf ? 'application/pdf' : 'image/jpeg');
+        }
         
         res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', 'inline');

@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import logo from "../../assets/synapse_logo.png";
+import logoIcon from "../../assets/synapse_y_logo.png";
 
 const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setIsMobileOpen }) => {
     const { logout } = useAuth();
@@ -101,27 +103,40 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
                 />
             )}
             <aside
-                className={`fixed lg:sticky top-20 md:top-24 z-50 flex h-[calc(100vh-5rem)] md:h-[calc(100vh-6rem)] shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-all duration-300 ${
+                className={`fixed lg:sticky top-0 z-50 flex h-screen shrink-0 flex-col overflow-y-auto border-r border-slate-200 bg-white transition-all duration-300 ${
                     isMobileOpen ? "translate-x-0 w-56 left-0 shadow-2xl" : "-translate-x-full lg:translate-x-0 left-0 lg:left-auto"
                 } ${collapsed ? "lg:w-20 w-0" : "lg:w-60 w-0"}`}
             >
-                <div className={`flex items-center ${collapsed ? "lg:justify-center px-3 py-5" : "justify-end px-6 py-5"} ${isMobileOpen ? 'justify-between' : ''}`}>
-                    <button
-                        type="button"
-                        onClick={onToggleCollapse}
-                        className="hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-cyan-600"
-                        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                        title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-                    >
-                        {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setIsMobileOpen(false)}
-                        className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-cyan-600"
-                    >
-                        <X className="h-5 w-5" />
-                    </button>
+                <div className={`flex items-center gap-3 ${collapsed ? "lg:justify-center px-3 py-5" : "justify-between px-6 py-5"} ${isMobileOpen ? 'justify-between' : ''}`}>
+                    {!collapsed && (
+                        <NavLink to="/" className="flex items-center">
+                            <img src={logo} alt="Synapse" className="h-20 w-auto object-contain" />
+                        </NavLink>
+                    )}
+                    {collapsed && (
+                        <NavLink to="/" className="flex items-center">
+                            <img src={logoIcon} alt="Synapse" className="h-14 w-auto object-contain" />
+                        </NavLink>
+                    )}
+                    
+                    <div className="flex items-center gap-2">
+                        <button
+                            type="button"
+                            onClick={onToggleCollapse}
+                            className="hidden lg:inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-cyan-600"
+                            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                            title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+                        >
+                            {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setIsMobileOpen(false)}
+                            className="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm transition-colors hover:bg-slate-50 hover:text-cyan-600"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
+                    </div>
                 </div>
 
                 <div className={collapsed ? "lg:px-3 pb-6 px-6" : "px-6 pb-6"}>
