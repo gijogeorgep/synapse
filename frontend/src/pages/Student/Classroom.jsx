@@ -136,7 +136,8 @@ const StudentClassroom = () => {
           throw new Error(text || `Preview failed (${response.status})`);
         }
 
-        const blob = new Blob([await response.arrayBuffer()], { type: "application/pdf" });
+        const contentType = response.headers.get("content-type") || "application/pdf";
+        const blob = new Blob([await response.arrayBuffer()], { type: contentType });
         objectUrl = URL.createObjectURL(blob);
         setPreviewUrl(objectUrl);
       } catch (error) {
@@ -159,11 +160,13 @@ const StudentClassroom = () => {
 
   useEffect(() => {
     if (previewUrl && previewSubmission) {
+        const isPdf = previewSubmission.fileName?.toLowerCase().endsWith(".pdf") || 
+                     (previewSubmission.fileUrl || "").toLowerCase().includes(".pdf");
         setSelectedMaterial({
             title: previewSubmission.fileName || "Submission Preview",
             fileUrl: previewUrl,
             isSubmission: true,
-            isPdf: true
+            isPdf: isPdf
         });
     }
   }, [previewUrl, previewSubmission]);
@@ -284,10 +287,7 @@ const StudentClassroom = () => {
             <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-slate-900 flex items-center gap-2"><FileText className="w-4 h-4 text-emerald-600" />Upcoming & active exams</h3><span className="text-xs font-medium text-slate-400">{availableExams?.length || 0} exams</span></div>
             <div className="space-y-3">{loadingExams ? <div className="text-center py-4 text-slate-400 text-sm">Loading exams...</div> : availableExams.length === 0 ? <div className="text-center py-4 text-slate-400 text-sm">No exams scheduled for this subject.</div> : availableExams.map((exam) => <div key={exam._id} className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50/70 border border-slate-100 hover:border-emerald-100 transition-colors"><div className="space-y-1"><p className="text-sm font-semibold text-slate-900">{exam.title}</p><p className="text-xs text-slate-500 flex items-center gap-2"><Clock className="w-3 h-3" />{exam.duration} mins • {exam.isActive ? "Active" : "Archived"}</p></div><button onClick={() => navigate("/student/exams", { state: { startExamId: exam._id } })} className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-full bg-cyan-600 text-white text-xs font-semibold shadow-sm hover:bg-cyan-700 transition-colors"><PlayCircle className="w-4 h-4" /><span>Take exam</span></button></div>)}</div>
           </div>
-          <div className="mt-8 border-t border-slate-100 pt-6 space-y-4">
-            <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-slate-900 flex items-center gap-2"><Award className="w-4 h-4 text-amber-600" />My results for {fallbackSubject}</h3><span className="text-xs font-medium text-slate-400">{results?.length || 0} scores</span></div>
-            <div className="space-y-3">{loadingResults ? <div className="text-center py-4 text-slate-400 text-sm">Loading results...</div> : results.length === 0 ? <div className="text-center py-4 text-slate-400 text-sm">You haven't taken any exams for this subject yet.</div> : results.map((res) => { const percentage = res.exam ? (res.score / res.exam.duration) * 100 : 0; let grade = "F"; if (percentage >= 90) grade = "A+"; else if (percentage >= 80) grade = "A"; else if (percentage >= 70) grade = "B"; else if (percentage >= 60) grade = "C"; else if (percentage >= 50) grade = "D"; return <div key={res._id} className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-100"><div className="space-y-1"><p className="text-sm font-bold text-slate-900">{res.exam?.title || "Unknown Exam"}</p><p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">{new Date(res.createdAt).toLocaleDateString()} • {Math.floor((res.timeTaken || 0) / 60)}m {(res.timeTaken || 0) % 60}s</p></div><div className="flex items-center gap-3"><div className="text-right"><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Score</p><p className="text-sm font-black text-slate-900">{res.score}</p></div><span className={`w-8 h-8 rounded-full text-[10px] font-black flex items-center justify-center ${percentage >= 50 ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700"}`}>{grade}</span></div></div>; })}</div>
-          </div>
+
           <div className="mt-8 border-t border-slate-100 pt-6 space-y-4">
             <div className="flex items-center justify-between"><h3 className="text-base font-semibold text-slate-900 flex items-center gap-2"><BookOpen className="w-4 h-4 text-cyan-600" />Assignments & classwork</h3><span className="text-xs font-medium text-slate-400">{assignments?.length || 0} items</span></div>
             <div className="space-y-4">{loadingAssignments ? <div className="text-center py-4 text-slate-400 text-sm">Loading assignments...</div> : assignments.length === 0 ? <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-100"><p className="text-sm text-slate-400">No assignments posted for this classroom.</p></div> : assignments.map((work) => { const submission = work.userSubmission; const isSubmitted = !!submission; const isGraded = submission?.status === "Graded"; const attachment = Array.isArray(work.attachments) ? work.attachments[0] : null; return <div key={work._id} className="p-4 rounded-2xl bg-slate-50 border border-slate-100 space-y-3"><div className="flex items-start justify-between gap-4"><div className="space-y-1"><p className="text-sm font-bold text-slate-900">{work.title}</p><p className="text-xs text-slate-500 flex items-center gap-1.5"><Calendar className="w-3 h-3" />Due {new Date(work.dueDate).toLocaleDateString()}</p>{typeof work.maxPoints === "number" && <p className="text-[11px] text-slate-400 font-semibold">{work.maxPoints} points</p>}</div><div className="flex items-center gap-2">{isGraded ? <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${isGraded ? "bg-emerald-100 text-emerald-700" : "bg-indigo-100 text-indigo-700"}`}>{isGraded ? "Graded" : "Submitted"}</span> : <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">Pending</span>}{attachment && <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSelectedMaterial({ title: work.title + " - Attachment", fileUrl: attachment.url, isAttachment: true }); }} className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-full bg-white text-[11px] font-semibold text-cyan-700 border border-cyan-100 hover:bg-cyan-50 transition-colors"><ExternalLink className="w-3.5 h-3.5" /><span>View work</span></button>}</div></div>{work.description && <p className="text-xs text-slate-600 line-clamp-2">{work.description}</p>}<div className="flex items-center justify-between pt-1"><div className="flex items-center gap-2">{isGraded && <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white border border-emerald-100 shadow-sm"><Award className="w-3.5 h-3.5 text-emerald-600" /><span className="text-xs font-bold text-emerald-700">Result: {submission.grade}</span></div>}</div>{!isSubmitted ? <button type="button" onClick={() => openSubmitModal(work)} className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-cyan-600 text-white text-xs font-bold hover:bg-cyan-700 transition-all shadow-sm"><PlayCircle className="w-3.5 h-3.5" /><span>Submit Homework</span></button> : <div className="flex items-center gap-2"><button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setPreviewSubmission(submission); }} className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-white text-xs font-bold text-slate-600 border border-slate-200 hover:bg-slate-50 transition-colors"><ExternalLink className="w-3.5 h-3.5" /><span>View submission</span></button>{!isGraded && <button type="button" onClick={() => openSubmitModal(work)} className="p-2 rounded-xl bg-slate-200 text-slate-600 hover:bg-slate-300 transition-colors" title="Update Submission"><PlayCircle className="w-3.5 h-3.5" /></button>}</div>}</div>{isGraded && submission.feedback && <div className="p-3 bg-emerald-50/50 rounded-xl border border-emerald-50 text-[11px] text-emerald-800 italic"><strong>Teacher's feedback:</strong> "{submission.feedback}"</div>}</div>; })}</div>
@@ -375,10 +375,11 @@ const StudentClassroom = () => {
               {(() => {
                 const fileUrl = selectedMaterial.fileUrl || selectedMaterial.url || "";
                 const isImage = /\.(jpe?g|png|gif|webp)(\?|$)/i.test(fileUrl) || 
-                                (selectedMaterial.isSubmission && !fileUrl.toLowerCase().includes('.pdf') && 
-                                 (fileUrl.includes('image') || /\.(jpe?g|png)/i.test(fileUrl)));
+                                (selectedMaterial.isSubmission && !selectedMaterial.isPdf) ||
+                                (selectedMaterial.isAttachment && !fileUrl.toLowerCase().includes('.pdf')) ||
+                                (selectedMaterial.isLecture && !fileUrl.toLowerCase().includes('.pdf'));
                 
-                if (isImage && (selectedMaterial.isSubmission || selectedMaterial.isAttachment)) {
+                if (isImage) {
                   return (
                     <div className="w-full h-full flex items-center justify-center p-6 bg-white overflow-auto">
                       <img
@@ -390,12 +391,12 @@ const StudentClassroom = () => {
                   );
                 }
                 
-                if (selectedMaterial.isLecture || selectedMaterial.isAttachment || selectedMaterial.isSubmission || (selectedMaterial.fileType || "").toLowerCase() === 'pdf' || fileUrl.toLowerCase().includes('.pdf')) {
+                if (!isImage && (selectedMaterial.isLecture || selectedMaterial.isAttachment || selectedMaterial.isSubmission || (selectedMaterial.fileType || "").toLowerCase() === 'pdf' || fileUrl.toLowerCase().includes('.pdf'))) {
                   return (
                     <div className="w-full h-full bg-white relative">
                       <iframe
                         src={selectedMaterial.isLecture
-                          ? (selectedMaterial.url || `${getApiUrl()}/classrooms/view-note/${classroom?._id}/${selectedMaterial._id}?token=${user?.token}`)
+                          ? `${getApiUrl()}/classrooms/view-note/${classroom?._id}/${selectedMaterial._id}?token=${user?.token}`
                           : (selectedMaterial.isAttachment || selectedMaterial.isSubmission)
                           ? fileUrl
                           : (selectedMaterial.fileUrl || `${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`)
