@@ -301,4 +301,10 @@ export const proxyFile = async (req, res) => {
         res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', `inline; filename="preview.${urlExt || 'pdf'}"`);
         res.setHeader('Cache-Control', 'public, max-age=3600');
+        const arrayBuffer = await response.arrayBuffer();
+        res.send(Buffer.from(arrayBuffer));
+    } catch (error) {
+        console.error("[PROXY_FILE] Error:", error);
+        res.status(500).json({ message: "Error proxying file" });
+    }
 };

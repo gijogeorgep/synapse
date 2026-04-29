@@ -33,7 +33,7 @@ const SplashScreen = ({ onComplete }) => {
         <div className="relative mb-8">
           <div className="absolute inset-0 bg-cyan-400/20 rounded-full blur-3xl animate-pulse scale-150" />
           <img
-            src="/app-icon-512.png"
+            src={(window.location.hostname.startsWith('admin') || window.location.port === '5174') ? "/y-admin-512.png" : "/app-icon-512.png"}
             alt="Synapse Logo"
             className="h-32 md:h-48 w-auto object-contain relative animate-logo-in"
           />

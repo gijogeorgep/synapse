@@ -18,7 +18,21 @@
     <link rel="manifest" href="/manifest.json?v=4" />
 
 
-    <link rel="apple-touch-icon" href="/app-icon-192.png" />
+    <link rel="apple-touch-icon" href="/app-icon-192.png" id="apple-touch-icon" />
+    <script>
+      (function() {
+        const isAdmin = window.location.hostname.startsWith('admin') || window.location.port === '5174'; 
+        if (isAdmin) {
+          const manifest = document.querySelector('link[rel="manifest"]');
+          if (manifest) manifest.setAttribute('href', '/admin-manifest.json');
+          
+          const appleIcon = document.getElementById('apple-touch-icon');
+          if (appleIcon) appleIcon.setAttribute('href', '/y-admin-192.png');
+          
+          document.title = "Synapse Admin Portal";
+        }
+      })();
+    </script>
 
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -62,7 +76,12 @@
       <!-- Initial Splash Screen (Static) -->
       <div id="initial-splash" style="position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Outfit', sans-serif;">
         <div style="display: flex; flex-direction: column; align-items: center;">
-          <img src="/app-icon-512.png" alt="Synapse" style="height: 120px; width: auto; margin-bottom: 20px; animation: pulse 2s infinite ease-in-out;" />
+          <img id="splash-logo" src="/app-icon-512.png" alt="Synapse" style="height: 120px; width: auto; margin-bottom: 20px; animation: pulse 2s infinite ease-in-out;" />
+          <script>
+            if (window.location.hostname.startsWith('admin') || window.location.port === '5174') {
+              document.getElementById('splash-logo').src = '/y-admin-512.png';
+            }
+          </script>
           <div style="width: 120px; height: 2px; background: #f1f5f9; border-radius: 2px; overflow: hidden; position: relative;">
             <div style="position: absolute; inset: 0; background: linear-gradient(90deg, transparent, #06b6d4, transparent); width: 100%; animation: initial-progress 1.5s infinite linear;"></div>
           </div>
