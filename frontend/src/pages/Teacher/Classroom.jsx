@@ -855,14 +855,22 @@ const TeacherClassroom = () => {
                                     {(() => {
                                         const url = selectedMaterial.url || "";
                                         const urlExt = (url.split('?')[0].split('.').pop() || '').toLowerCase();
-                                        const isPdf = urlExt === 'pdf' || url.toLowerCase().includes('.pdf');
-                                        const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(urlExt) || /\.(jpg|jpeg|png|gif|webp)$/i.test(url);
-                                        const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(urlExt);
+                                        
+                                        // Enhanced detection
+                                        const isPdf = urlExt === 'pdf' || 
+                                                      (selectedMaterial.fileType || "").toLowerCase() === 'pdf' || 
+                                                      url.toLowerCase().includes('.pdf');
+                                        const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(urlExt) || 
+                                                      ['image/jpeg', 'image/png', 'image/jpg'].includes(selectedMaterial.fileType) ||
+                                                      /\.(jpe?g|png|gif|webp)(\?|$)/i.test(url);
+                                        const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(urlExt) ||
+                                                         (selectedMaterial.fileType || "").toLowerCase().includes('presentation') ||
+                                                         (selectedMaterial.fileType || "").toLowerCase().includes('wordprocessingml');
                                         
                                         if (isPdf) {
                                             return (
                                                 <iframe
-                                                    src={`${getApiUrl()}/classrooms/view-note/${classroom._id}/${selectedMaterial._id}?token=${user?.token}`}
+                                                    src={`${getApiUrl()}/classrooms/view-note/${classroom._id}/${selectedMaterial._id}/preview.pdf?token=${user?.token}`}
                                                     title={selectedMaterial.title}
                                                     className="w-full h-full border-none bg-white"
                                                 />
@@ -877,8 +885,9 @@ const TeacherClassroom = () => {
                                                     />
                                                 </div>
                                             );
-                                        } else if (isOffice || url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc')) {
-                                            const googleUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+                                        } else if (isOffice || url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc') || url.toLowerCase().includes('.xls')) {
+                                            const directUrl = url.replace('http://', 'https://');
+                                            const googleUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(directUrl)}&embedded=true`;
                                             return (
                                                 <iframe
                                                     src={googleUrl}
@@ -897,18 +906,18 @@ const TeacherClassroom = () => {
                                                         This file type cannot be previewed directly. 
                                                         You can try opening it in a new tab or downloading it.
                                                     </p>
-                                                    <div className="flex gap-4">
+                                                    <div className="flex gap-4 mt-6">
                                                         <a 
                                                             href={url} 
                                                             target="_blank" 
                                                             rel="noreferrer"
-                                                            className="mt-6 px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm"
+                                                            className="px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm"
                                                         >
-                                                            Open In Tab
+                                                            Open in New Tab
                                                         </a>
                                                         <a 
-                                                            href={`${getApiUrl()}/classrooms/view-note/${classroom._id}/${selectedMaterial._id}?token=${user?.token}&download=true`} 
-                                                            className="mt-6 px-6 py-3 bg-slate-900 text-white rounded-xl font-bold text-sm"
+                                                            href={`${url}${url.includes('?') ? '&' : '?'}download=true`}
+                                                            className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"
                                                         >
                                                             Download
                                                         </a>

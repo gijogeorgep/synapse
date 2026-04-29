@@ -182,33 +182,46 @@ export const viewMaterialProxy = async (req, res) => {
         }
 
         const arrayBuffer = await response.arrayBuffer();
-        const isPdf = material.fileType === 'pdf' || (material.fileUrl || "").toLowerCase().includes(".pdf");
-        const urlExt = (material.fileUrl || "").split('?')[0].split('.').pop().toLowerCase();
+        
+        // Detect extension from material.fileUrl OR from the filename suffix if provided
+        const urlForExt = (req.params.filename || material.fileUrl || "").split('?')[0];
+        const urlExt = urlForExt.split('.').pop().toLowerCase();
+        
+        const isPdf = urlExt === 'pdf' || material.fileType === 'pdf' || (material.fileUrl || "").toLowerCase().includes(".pdf");
         
         let contentType = response.headers.get('content-type');
-        if (!contentType || contentType === 'application/octet-stream') {
-            const mimeTypes = {
-                'pdf': 'application/pdf',
-                'ppt': 'application/vnd.ms-powerpoint',
-                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'doc': 'application/msword',
-                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'xls': 'application/vnd.ms-excel',
-                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            };
+        
+        // Map common extensions to MIME types
+        const mimeTypes = {
+            'pdf': 'application/pdf',
+            'ppt': 'application/vnd.ms-powerpoint',
+            'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'doc': 'application/msword',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls': 'application/vnd.ms-excel',
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'gif': 'image/gif',
+            'webp': 'image/webp'
+        };
+
+        // If content-type is missing or generic, force it based on extension
+        if (!contentType || contentType === 'application/octet-stream' || contentType === 'binary/octet-stream') {
             contentType = mimeTypes[urlExt] || (isPdf ? 'application/pdf' : 'image/jpeg');
         }
 
         if (req.query.download === 'true') {
-            const extension = isPdf ? 'pdf' : (contentType.split('/')[1] || 'bin');
+            const extension = urlExt || (isPdf ? 'pdf' : (contentType.split('/')[1] || 'bin'));
             res.setHeader('Content-Type', contentType);
             res.setHeader('Content-Disposition', `attachment; filename="${material.title || 'document'}.${extension}"`);
         } else {
-            // Force inline headers to ensure browser previewing
+            // Force inline headers with filename hint to ensure browser previewing
             res.setHeader('Content-Type', contentType);
-            res.setHeader('Content-Disposition', 'inline');
+            res.setHeader('Content-Disposition', `inline; filename="preview.${urlExt || (isPdf ? 'pdf' : 'jpg')}"`);
             res.setHeader('X-Content-Type-Options', 'nosniff');
-            res.setHeader('Cache-Control', 'no-cache');
+            res.setHeader('Cache-Control', 'public, max-age=3600');
         }
         
         res.send(Buffer.from(arrayBuffer));
@@ -264,32 +277,28 @@ export const proxyFile = async (req, res) => {
         const urlExt = (url.split('?')[0].split('.').pop() || '').toLowerCase();
         let contentType = response.headers.get('content-type');
         
+        const mimeTypes = {
+            'pdf': 'application/pdf',
+            'ppt': 'application/vnd.ms-powerpoint',
+            'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'doc': 'application/msword',
+            'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xls': 'application/vnd.ms-excel',
+            'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'png': 'image/png',
+            'jpg': 'image/jpeg',
+            'jpeg': 'image/jpeg',
+            'gif': 'image/gif',
+            'webp': 'image/webp'
+        };
+
         // If content-type is generic or missing, try to guess from extension
-        if (!contentType || contentType === 'application/octet-stream') {
-            const mimeTypes = {
-                'pdf': 'application/pdf',
-                'ppt': 'application/vnd.ms-powerpoint',
-                'pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
-                'doc': 'application/msword',
-                'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'xls': 'application/vnd.ms-excel',
-                'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                'png': 'image/png',
-                'jpg': 'image/jpeg',
-                'jpeg': 'image/jpeg',
-                'gif': 'image/gif',
-                'webp': 'image/webp'
-            };
+        if (!contentType || contentType === 'application/octet-stream' || contentType === 'binary/octet-stream') {
             contentType = mimeTypes[urlExt] || 'application/pdf';
         }
         
+        // Set headers for inline preview with filename hint
         res.setHeader('Content-Type', contentType);
-        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Content-Disposition', `inline; filename="preview.${urlExt || 'pdf'}"`);
         res.setHeader('Cache-Control', 'public, max-age=3600');
-
-        const arrayBuffer = await response.arrayBuffer();
-        res.send(Buffer.from(arrayBuffer));
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
 };

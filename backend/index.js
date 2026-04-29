@@ -44,6 +44,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/sitemap", sitemapRoutes);
+app.use("/", sitemapRoutes); // Allow /sitemap.xml at root level
 
 app.get("/", (req, res) => {
     res.send("API is running...");

@@ -72,9 +72,9 @@ const Hero = () => {
             >
               <div className="space-y-4 sm:space-y-5 w-full">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-[4rem] font-extrabold text-white leading-[1.2] lg:leading-[1.15] tracking-tight drop-shadow-sm">
-                  India's Most Focused <br className="hidden sm:block" />
+                  <span className="block mb-2">Synapse Edu Hub</span>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-sky-200">
-                    Learning Ecosystem
+                    India's Most Focused Learning Ecosystem
                   </span>
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-cyan-100 font-normal max-w-xl leading-relaxed mt-2 sm:mt-4 mx-auto lg:mx-0">

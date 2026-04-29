@@ -235,24 +235,82 @@ const StudentMaterials = () => {
                         </div>
                         
                         <div className="flex-1 bg-slate-50 relative overflow-hidden">
-                            {(selectedMaterial.fileType || "").toLowerCase() === 'pdf' || (selectedMaterial.fileUrl || "").toLowerCase().includes('.pdf') ? (
-                                <div className="w-full h-full bg-white relative">
-                                    <iframe
-                                        src={`${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`}
-                                        title={selectedMaterial.title}
-                                        style={{ width: '100%', height: '100%', border: 'none' }}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto bg-white">
-                                    <img 
-                                        src={`${getApiUrl()}/materials/view/${selectedMaterial._id}?token=${user?.token}`}
-                                        alt={selectedMaterial.title}
-                                        className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
-                                        onError={() => setSelectedMaterial(prev => ({ ...prev, fileType: 'pdf' }))}
-                                    />
-                                </div>
-                            )}
+                            {(() => {
+                                const url = selectedMaterial.fileUrl || selectedMaterial.url || "";
+                                const urlExt = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+                                
+                                // Enhanced detection
+                                const isPdf = urlExt === 'pdf' || 
+                                              (selectedMaterial.fileType || "").toLowerCase() === 'pdf' || 
+                                              url.toLowerCase().includes('.pdf');
+                                const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(urlExt) || 
+                                              ['image/jpeg', 'image/png', 'image/jpg'].includes(selectedMaterial.fileType) ||
+                                              /\.(jpe?g|png|gif|webp)(\?|$)/i.test(url);
+                                const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(urlExt) ||
+                                                 (selectedMaterial.fileType || "").toLowerCase().includes('presentation') ||
+                                                 (selectedMaterial.fileType || "").toLowerCase().includes('wordprocessingml');
+
+                                if (isPdf) {
+                                    return (
+                                        <div className="w-full h-full bg-white relative">
+                                            <iframe
+                                                src={`${getApiUrl()}/materials/view/${selectedMaterial._id}/preview.pdf?token=${user?.token}`}
+                                                title={selectedMaterial.title}
+                                                style={{ width: '100%', height: '100%', border: 'none' }}
+                                            />
+                                        </div>
+                                    );
+                                } else if (isImg) {
+                                    return (
+                                        <div className="w-full h-full flex items-center justify-center p-4 md:p-8 overflow-auto bg-white">
+                                            <img 
+                                                src={`${getApiUrl()}/materials/view/${selectedMaterial._id}/image.${urlExt || 'jpg'}?token=${user?.token}`}
+                                                alt={selectedMaterial.title}
+                                                className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                                            />
+                                        </div>
+                                    );
+                                } else if (isOffice || url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc') || url.toLowerCase().includes('.xls')) {
+                                    const directUrl = url.replace('http://', 'https://');
+                                    const googleUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(directUrl)}&embedded=true`;
+                                    return (
+                                        <iframe
+                                            src={googleUrl}
+                                            title={selectedMaterial.title}
+                                            className="w-full h-full border-none bg-white"
+                                        />
+                                    );
+                                } else {
+                                    return (
+                                        <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-white text-center">
+                                            <div className="w-20 h-20 rounded-full bg-slate-50 flex items-center justify-center mb-4">
+                                                <FileText className="w-10 h-10 text-cyan-600" />
+                                            </div>
+                                            <h4 className="text-lg font-bold text-slate-900">Preview Not Supported</h4>
+                                            <p className="text-sm text-slate-500 max-w-xs mt-2">
+                                                This file type cannot be previewed directly. 
+                                                You can try opening it in a new tab or downloading it.
+                                            </p>
+                                            <div className="flex gap-4 mt-6">
+                                                <a 
+                                                    href={url} 
+                                                    target="_blank" 
+                                                    rel="noreferrer"
+                                                    className="px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm"
+                                                >
+                                                    Open in New Tab
+                                                </a>
+                                                <a 
+                                                    href={`${url}${url.includes('?') ? '&' : '?'}download=true`}
+                                                    className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"
+                                                >
+                                                    Download
+                                                </a>
+                                            </div>
+                                        </div>
+                                    );
+                                }
+                            })()}
                         </div>
 
                         <div className="p-4 md:p-6 border-t border-slate-100 flex items-center justify-end gap-3 bg-white">
