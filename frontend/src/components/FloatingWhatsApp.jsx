@@ -6,7 +6,7 @@ const FloatingWhatsApp = () => {
       href="https://wa.me/918157930567"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Chat with Synapse Edu Hub on WhatsApp"
+      aria-label="Chat with Synapse Connect on WhatsApp"
       className="fixed bottom-6 right-6 z-[70] group"
     >
       <div className="absolute inset-0 rounded-full bg-emerald-500/30 blur-xl animate-pulse" />

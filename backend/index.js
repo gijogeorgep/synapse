@@ -15,6 +15,8 @@ import notificationRoutes from "./routes/notificationRoutes.js";
 import contactRoutes from "./routes/contactRoutes.js";
 import assignmentRoutes from "./routes/assignmentRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
+import bannerRoutes from "./routes/bannerRoutes.js";
+import settingsRoutes from "./routes/settingsRoutes.js";
 
 dotenv.config();
 
@@ -43,6 +45,8 @@ app.use("/api/programs", programRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/contact", contactRoutes);
 app.use("/api/assignments", assignmentRoutes);
+app.use("/api/banners", bannerRoutes);
+app.use("/api/settings", settingsRoutes);
 app.use("/api/sitemap", sitemapRoutes);
 app.use("/", sitemapRoutes); // Allow /sitemap.xml at root level
 

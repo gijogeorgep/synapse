@@ -21,6 +21,7 @@ import {
     ChevronLeft,
     ChevronRight,
     X,
+    Image as ImageIcon,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -64,9 +65,10 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             { name: "Reports", icon: BarChart3, path: "/admin/reports" },
             { name: "Bulk Promotions", icon: ArrowUpCircle, path: "/admin/promotions" },
             { name: "Resource Library", icon: BookCopy, path: "/admin/resources" },
-            { name: "Programs ", icon: Sparkles, path: "/admin/programs" },
-            { name: "Blogs ", icon: FileText, path: "/admin/blogs" },
-            { name: "Payments", icon: CreditCard, path: "/admin/payments" },
+            {name: "Programs ", icon: Sparkles, path: "/admin/programs" },
+            {name: "Blogs ", icon: FileText, path: "/admin/blogs" },
+            {name: "Banner Ads", icon: ImageIcon, path: "/admin/banners" },
+            {name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
         ],
         superadmin: [
@@ -78,9 +80,10 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             { name: "Reports", icon: BarChart3, path: "/admin/reports" },
             { name: "Bulk Promotions", icon: ArrowUpCircle, path: "/admin/promotions" },
             { name: "Resource Library", icon: BookCopy, path: "/admin/resources" },
-            { name: "Programs ", icon: Sparkles, path: "/admin/programs" },
-            { name: "Blogs ", icon: FileText, path: "/admin/blogs" },
-            { name: "Audit Logs", icon: History, path: "/admin/audit-logs" },
+            {name: "Programs ", icon: Sparkles, path: "/admin/programs" },
+            {name: "Blogs ", icon: FileText, path: "/admin/blogs" },
+            {name: "Banner Ads", icon: ImageIcon, path: "/admin/banners" },
+            {name: "Audit Logs", icon: History, path: "/admin/audit-logs" },
             { name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
         ],

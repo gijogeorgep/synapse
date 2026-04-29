@@ -36,7 +36,7 @@ const FAQ = () => {
 
   const faqs = [
     {
-      question: "What are the main programs at Synapse edu Hub?",
+      question: "What are the main programs at Synapse Connect?",
       answer: "Our core programs include PRIME ONE (Personalized 1-on-1 Tuition), CLUSTER (Batch Intensive sessions), and DEEP ROOTS (Comprehensive Bridge Course), designed for India's most focused learning ecosystem."
     },
     {

@@ -55,7 +55,7 @@ const Hero = () => {
     <>
       <section
         ref={scopeRef}
-        className="relative w-full bg-slate-50 pt-4 sm:pt-8 md:pt-12 pb-8 overflow-hidden"
+        className="relative w-full bg-slate-50 pt-4 sm:pt-8 md:pt-12 pb-2 overflow-hidden"
       >
         {/* Background Decorative Elements - NOW CLIPPED BY overflow-hidden */}
         <div className="absolute top-[0%] left-[-10%] w-[60%] h-[60%] bg-cyan-500 rounded-full mix-blend-multiply filter blur-[80px] md:blur-[120px] opacity-20 animate-pulse duration-[3000ms] pointer-events-none"></div>
@@ -72,13 +72,13 @@ const Hero = () => {
             >
               <div className="space-y-4 sm:space-y-5 w-full">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-[4rem] font-extrabold text-white leading-[1.2] lg:leading-[1.15] tracking-tight drop-shadow-sm">
-                  <span className="block mb-2">Synapse Edu Hub</span>
+                  <span className="block mb-2">Synapse Connect</span>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-sky-200">
                     India's Most Focused Learning Ecosystem
                   </span>
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-cyan-100 font-normal max-w-xl leading-relaxed mt-2 sm:mt-4 mx-auto lg:mx-0">
-                  Synapse edu Hub is India's most focused learning ecosystem. We specialize in programs like 
+                  Synapse Connect is India's most focused learning ecosystem. We specialize in programs like 
                   <span className="font-bold text-white"> PRIME ONE, CLUSTER, and DEEP ROOTS</span>, 
                   and provide expert mock tests and assessments for 
                   <span className="font-bold text-white"> NEET, JEE, and PSC.</span>
@@ -170,7 +170,7 @@ const Hero = () => {
                 <div className="relative z-10 p-0 flex items-end justify-center">
                   <img
                     src={heroimg}
-                    alt="Synapse Edu Hub - India's Most Focused Learning Ecosystem"
+                    alt="Synapse Connect - India's Most Focused Learning Ecosystem"
                     className="w-full h-auto relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-100 lg:scale-[1.15] origin-bottom hover:scale-105 lg:hover:scale-[1.20] transition-transform duration-700"
                   />
 

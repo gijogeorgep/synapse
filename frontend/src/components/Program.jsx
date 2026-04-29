@@ -111,7 +111,7 @@ const Program = () => {
     };
 
     fetchProgramsData();
-  }, []);
+  }, [])
 
   return (
     <>
@@ -123,7 +123,7 @@ const Program = () => {
           width: 100%;
           min-height: 100vh;
           background: #f8fafc;
-          padding: 120px 24px 140px;
+          padding: 40px 24px 140px;
           position: relative;
         }
 
@@ -157,23 +157,12 @@ const Program = () => {
           will-change: transform;
         }
 
-        .header-anim {
-          opacity: 0;
-          transform: translateY(30px);
-          transition: all 0.8s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        .header-anim.visible {
-          opacity: 1;
-          transform: translateY(0);
-        }
-
         @media (max-width: 900px) {
           .programs-grid {
             grid-template-columns: repeat(2, 1fr);
           }
           .programs-section {
-            padding: 80px 20px 100px;
+            padding: 40px 20px 100px;
           }
         }
         @media (max-width: 640px) {
@@ -187,7 +176,7 @@ const Program = () => {
         <div className="ambient-orb orb-1" />
         <div className="ambient-orb orb-2" />
 
-        <div className="text-center mb-20 relative z-10">
+        <div className="text-center mb-10 relative z-10">
           <div data-gsap="reveal" data-y="20">
             <span className="inline-block px-4 py-1.5 mb-6 text-[10px] font-black tracking-[0.2em] text-cyan-600 bg-cyan-50 border border-cyan-100 rounded-full uppercase">
               Curated Opportunities

@@ -20,6 +20,7 @@ import Crescent from "./components/Crescent";
 import Contact from "./components/Contact";
 import FAQ from "./components/FAQ";
 import Testimonials from "./components/Testimonials";
+import PromotionBanner from "./components/PromotionBanner";
 import AboutPage from "./pages/AboutPage";
 import MaintenancePage from "./pages/MaintenancePage";
 import NotFound from "./pages/NotFound";
@@ -53,6 +54,7 @@ import AdminAuditLogs from "./pages/Admin/reports/AuditLogs";
 import AdminReports from "./pages/Admin/reports/Reports";
 import AdminBlogManagement from "./pages/Admin/content/BlogManagement";
 import AdminProgramManagement from "./pages/Admin/content/ProgramManagement";
+import AdminBannerManagement from "./pages/Admin/content/BannerManagement";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
 import ClassroomSelection from "./pages/Student/ClassroomSelection";
@@ -62,7 +64,32 @@ import ProgramDetail from "./pages/Programs/ProgramDetail";
 import Notifications from "./pages/Notifications/Notifications";
 import { HOME_SCROLL_KEY } from "./utils/scrollToHomeSection";
 
+import { getBanners, getSettings } from "./api/services";
+
 function LandingPage() {
+  const [activeBanners, setActiveBanners] = useState([]);
+  const [showBanners, setShowBanners] = useState(false);
+
+  useEffect(() => {
+    const fetchBannersAndSettings = async () => {
+      try {
+        // Fetch settings first
+        const settings = await getSettings();
+        setShowBanners(settings.showBanners);
+
+        if (settings.showBanners) {
+          const banners = await getBanners();
+          if (banners && banners.length > 0) {
+            setActiveBanners(banners);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching banner data:", error);
+      }
+    };
+    fetchBannersAndSettings();
+  }, []);
+
   useEffect(() => {
     const target = sessionStorage.getItem(HOME_SCROLL_KEY);
     if (!target) return;
@@ -81,6 +108,11 @@ function LandingPage() {
       <section id="home" className="scroll-mt-20 md:scroll-mt-24">
         <Hero />
       </section>
+      {showBanners && activeBanners.length > 0 && (
+        <PromotionBanner 
+          banners={activeBanners}
+        />
+      )}
       <section id="programs" className="scroll-mt-20 md:scroll-mt-24">
         <Program />
       </section>
@@ -140,7 +172,7 @@ function RouteSeo() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Synapse Edu Hub",
+    name: "Synapse Connect",
     url: siteUrl || undefined,
     potentialAction: {
       "@type": "SearchAction",
@@ -152,7 +184,7 @@ function RouteSeo() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
-    name: "Synapse Edu Hub",
+    name: "Synapse Connect",
     url: siteUrl || undefined,
     email: "synapseeduhub@gmail.com",
     telephone: "+91 81579 30567",
@@ -173,51 +205,51 @@ function RouteSeo() {
 
   const seoByPath = {
     "/": {
-      title: "Synapse Edu Hub | Personalized Coaching, Study Materials & Online Exams",
+      title: "Synapse Connect | Personalized Coaching, Study Materials & Online Exams",
       description:
-        "Achieve academic success with Synapse Edu Hub through expert mentors, multilingual learning support, mock tests, study materials, and performance tracking.",
+        "Achieve academic success with Synapse Connect through expert mentors, multilingual learning support, mock tests, study materials, and performance tracking.",
       keywords:
-        "Synapse Edu Hub, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition",
+        "Synapse Connect, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition",
       structuredData: [websiteSchema, organizationSchema],
     },
     "/about": {
-      title: "About Synapse Edu Hub | Student-first academic coaching",
+      title: "About Synapse Connect | Student-first academic coaching",
       description:
-        "Learn about Synapse Edu Hub, our mission, mentors, and multilingual learning approach for students across Kerala and India.",
+        "Learn about Synapse Connect, our mission, mentors, and multilingual learning approach for students across Kerala and India.",
       keywords:
-        "about Synapse Edu Hub, education company Kerala, student mentoring, academic coaching",
+        "about Synapse Connect, education company Kerala, student mentoring, academic coaching",
     },
     "/blogs": {
-      title: "Education Blog & Study Resources | Synapse Edu Hub",
+      title: "Education Blog & Study Resources | Synapse Connect",
       description:
-        "Explore exam tips, study strategies, and practical learning resources from Synapse Edu Hub experts.",
+        "Explore exam tips, study strategies, and practical learning resources from Synapse Connect experts.",
       keywords:
-        "study tips blog, exam preparation articles, student resources, Synapse Edu Hub blog",
+        "study tips blog, exam preparation articles, student resources, Synapse Connect blog",
     },
     "/privacy-policy": {
-      title: "Privacy Policy | Synapse Edu Hub",
-      description: "Read how Synapse Edu Hub collects, uses, and protects your personal information.",
-      keywords: "privacy policy, Synapse Edu Hub privacy",
+      title: "Privacy Policy | Synapse Connect",
+      description: "Read how Synapse Connect collects, uses, and protects your personal information.",
+      keywords: "privacy policy, Synapse Connect privacy",
     },
     "/terms-conditions": {
-      title: "Terms & Conditions | Synapse Edu Hub",
-      description: "Review the terms and conditions for using Synapse Edu Hub services and platforms.",
-      keywords: "terms and conditions, Synapse Edu Hub terms",
+      title: "Terms & Conditions | Synapse Connect",
+      description: "Review the terms and conditions for using Synapse Connect services and platforms.",
+      keywords: "terms and conditions, Synapse Connect terms",
     },
     "/maintenance": {
-      title: "Maintenance Update | Synapse Edu Hub",
-      description: "Synapse Edu Hub is temporarily under maintenance. Please check back shortly.",
+      title: "Maintenance Update | Synapse Connect",
+      description: "Synapse Connect is temporarily under maintenance. Please check back shortly.",
       noindex: true,
     },
     "/admin-portal-auth": {
-      title: "Admin Portal Login | Synapse Edu Hub",
-      description: "Secure admin login for Synapse Edu Hub.",
+      title: "Admin Portal Login | Synapse Connect",
+      description: "Secure admin login for Synapse Connect.",
       noindex: true,
     },
   };
 
   const pageSeo = seoByPath[pathname] ?? {
-    title: "Page Not Found | Synapse Edu Hub",
+    title: "Page Not Found | Synapse Connect",
     description: "The page you are looking for does not exist.",
     noindex: true,
   };
@@ -306,6 +338,7 @@ function AppContent() {
               <Route path="/admin/resources" element={<AdminResources />} />
               <Route path="/admin/programs" element={<AdminProgramManagement />} />
               <Route path="/admin/blogs" element={<AdminBlogManagement />} />
+              <Route path="/admin/banners" element={<AdminBannerManagement />} />
               <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
                 <Route index element={<AdminAuditLogs />} />
               </Route>

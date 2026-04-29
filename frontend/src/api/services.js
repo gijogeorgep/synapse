@@ -207,3 +207,18 @@ export const deleteAdminResource = (id) =>
 // Student Enrollment Services
 export const enrollInClassroom = (classroomId) =>
   apiClient(`/classrooms/${classroomId}/enroll`, { method: "POST" });
+
+// Banner Services
+export const getBanners = () => apiClient("/banners");
+export const getAdminBanners = () => apiClient("/banners/admin");
+export const createBanner = (bannerData) =>
+  apiClient("/banners", { method: "POST", body: bannerData });
+export const updateBanner = (id, bannerData) =>
+  apiClient(`/banners/${id}`, { method: "PATCH", body: bannerData });
+export const deleteBanner = (id) =>
+  apiClient(`/banners/${id}`, { method: "DELETE" });
+
+// Global Settings Services
+export const getSettings = () => apiClient("/settings");
+export const updateSettings = (settingsData) =>
+  apiClient("/settings", { method: "PATCH", body: settingsData });

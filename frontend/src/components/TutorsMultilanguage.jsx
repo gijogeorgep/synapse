@@ -46,7 +46,7 @@ const TutorsMultilanguage = () => {
             data-delay="0.16"
             className="text-slate-500 font-medium text-lg md:text-xl max-w-2xl mx-auto leading-relaxed mb-10 font-['Plus_Jakarta_Sans']"
           >
-            At Synapse Edu Hub, we believe that deep understanding happens when
+            At Synapse Connect, we believe that deep understanding happens when
             you learn in the language of your heart. Our Elite Multilingual
             Class System offers a premium, high-tier educational experience for
             students. Whether it is{" "}

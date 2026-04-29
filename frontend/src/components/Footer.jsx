@@ -6,11 +6,9 @@ import {
   Instagram,
   Linkedin,
   Youtube,
-  MessageCircle,
   Mail,
   Phone,
-  MapPin,
-  ArrowUp
+  ArrowRight
 } from "lucide-react";
 import ylogo from "../assets/synapse_y_logo.png";
 import { scrollToHomeSection } from "../utils/scrollToHomeSection";
@@ -18,9 +16,6 @@ import { scrollToHomeSection } from "../utils/scrollToHomeSection";
 const Footer = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
 
   const quickLinks = [
     { label: "Home", sectionId: "home" },
@@ -30,144 +25,117 @@ const Footer = () => {
     { label: "Blog", href: "/blogs" }
   ];
 
-  return (
-    <footer className="w-full bg-[#0f172a] text-slate-300 pt-10 pb-4 mt-8 relative overflow-hidden">
-      {/* Decorative background element */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent"></div>
-      <div className="absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-cyan-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+  const socials = [
+    { icon: Facebook, href: "https://www.facebook.com/share/1KBy2iguoK/?mibextid=wwXIfr" },
+    { icon: Instagram, href: "https://www.instagram.com/synapse_edu.hub?igsh=ZDNlZDc0MzIxNw==" },
+    { icon: Linkedin, href: "https://www.linkedin.com/in/synapse-edu-hub-9b788b371?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app" },
+    { icon: Youtube, href: "https://youtube.com/@synapseeduhub?si=8elDU9OfBgXTOAvC" }
+  ];
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 lg:gap-6 mb-8">
-          {/* Brand Column */}
-          <div className="lg:col-span-1 border-b lg:border-none border-slate-800 pb-6 lg:pb-0">
-            <div className="flex items-center gap-3 mb-4 group cursor-pointer" onClick={scrollToTop}>
-              <div className="p-1.5 bg-slate-800 rounded-xl group-hover:bg-cyan-600/20 transition-colors border border-slate-700/50 group-hover:border-cyan-500/30">
-                <img className="w-10 h-10 object-contain" src={ylogo} alt="Synapse logo" />
+  return (
+    <footer className="w-full bg-[#030712] text-slate-400 py-12 mt-20 border-t border-slate-800/40">
+      <div className="max-w-7xl mx-auto px-6">
+        <div className="flex flex-col lg:flex-row justify-between items-start gap-12 lg:gap-6 pb-12">
+          {/* Brand & Slogan */}
+          <div className="max-w-sm">
+            <div className="flex items-center gap-3 mb-6 group cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <div className="p-2 bg-slate-900/50 rounded-xl border border-slate-800 group-hover:border-cyan-500/50 transition-all duration-500">
+                <img className="w-8 h-8 object-contain" src={ylogo} alt="Synapse" />
               </div>
               <div>
-                <h2 className="text-xl font-black tracking-tighter text-white font-['Outfit'] italic">
-                  SYNAPSE
+                <h2 className="text-xl font-bold tracking-tight text-white font-['Outfit']">
+                  Synapse <span className="text-cyan-500">Connect</span>
                 </h2>
-                <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-cyan-400">
-                  Edu Hub
+                <p className="text-[10px] font-medium uppercase tracking-[0.2em] text-slate-500">
+                  Focus. Learn. Excel.
                 </p>
               </div>
             </div>
-            <p className="text-slate-400 text-[13px] leading-relaxed max-w-sm mb-6 font-medium">
-              India's Most Focused Learning Ecosystem. Elite mentorship for NEET, JEE & School excellence.
+            <p className="text-sm leading-relaxed text-slate-500 font-medium">
+              India's most focused learning ecosystem. We empower students with elite mentorship for NEET, JEE, and academic excellence.
             </p>
-            <div className="flex flex-wrap gap-2.5">
-              {[
-                { icon: Facebook, href: "https://www.facebook.com/share/1KBy2iguoK/?mibextid=wwXIfr", color: "hover:bg-blue-600" },
-                { icon: Instagram, href: "https://www.instagram.com/synapse_edu.hub?igsh=ZDNlZDc0MzIxNw==", color: "hover:bg-pink-600" },
-                { icon: Linkedin, href: "https://www.linkedin.com/in/synapse-edu-hub-9b788b371?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=android_app", color: "hover:bg-blue-700" },
-                { icon: Youtube, href: "https://youtube.com/@synapseeduhub?si=8elDU9OfBgXTOAvC", color: "hover:bg-red-600" }
-              ].map((social, i) => (
-                <a
-                  key={i}
-                  href={social.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`w-9 h-9 flex items-center justify-center rounded-lg bg-slate-800/50 border border-slate-700 text-slate-400 hover:text-white transition-all duration-300 hover:-translate-y-1 ${social.color}`}
-                >
-                  <social.icon size={16} />
-                </a>
-              ))}
-            </div>
           </div>
 
-          {/* Quick Links */}
-          <div className="lg:pl-8">
-            <h3 className="text-white font-bold text-[11px] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full"></span>
-              Explore
-            </h3>
-            <ul className="space-y-3">
-              {quickLinks.map((item) => (
-                <li key={item.label}>
-                  {item.sectionId ? (
-                    <a
-                      href="/"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        scrollToHomeSection(item.sectionId, navigate, location.pathname);
-                      }}
-                      className="text-slate-400 hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-2 group"
-                    >
-                      <span className="w-0 group-hover:w-2 h-0.5 bg-cyan-500 transition-all"></span>
-                      {item.label}
-                    </a>
-                  ) : (
-                    <a
-                      href={item.href}
-                      className="text-slate-400 hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-2 group"
-                    >
-                      <span className="w-0 group-hover:w-2 h-0.5 bg-cyan-500 transition-all"></span>
-                      {item.label}
-                    </a>
-                  )}
+          {/* Navigation Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-12 lg:gap-24">
+            <div>
+              <h3 className="text-white text-[11px] font-bold uppercase tracking-[0.2em] mb-6">Platform</h3>
+              <ul className="space-y-4">
+                {quickLinks.map((item) => (
+                  <li key={item.label}>
+                    {item.sectionId ? (
+                      <button
+                        onClick={() => scrollToHomeSection(item.sectionId, navigate, location.pathname)}
+                        className="hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-2 group"
+                      >
+                        {item.label}
+                      </button>
+                    ) : (
+                      <a
+                        href={item.href}
+                        className="hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-2 group"
+                      >
+                        {item.label}
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            <div>
+              <h3 className="text-white text-[11px] font-bold uppercase tracking-[0.2em] mb-6">Contact</h3>
+              <ul className="space-y-4">
+                <li>
+                  <a href="mailto:synapseeduhub@gmail.com" className="hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-3">
+                    <Mail size={14} className="text-slate-600" />
+                    <span>Email Us</span>
+                  </a>
                 </li>
-              ))}
-            </ul>
-          </div>
+                <li>
+                  <a href="tel:+916235723263" className="hover:text-cyan-400 transition-colors text-[13px] font-semibold flex items-center gap-3">
+                    <Phone size={14} className="text-slate-600" />
+                    <span>Call Us</span>
+                  </a>
+                </li>
+                <li>
+                  <a href="https://wa.me/918157930567" target="_blank" rel="noopener noreferrer" className="text-cyan-500 hover:text-cyan-400 transition-colors text-[13px] font-bold flex items-center gap-2 group">
+                    <span>WhatsApp</span>
+                    <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
+                  </a>
+                </li>
+              </ul>
+            </div>
 
-          {/* Contact Column */}
-          <div>
-            <h3 className="text-white font-bold text-[11px] uppercase tracking-[0.2em] mb-6 flex items-center gap-2">
-              <span className="w-1.5 h-1.5 bg-cyan-500 rounded-full"></span>
-              Get in Touch
-            </h3>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-
-
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-slate-800/50 border border-slate-700 flex items-center justify-center shrink-0">
-                  <Mail size={16} className="text-cyan-400" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase">Email</p>
-                  <p className="text-[13px] text-slate-300 font-medium break-all">synapseeduhub@gmail.com</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-lg bg-slate-800/50 border border-slate-700 flex items-center justify-center shrink-0">
-                  <Phone size={16} className="text-cyan-400" />
-                </div>
-                <div>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase">Call Us</p>
-                  <p className="text-[13px] text-slate-300 font-medium">+91 62357 23263</p>
-                </div>
+            <div className="hidden sm:block">
+              <h3 className="text-white text-[11px] font-bold uppercase tracking-[0.2em] mb-6">Social</h3>
+              <div className="flex gap-4">
+                {socials.map((social, i) => (
+                  <a
+                    key={i}
+                    href={social.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-2.5 rounded-lg bg-slate-900/50 border border-slate-800 text-slate-500 hover:text-white hover:border-cyan-500/30 transition-all duration-300"
+                  >
+                    <social.icon size={16} />
+                  </a>
+                ))}
               </div>
             </div>
-          </div>
-
-          {/* Support / WhatsApp */}
-          <div className="bg-gradient-to-br from-slate-800/50 to-slate-900/50 p-6 rounded-[2rem] border border-slate-700/50 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <MessageCircle size={80} className="rotate-12" />
-            </div>
-            <h3 className="text-white font-bold text-lg mb-2 relative z-10">Academic support?</h3>
-            <p className="text-slate-400 text-[13px] mb-6 relative z-10 font-medium leading-relaxed">Immediate guidance from our counselors.</p>
-            <a
-              href="https://wa.me/918157930567"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2.5 w-full py-3.5 rounded-xl bg-[#25D366] text-white text-[13px] font-black uppercase tracking-wider hover:scale-[1.02] transition-all shadow-lg shadow-green-900/10 group/wa relative z-10"
-            >
-              <MessageCircle size={18} />
-              <span>WhatsApp Now</span>
-            </a>
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="pt-6 border-t border-slate-800/80 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest order-2 md:order-1">
-            © {new Date().getFullYear()} Synapse Edu Hub. All rights reserved.
+        <div className="pt-8 border-t border-slate-800/40 flex flex-col sm:flex-row justify-between items-center gap-6">
+          <p className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">
+            © {new Date().getFullYear()} Synapse Connect. All rights reserved.
           </p>
-
+          
+          <div className="flex items-center gap-8">
+            <a href="/terms-conditions" className="text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:text-cyan-400 transition-colors">Terms</a>
+            <a href="/privacy-policy" className="text-[10px] font-bold uppercase tracking-widest text-slate-600 hover:text-cyan-400 transition-colors">Privacy</a>
+          </div>
         </div>
       </div>
     </footer>

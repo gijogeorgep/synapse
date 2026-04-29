@@ -1,6 +1,6 @@
 {
   "id": "/admin",
-  "name": "Synapse Admin Portal",
+  "name": "Synapse Admin",
   "short_name": "Synapse Admin",
   "description": "Admin Management System for Synapse edu Hub.",
   "start_url": "/",

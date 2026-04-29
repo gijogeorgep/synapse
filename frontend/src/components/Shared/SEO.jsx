@@ -1,10 +1,10 @@
 import { useEffect } from "react";
 
-const SITE_NAME = "Synapse Edu Hub";
+const SITE_NAME = "Synapse Connect";
 const DEFAULT_DESCRIPTION =
-  "Achieve academic success with Synapse Edu Hub, India's most focused learning ecosystem. Expert mentors and mock tests for NEET, JEE, and PSC with multilingual support.";
+  "Achieve academic success with Synapse Connect, India's most focused learning ecosystem. Expert mentors and mock tests for NEET, JEE, and PSC with multilingual support.";
 const DEFAULT_KEYWORDS =
-  "Synapse Edu Hub, Synapse Kerala, NEET coaching Kerala, JEE mock tests, PSC exam preparation, online tuition Kerala, multilingual education India, expert academic mentoring";
+  "Synapse Connect, Synapse Kerala, NEET coaching Kerala, JEE mock tests, PSC exam preparation, online tuition Kerala, multilingual education India, expert academic mentoring";
 
 const setOrRemoveMetaTag = (attr, key, content) => {
   const selector = `meta[${attr}="${key}"]`;

@@ -62,7 +62,7 @@ const AboutPage = () => {
     {
       year: "2023",
       title: "The Inception",
-      desc: "Synapse Edu Hub was founded with a vision to bridge the educational gap.",
+      desc: "Synapse Connect was founded with a vision to bridge the educational gap.",
     },
     {
       year: "2024",
@@ -100,7 +100,7 @@ const AboutPage = () => {
               </span>
             </h1>
             <p className="text-lg md:text-xl text-slate-600 font-medium leading-relaxed max-w-2xl">
-              Synapse Edu Hub isn't just a coaching center; it's a personalized
+              Synapse Connect isn't just a coaching center; it's a personalized
               learning ecosystem designed to help every student find their
               unique path to success through expert mentorship in their own
               regional language.
@@ -154,7 +154,7 @@ const AboutPage = () => {
                     Amith Girish
                   </h3>
                   <p className="text-cyan-300 font-bold uppercase tracking-widest text-xs">
-                    Founder & CEO, Synapse Edu Hub
+                    Founder & CEO, Synapse Connect
                   </p>
                 </div>
               </div>
@@ -177,7 +177,7 @@ const AboutPage = () => {
               </div>
               <div className="space-y-6 text-slate-600 text-lg font-medium leading-relaxed">
                 <p>
-                  Synapse Edu Hub was never intended to be a 'normal' coaching
+                  Synapse Connect was never intended to be a 'normal' coaching
                   center. While we are still growing and evolving, our mission
                   is clear: to build a focused learning ecosystem that moves
                   away from the noise of mass-crowded classrooms.
