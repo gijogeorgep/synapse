@@ -3,6 +3,7 @@ import synapse_y_logo from "../assets/synapse_y_logo.png"; // background logo
 import amith from "../assets/amith.jpeg"; // founder photo
 import { Facebook, Phone, Instagram, Send, Star, Users, GraduationCap, Quote, Zap } from "lucide-react";
 import useGsapReveal from "../hooks/useGsapReveal";
+import TechLeads from "./TechLeads";
 
 const About = () => {
   const scopeRef = useGsapReveal();
@@ -90,63 +91,9 @@ const About = () => {
           </div>
         </div>
 
-        {/* Narrative & Highlights Section */}
-        <div data-gsap="reveal" data-y="36" data-delay="0.12" className="flex-1 space-y-10">
-          <div className="space-y-6">
-            <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-cyan-50 border border-cyan-100/50">
-              <span className="w-2 h-2 rounded-full bg-cyan-500 animate-ping" />
-              <span className="text-[10px] font-black text-cyan-700 uppercase tracking-widest">Global Educational Vision</span>
-            </div>
-
-            <h2 className="text-4xl lg:text-7xl font-black text-slate-900 tracking-tighter leading-[0.9] font-['Outfit']">
-              SYNAPSE <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-indigo-600">Speaks You</span>
-            </h2>
-
-            <div className="space-y-6 text-lg text-slate-600 max-w-xl font-medium leading-relaxed">
-              <p>
-                As <span className="text-slate-900 font-bold">India's Most Focused Learning Ecosystem</span>, we believe learning is most effective when it speaks your way. We bridge the gap between complexity and clarity.
-              </p>
-              <p className="text-base text-slate-500">
-                We connect students with expert faculty who teach in their regional language — Malayalam, Hindi, Tamil, Telugu, or English. Education isn't just about subjects; it's about understanding you.
-              </p>
-            </div>
-          </div>
-
-          {/* Quick Value Cards (Compact) */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { icon: Users, title: "Personalized Path", desc: "Learning tailored to your speed", color: "bg-blue-50 text-blue-600" },
-              { icon: GraduationCap, title: "Expert Educators", desc: "Passionate regional faculties", color: "bg-indigo-50 text-indigo-600" },
-              { icon: Star, title: "Excellence Driven", desc: "Focused on academic mastery", color: "bg-emerald-50 text-emerald-600" },
-              { icon: Zap, title: "Modern Tools", desc: "Innovative learning methodologies", color: "bg-amber-50 text-amber-600" }
-            ].map((item, i) => (
-              <div
-                key={i}
-                data-gsap="reveal"
-                data-y="24"
-                data-delay={String(0.22 + i * 0.08)}
-                className="group p-5 bg-white border border-slate-100 rounded-[2rem] shadow-sm hover:shadow-xl hover:border-cyan-100 transition-all duration-300"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${item.color} group-hover:scale-110 transition-transform`}>
-                    <item.icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-black text-slate-800 tracking-tight">{item.title}</h4>
-                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-tight">{item.desc}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Bottom Branding Mark */}
-          <div data-gsap="reveal" data-y="18" data-delay="0.58" className="flex items-center gap-4 pt-6 opacity-30">
-            <div className="h-px bg-slate-200 flex-1" />
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[.4em]">Synapse Hub</span>
-            <div className="h-px bg-slate-200 flex-1" />
-          </div>
+        {/* Tech Leads Section */}
+        <div data-gsap="reveal" data-y="36" data-delay="0.12" className="flex-[1.5] w-full">
+          <TechLeads />
         </div>
       </div>
     </section>
@@ -154,4 +101,3 @@ const About = () => {
 };
 
 export default About;
-
