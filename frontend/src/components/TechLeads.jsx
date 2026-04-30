@@ -10,19 +10,16 @@ const TechLeads = () => {
       name: "Gijo George",
       role: "Tech Lead",
       image: gijo,
-      color: "bg-[#FFC107]", // Vibrant Yellow from UI
     },
     {
       name: "Ashin Girish",
       role: "Operations Lead",
       image: ashin,
-      color: "bg-[#7CB342]", // Nature Green from UI
     },
     {
       name: "Jinson Dcruz",
       role: "Marketing Lead",
       image: jinson,
-      color: "bg-[#42A5F5]", // Bright Blue from UI
     },
   ];
 
@@ -68,11 +65,11 @@ const TechLeads = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12 relative z-10">
         {leads.map((lead, index) => (
           <div key={index} className="flex flex-col items-center group cursor-pointer">
-            <div className={`relative w-full max-w-[220px] aspect-[4/5] rounded-[2rem] overflow-hidden mb-6 ${lead.color} transition-all duration-500 group-hover:scale-[1.05] group-hover:shadow-xl shadow-md`}>
+            <div className={`relative w-full max-w-[220px] aspect-[4/5] rounded-[2rem] overflow-hidden mb-6 bg-slate-200 transition-all duration-500 group-hover:scale-[1.05] group-hover:shadow-xl shadow-md`}>
               <img
                 src={lead.image}
                 alt={lead.name}
-                className="w-full h-full object-cover mix-blend-multiply grayscale hover:grayscale-0 transition-all duration-700"
+                className="w-full h-full object-cover"
               />
             </div>
             <div className="text-center">
