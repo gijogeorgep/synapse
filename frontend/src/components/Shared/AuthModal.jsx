@@ -136,7 +136,21 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
           {/* Error Message */}
           {error && (
             <div className="mb-6 p-3 bg-red-50 border border-red-100 text-red-600 text-sm rounded-xl text-center">
-              {error}
+              {typeof error === "string" && error.includes("admin portal") ? (
+                <>
+                  Admin accounts must login via the{" "}
+                  <a
+                    href="https://admin.synapseeduhub.com"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-bold underline text-red-700 hover:text-red-900"
+                  >
+                    Admin Portal ↗
+                  </a>
+                </>
+              ) : (
+                error
+              )}
             </div>
           )}
 

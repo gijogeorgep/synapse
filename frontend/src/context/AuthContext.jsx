@@ -61,6 +61,26 @@ export const AuthProvider = ({ children }) => {
                 };
             }
 
+            // --- Domain-based role enforcement ---
+            const hostname = typeof window !== "undefined" ? window.location.hostname : "";
+            const isAdminPortal = hostname.includes("admin.") || hostname.startsWith("admin");
+            const isAdminRole = data.role === "admin" || data.role === "superadmin";
+
+            if (!isAdminPortal && isAdminRole) {
+                // Admin trying to login from the main site
+                const msg = "Admin accounts must login via the admin portal at admin.synapseeduhub.com";
+                toast.error(msg);
+                return { success: false, message: msg };
+            }
+
+            if (isAdminPortal && !isAdminRole) {
+                // Student/Teacher trying to login from the admin portal
+                const msg = "Access denied. Only admin accounts can login here.";
+                toast.error(msg);
+                return { success: false, message: msg };
+            }
+            // --- End domain check ---
+
             console.log("[AUTH_CONTEXT] Login successful for:", data.email, "Role:", data.role);
             setUser(data);
             localStorage.setItem("userInfo", JSON.stringify(data));

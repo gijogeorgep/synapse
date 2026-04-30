@@ -240,10 +240,10 @@ const Navbar = () => {
                                                     {user?.avatarUrl ? (
                                                         <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                                                     ) : (
-                                                        (user?.name || "U")[0].toUpperCase()
+                                                        user.role === 'superadmin' ? 'A' : (user?.name || "U")[0].toUpperCase()
                                                     )}
                                                 </div>
-                                                <span>{user.name}</span>
+                                                <span>{user.role === 'superadmin' ? 'Amith Girish' : user.name}</span>
                                             </Link>
                                         )}
                                         <button

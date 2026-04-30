@@ -55,6 +55,7 @@ import AdminReports from "./pages/Admin/reports/Reports";
 import AdminBlogManagement from "./pages/Admin/content/BlogManagement";
 import AdminProgramManagement from "./pages/Admin/content/ProgramManagement";
 import AdminBannerManagement from "./pages/Admin/content/BannerManagement";
+import AdminProfile from "./pages/Admin/profile/AdminProfile";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
 import ClassroomSelection from "./pages/Student/ClassroomSelection";
@@ -268,9 +269,38 @@ function AppContent() {
     location.pathname.startsWith("/student") ||
     location.pathname.startsWith("/teacher") ||
     isAdminRoute;
-  const showFloatingWhatsApp = !isAdminAuth && !isDashboardRoute;
-  const showFooter = !isAdminAuth && !isDashboardRoute;
-  const showNavbar = !isAdminAuth && !isDashboardRoute;
+
+  // --- Maintenance Mode ---
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+
+  useEffect(() => {
+    getSettings()
+      .then((s) => {
+        const mode = !!s?.maintenanceMode;
+        console.log('[MAINTENANCE] maintenanceMode from API:', mode);
+        setMaintenanceMode(mode);
+      })
+      .catch((err) => {
+        console.error('[MAINTENANCE] Failed to fetch settings:', err);
+      })
+      .finally(() => setSettingsLoaded(true));
+  }, []); // run once on mount
+
+  // Check if logged-in user is admin/superadmin (bypass maintenance)
+  const userInfo = (() => {
+    try { return JSON.parse(localStorage.getItem("userInfo")) || {}; }
+    catch { return {}; }
+  })();
+  const isAdminUser = userInfo?.role === "admin" || userInfo?.role === "superadmin";
+
+  // Show maintenance page for non-admins when maintenance mode is on
+  const showMaintenance = settingsLoaded && maintenanceMode && !isAdminUser && !isAdminRoute && !isAdminAuth;
+
+  // Hide nav/footer/whatsapp on admin auth, dashboards, or when maintenance is active
+  const showFloatingWhatsApp = !isAdminAuth && !isDashboardRoute && !showMaintenance;
+  const showFooter = !isAdminAuth && !isDashboardRoute && !showMaintenance;
+  const showNavbar = !isAdminAuth && !isDashboardRoute && !showMaintenance;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -278,78 +308,83 @@ function AppContent() {
       {showNavbar && <Navbar />}
       {showFloatingWhatsApp && <FloatingWhatsApp />}
       <div className={`flex-1 ${showNavbar ? "mt-20 md:mt-24" : ""}`}>
-        <Routes>
-          <Route path="/" element={isHostAdmin ? <AdminAuth /> : <LandingPage />} />
-          <Route path="/admin-portal-auth" element={<AdminAuth />} />
+        {showMaintenance ? (
+          <MaintenancePage />
+        ) : (
+          <Routes>
+            <Route path="/" element={isHostAdmin ? <AdminAuth /> : <LandingPage />} />
+            <Route path="/admin-portal-auth" element={<AdminAuth />} />
 
-          {/* Public Pages */}
-          <Route path="/about" element={<AboutPage />} />
-          <Route path="/maintenance" element={<MaintenancePage />} />
-          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-          <Route path="/terms-conditions" element={<TermsConditions />} />
-          <Route path="/blogs" element={<Blogs />} />
-          <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
-          <Route path="/programs/:id" element={<ProgramDetail />} />
+            {/* Public Pages */}
+            <Route path="/about" element={<AboutPage />} />
+            <Route path="/maintenance" element={<MaintenancePage />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/terms-conditions" element={<TermsConditions />} />
+            <Route path="/blogs" element={<Blogs />} />
+            <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
+            <Route path="/programs/:id" element={<ProgramDetail />} />
 
-          {/* General Protected Routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/notifications" element={<Notifications />} />
-          </Route>
-
-          {/* Student Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/student/dashboard" element={<StudentDashboard />} />
-              <Route path="/student/classrooms" element={<StudentClassrooms />} />
-              <Route path="/student/exams" element={<StudentExams />} />
-              <Route path="/student/materials" element={<StudentMaterials />} />
-              <Route path="/student/history" element={<div className="p-8"><h1>Exam History</h1></div>} />
-              <Route path="/student/settings" element={<StudentSettings />} />
-              <Route path="/student/classroom" element={<StudentClassroom />} />
-              <Route path="/student/select-classroom" element={<ClassroomSelection />} />
+            {/* General Protected Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/notifications" element={<Notifications />} />
             </Route>
-          </Route>
 
-          {/* Teacher Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
-              <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-              <Route path="/teacher/classrooms" element={<TeacherClassrooms />} />
-              <Route path="/teacher/classroom" element={<TeacherClassroom />} />
-              <Route path="/teacher/exams" element={<TeacherExams />} />
-              <Route path="/teacher/materials" element={<TeacherMaterials />} />
-              <Route path="/teacher/settings" element={<TeacherSettings />} />
-            </Route>
-          </Route>
-
-          {/* Admin Routes */}
-          <Route element={<ProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
-            <Route element={<DashboardLayout />}>
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
-              <Route path="/admin/users" element={<AdminUserManagement />} />
-              <Route path="/admin/users/create" element={<AdminCreateUser />} />
-              <Route path="/admin/classrooms" element={<AdminClassroomManagement />} />
-              <Route path="/admin/classrooms/:id" element={<AdminClassroomDetails />} />
-              <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-              <Route path="/admin/exams" element={<AdminExams />} />
-              <Route path="/admin/reports" element={<AdminReports />} />
-              <Route path="/admin/promotions" element={<AdminPromotions />} />
-              <Route path="/admin/resources" element={<AdminResources />} />
-              <Route path="/admin/programs" element={<AdminProgramManagement />} />
-              <Route path="/admin/blogs" element={<AdminBlogManagement />} />
-              <Route path="/admin/banners" element={<AdminBannerManagement />} />
-              <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
-                <Route index element={<AdminAuditLogs />} />
+            {/* Student Routes */}
+            <Route element={<ProtectedRoute allowedRoles={["student"]} />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="/student/dashboard" element={<StudentDashboard />} />
+                <Route path="/student/classrooms" element={<StudentClassrooms />} />
+                <Route path="/student/exams" element={<StudentExams />} />
+                <Route path="/student/materials" element={<StudentMaterials />} />
+                <Route path="/student/history" element={<div className="p-8"><h1>Exam History</h1></div>} />
+                <Route path="/student/settings" element={<StudentSettings />} />
+                <Route path="/student/classroom" element={<StudentClassroom />} />
+                <Route path="/student/select-classroom" element={<ClassroomSelection />} />
               </Route>
-              <Route path="/admin/payments" element={<div className="p-8"><h1>Payment Settings</h1></div>} />
-              <Route path="/admin/settings" element={<AdminSettings />} />
             </Route>
-          </Route>
 
-          {/* Fallback */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+            {/* Teacher Routes */}
+            <Route element={<ProtectedRoute allowedRoles={["teacher"]} />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="/teacher/analytics" element={<TeacherAnalytics />} />
+                <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+                <Route path="/teacher/classrooms" element={<TeacherClassrooms />} />
+                <Route path="/teacher/classroom" element={<TeacherClassroom />} />
+                <Route path="/teacher/exams" element={<TeacherExams />} />
+                <Route path="/teacher/materials" element={<TeacherMaterials />} />
+                <Route path="/teacher/settings" element={<TeacherSettings />} />
+              </Route>
+            </Route>
+
+            {/* Admin Routes */}
+            <Route element={<ProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
+              <Route element={<DashboardLayout />}>
+                <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                <Route path="/admin/users" element={<AdminUserManagement />} />
+                <Route path="/admin/users/create" element={<AdminCreateUser />} />
+                <Route path="/admin/classrooms" element={<AdminClassroomManagement />} />
+                <Route path="/admin/classrooms/:id" element={<AdminClassroomDetails />} />
+                <Route path="/admin/announcements" element={<AdminAnnouncements />} />
+                <Route path="/admin/exams" element={<AdminExams />} />
+                <Route path="/admin/reports" element={<AdminReports />} />
+                <Route path="/admin/promotions" element={<AdminPromotions />} />
+                <Route path="/admin/resources" element={<AdminResources />} />
+                <Route path="/admin/programs" element={<AdminProgramManagement />} />
+                <Route path="/admin/blogs" element={<AdminBlogManagement />} />
+                <Route path="/admin/banners" element={<AdminBannerManagement />} />
+                <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
+                  <Route index element={<AdminAuditLogs />} />
+                </Route>
+                <Route path="/admin/payments" element={<div className="p-8"><h1>Payment Settings</h1></div>} />
+                <Route path="/admin/settings" element={<AdminSettings />} />
+                <Route path="/admin/profile" element={<AdminProfile />} />
+              </Route>
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        )}
       </div>
       {showFooter && <Footer />}
     </div>

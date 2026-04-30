@@ -1,8 +1,8 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import Sidebar from "./Sidebar";
 import { useAuth } from "../../context/AuthContext";
-import { Menu } from "lucide-react";
+import { Menu, Bell } from "lucide-react";
 
 const SIDEBAR_COLLAPSE_KEY = "dashboard-sidebar-collapsed";
 
@@ -13,6 +13,20 @@ const DashboardLayout = () => {
         return window.localStorage.getItem(SIDEBAR_COLLAPSE_KEY) === "true";
     });
     const [isMobileOpen, setIsMobileOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    useEffect(() => {
+        if (user) {
+            import("../../api/services").then(({ getNotifications }) => {
+                getNotifications().then(res => {
+                    if (res && Array.isArray(res)) {
+                        const unread = res.filter(n => !n.readBy.includes(user._id)).length;
+                        setUnreadCount(unread);
+                    }
+                }).catch(console.error);
+            });
+        }
+    }, [user]);
 
     useEffect(() => {
         window.localStorage.setItem(SIDEBAR_COLLAPSE_KEY, String(collapsed));
@@ -43,21 +57,35 @@ const DashboardLayout = () => {
                     </div>
 
                     <div className="flex items-center gap-4 ml-auto">
-                        <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all hover:bg-white/30 cursor-pointer">
+                        <Link 
+                            to="/notifications" 
+                            className="relative flex h-11 w-11 items-center justify-center rounded-2xl bg-white border border-slate-100 text-slate-500 shadow-sm transition-all hover:bg-slate-50 hover:text-cyan-600 group"
+                        >
+                            <Bell className="h-5 w-5 transition-transform group-hover:scale-110" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-2.5 right-2.5 flex h-2.5 w-2.5 rounded-full border-2 border-white bg-red-500 shadow-sm animate-pulse"></span>
+                            )}
+                        </Link>
+                        <Link 
+                            to="/admin/profile"
+                            className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all hover:bg-white/40 hover:scale-[1.02] active:scale-95 cursor-pointer group/profile"
+                        >
                             <div className="flex flex-col items-end hidden sm:flex">
-                                <span className="text-sm font-bold text-slate-800 leading-none">{user.name}</span>
+                                <span className="text-sm font-bold text-slate-800 leading-none group-hover/profile:text-cyan-700 transition-colors">
+                                    {user.role === 'superadmin' ? 'Amith Girish' : user.name}
+                                </span>
                                 <span className="text-[10px] font-semibold text-cyan-600 uppercase tracking-wider mt-1">{user.role}</span>
                             </div>
-                            <div className="w-10 h-10 rounded-full border-2 border-white/50 bg-white/10 backdrop-blur-xl overflow-hidden shadow-sm flex-shrink-0 flex items-center justify-center">
+                            <div className="w-10 h-10 rounded-full border-2 border-white/50 bg-white/10 backdrop-blur-xl overflow-hidden shadow-sm flex-shrink-0 flex items-center justify-center transition-transform group-hover/profile:rotate-3">
                                 {user.avatarUrl ? (
                                     <img src={user.avatarUrl} alt={user.name} className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-cyan-500/80 to-sky-600/80 text-white font-bold text-sm">
-                                        {user.name?.[0].toUpperCase()}
+                                        {user.role === 'superadmin' ? 'A' : user.name?.[0].toUpperCase()}
                                     </div>
                                 )}
                             </div>
-                        </div>
+                        </Link>
                     </div>
                 </div>
 

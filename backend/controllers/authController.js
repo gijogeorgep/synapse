@@ -134,6 +134,14 @@ export const authUser = async (req, res) => {
         const user = await User.findOne({ email });
 
         if (user && (await user.matchPassword(password))) {
+            // Block admins from using the public login endpoint
+            if (user.role === 'admin' || user.role === 'superadmin') {
+                console.warn(`[AUTH] Admin account attempted login via main portal: ${email}`);
+                return res.status(403).json({ 
+                    message: "Admin accounts must login via the admin portal at admin.synapseeduhub.com" 
+                });
+            }
+
             const sessionToken = crypto.randomUUID();
             user.sessionToken = sessionToken;
             await user.save();

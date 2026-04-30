@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight, Clock3, Home, Wrench } from "lucide-react";
+import logo from "../assets/synapse_logo.png";
 
 const MaintenancePage = () => {
   const [isVisible, setIsVisible] = useState(false);
@@ -11,67 +10,45 @@ const MaintenancePage = () => {
   }, []);
 
   return (
-    <div className="min-h-screen overflow-hidden bg-slate-50 font-['Plus_Jakarta_Sans',sans-serif]">
-      <section className="relative flex min-h-screen items-center justify-center px-4 py-20 md:px-8">
-        <div className="absolute inset-0">
-          <div className="absolute left-[-8%] top-[-10%] h-80 w-80 rounded-full bg-cyan-200/50 blur-3xl" />
-          <div className="absolute bottom-[-12%] right-[-8%] h-96 w-96 rounded-full bg-amber-200/50 blur-3xl" />
-          <div
-            className="absolute inset-0 opacity-[0.05]"
-            style={{
-              backgroundImage: "radial-gradient(#0f172a 1px, transparent 1px)",
-              backgroundSize: "32px 32px",
-            }}
-          />
-        </div>
+    <div className="min-h-screen relative flex flex-col items-center justify-center bg-slate-50 font-['Plus_Jakarta_Sans',sans-serif] overflow-hidden">
+      
+      {/* Crisp Background Shapes (The glass will blur them) */}
+      <div className="absolute inset-0 pointer-events-none opacity-60">
+        <div className="absolute top-[-20%] left-[-10%] w-[50rem] h-[50rem] bg-gradient-to-br from-cyan-400 to-blue-500 rounded-full" />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[55rem] h-[55rem] bg-gradient-to-tl from-indigo-500 to-purple-400 rounded-full" />
+        <div className="absolute top-[30%] right-[20%] w-[25rem] h-[25rem] bg-gradient-to-tr from-amber-400 to-orange-400 rounded-full" />
+      </div>
 
-        <div
-          className={`relative z-10 w-full max-w-3xl rounded-[3rem] border border-white/70 bg-white/90 p-8 text-center shadow-[0_30px_80px_rgba(15,23,42,0.08)] backdrop-blur-sm transition-all duration-1000 md:p-14 ${
-            isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"
-          }`}
-        >
-          <div className="mx-auto mb-8 flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-amber-500 via-orange-500 to-cyan-500 shadow-2xl">
-            <div className="relative flex h-20 w-20 items-center justify-center rounded-full bg-white">
-              <Clock3 className="h-8 w-8 text-slate-900" />
-              <div className="absolute -right-1 -top-1 flex h-9 w-9 items-center justify-center rounded-full bg-slate-900 text-white shadow-lg">
-                <Wrench className="h-4 w-4" />
-              </div>
-            </div>
-          </div>
+      {/* True Full-page Frosted Glass Overlay */}
+      <div className="absolute inset-0 bg-white/40 backdrop-blur-3xl border-t border-white/50" />
 
-          <div className="inline-flex items-center gap-2 rounded-full border border-amber-100 bg-amber-50 px-4 py-2 text-[11px] font-black uppercase tracking-[0.24em] text-amber-700">
-            Maintenance Mode
-          </div>
+      <div 
+        className={`relative z-10 w-full max-w-2xl px-6 text-center transition-all duration-1000 ease-out flex flex-col items-center
+          ${isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}
+        `}
+      >
+        {/* Large Logo */}
+        <img 
+            src={logo} 
+            alt="Synapse Connect" 
+            className="h-24 md:h-32 mb-12 object-contain drop-shadow-md"
+        />
 
-          <h1 className="mt-6 text-4xl font-black tracking-tighter text-slate-900 md:text-6xl">
-            Under
-            <span className="bg-gradient-to-r from-amber-500 to-cyan-600 bg-clip-text text-transparent">
-              {" "}Maintenance
-            </span>
-          </h1>
+        {/* Minimalist Copy */}
+        <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-3">
+          Under Maintenance
+        </h1>
+        
+        <h2 className="text-xl md:text-2xl font-bold text-slate-700 mb-6">
+          We'll be back soon.
+        </h2>
+        
+        <p className="text-slate-600 font-medium text-base md:text-lg leading-relaxed max-w-lg mx-auto">
+          Synapse Connect is currently undergoing brief maintenance to improve your experience. Thank you for your patience.
+        </p>
 
-          <p className="mx-auto mt-4 max-w-xl text-base font-medium leading-relaxed text-slate-500 md:text-lg">
-            We’ll be back shortly.
-          </p>
-
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Link
-              to="/"
-              className="group inline-flex items-center justify-center gap-3 rounded-2xl bg-slate-900 px-7 py-4 text-sm font-black uppercase tracking-[0.22em] text-white transition-all hover:-translate-y-1 hover:bg-cyan-700"
-            >
-              <Home className="h-4 w-4" />
-              Go Home
-            </Link>
-            <a
-              href="mailto:synapseeduhub@gmail.com"
-              className="inline-flex items-center justify-center gap-3 rounded-2xl border border-slate-200 bg-white px-7 py-4 text-sm font-black uppercase tracking-[0.22em] text-slate-700 transition-all hover:-translate-y-1 hover:border-cyan-200 hover:text-cyan-700"
-            >
-              Contact Us
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
-        </div>
-      </section>
+      </div>
+      
     </div>
   );
 };

@@ -15,6 +15,11 @@ router.get("/", async (req, res) => {
         if (!settings) {
             settings = await GlobalSettings.create({ showBanners: true });
         }
+        // Prevent browser caching so maintenance mode updates instantly
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+
         res.json(settings);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -32,10 +37,13 @@ router.patch("/", protect, authorize("superadmin", "admin"), async (req, res) =>
         if (!settings) {
             settings = new GlobalSettings();
         }
-        
-        if (req.body.showBanners !== undefined) {
-            settings.showBanners = req.body.showBanners;
-        }
+
+        const fields = ['siteName', 'contactEmail', 'contactPhone', 'maintenanceMode', 'showBanners'];
+        fields.forEach(field => {
+            if (req.body[field] !== undefined) {
+                settings[field] = req.body[field];
+            }
+        });
 
         const updatedSettings = await settings.save();
         res.json(updatedSettings);
