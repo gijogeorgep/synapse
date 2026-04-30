@@ -5,6 +5,7 @@ import fidha from "../assets/fidha.jpeg";
 import liya from "../assets/liya.jpeg";
 import karthik from "../assets/karthik.jpeg";
 import aysha from "../assets/aysha.jpeg";
+import varada from "../assets/varada.jpeg"
 const facultyReviews = [
   {
     name: "Fidha ",
@@ -13,12 +14,12 @@ const facultyReviews = [
     review: `I am happy to be part of Synapse Edu Hub. The institution is highly professional, well-organized, and committed to quality education. The management is supportive, respectful of tutors’ time, and ensures clear communication. It has been a valuable experience for me both professionally and personally. Grateful for the opportunity and guidance`,
   },
   {
-    name: "Nimisha Paul",
+    name: "Varada Menon",
     role: "Academic Mentor",
-    image: "https://randomuser.me/api/portraits/women/44.jpg",
+    image: varada,
     review:
-      "What stands out is the personal attention students receive. The learning flow is organized, and the communication between faculty and learners stays very clear.",
-  },
+      `I had a really good experience working here as a Class 11 Biology tutor. It’s a growing institute that genuinely focuses on understanding each student’s needs and providing quality learning. I especially appreciate their multilingual approach, which helps students learn comfortably in their mother tongue. It’s a supportive place where students show real progress. I would definitely recommend this institute to parents looking for a caring and effective learning environment`
+  }
 ];
 
 const studentReviews = [
@@ -36,7 +37,10 @@ I was able to go into my final exams feeling calm and prepared. I didn't have th
     name: "Liya",
     role: "Student",
     image: liya,
-    review: `I joined Synapse for Plus One tuition, and it has been a great experience. The one-to-one classes helped me understand Physics, Chemistry, Biology, and Maths much better. The tutors explain things clearly and are always ready to help with doubts. The exam preparation sessions, especially the Previous Year Questions and paper discussions, made me feel very confident for my final exams. I no longer feel stressed about exams because I know what to expect and how to prepare.`,
+    review: ` have participated in both the online and offline classes of this tuition centre, and it has been a very good experience for me. The topics are explained clearly, and the teachers also cover related concepts beyond the syllabus, helping to build a strong foundation.
+The teachers are friendly and approachable, and the WhatsApp channel allows flexible learning anytime. The free online classes are especially helpful during exams for quick revision.
+
+Overall, I am very satisfied with my learning experience here`,
   },
 ];
 

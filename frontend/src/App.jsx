@@ -172,7 +172,7 @@ function RouteSeo() {
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "Synapse Connect",
+    name: "Synapse Edu Hub",
     url: siteUrl || undefined,
     potentialAction: {
       "@type": "SearchAction",
@@ -184,7 +184,7 @@ function RouteSeo() {
   const organizationSchema = {
     "@context": "https://schema.org",
     "@type": "EducationalOrganization",
-    name: "Synapse Connect",
+    name: "Synapse Edu Hub",
     url: siteUrl || undefined,
     email: "synapseeduhub@gmail.com",
     telephone: "+91 81579 30567",
@@ -205,22 +205,22 @@ function RouteSeo() {
 
   const seoByPath = {
     "/": {
-      title: "Synapse Connect | Personalized Coaching, Study Materials & Online Exams",
+      title: "Synapse Edu Hub | India's Most Focused Learning Ecosystem",
       description:
-        "Achieve academic success with Synapse Connect through expert mentors, multilingual learning support, mock tests, study materials, and performance tracking.",
+        "India's most focused learning ecosystem for PRIME ONE, CLUSTER, and DEEP ROOTS. Achieve academic success through expert mentors, mock tests, and study materials.",
       keywords:
         "Synapse Connect, online coaching Kerala, academic mentoring, mock tests, study materials, multilingual tuition",
       structuredData: [websiteSchema, organizationSchema],
     },
     "/about": {
-      title: "About Synapse Connect | Student-first academic coaching",
+      title: "About Synapse Edu Hub | Student-first academic coaching",
       description:
         "Learn about Synapse Connect, our mission, mentors, and multilingual learning approach for students across Kerala and India.",
       keywords:
         "about Synapse Connect, education company Kerala, student mentoring, academic coaching",
     },
     "/blogs": {
-      title: "Education Blog & Study Resources | Synapse Connect",
+      title: "Education Blog & Study Resources | Synapse Edu Hub",
       description:
         "Explore exam tips, study strategies, and practical learning resources from Synapse Connect experts.",
       keywords:

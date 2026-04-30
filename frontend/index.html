@@ -1,107 +1,113 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" id="favicon" type="image/png" href="/synapse favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Synapse Connect is India's most focused learning ecosystem for PRIME ONE, CLUSTER, and DEEP ROOTS. We provide expert mock tests and assessments for NEET, JEE, and PSC."
-    />
-    <meta
-      name="keywords"
-      content="Synapse, Synapse Connect, PRIME ONE tuition, CLUSTER coaching, DEEP ROOTS program, mock tests NEET, JEE mock assessments, PSC test series, India's most focused learning ecosystem"
-    />
-    <meta name="author" content="Synapse Connect" />
-    <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#06b6d4" />
-    <link rel="manifest" href="/manifest.json?v=4" />
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" id="favicon" type="image/png" href="/synapse favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="Synapse Eduhub is India's most focused learning ecosystem for PRIME ONE, CLUSTER, and DEEP ROOTS. We provide expert mock tests and assessments for NEET, JEE, and PSC." />
+  <meta name="keywords"
+    content="Synapse, Synapse Connect, PRIME ONE tuition, CLUSTER coaching, DEEP ROOTS program, mock tests NEET, JEE mock assessments, PSC test series, India's most focused learning ecosystem" />
+  <meta name="author" content="Synapse Connect" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#06b6d4" />
+  <link rel="manifest" href="/manifest.json?v=4" />
 
 
-    <link rel="apple-touch-icon" href="/app-icon-192.png" id="apple-touch-icon" />
-    <script>
-      (function() {
-        const isAdmin = window.location.hostname.startsWith('admin') || window.location.port === '5174'; 
-        if (isAdmin) {
-          const manifest = document.querySelector('link[rel="manifest"]');
-          if (manifest) manifest.setAttribute('href', '/admin-manifest.json');
-          
-          const appleIcon = document.getElementById('apple-touch-icon');
-          if (appleIcon) appleIcon.setAttribute('href', '/y-admin-192.png');
-          
-          const favicon = document.getElementById('favicon');
-          if (favicon) favicon.setAttribute('href', '/y-admin-192.png');
-          
-          document.title = "Synapse Admin";
-        }
-      })();
-    </script>
+  <link rel="apple-touch-icon" href="/app-icon-192.png" id="apple-touch-icon" />
+  <script>
+    (function () {
+      const isAdmin = window.location.hostname.startsWith('admin') || window.location.port === '5174';
+      if (isAdmin) {
+        const manifest = document.querySelector('link[rel="manifest"]');
+        if (manifest) manifest.setAttribute('href', '/admin-manifest.json');
 
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="apple-mobile-web-app-title" content="Synapse Connect" />
+        const appleIcon = document.getElementById('apple-touch-icon');
+        if (appleIcon) appleIcon.setAttribute('href', '/y-admin-192.png');
+
+        const favicon = document.getElementById('favicon');
+        if (favicon) favicon.setAttribute('href', '/y-admin-192.png');
+
+        document.title = "Synapse Admin";
+      }
+    })();
+  </script>
+
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Synapse Connect" />
 
 
-    <meta property="og:site_name" content="Synapse Connect" />
-    <meta property="og:type" content="website" />
-    <meta
-      property="og:title"
-      content="Synapse Connect|India's Most Focused Learning Ecosystem"
-    />
-    <meta
-      property="og:description"
-      content="Expert mentors, study materials, and online assessments for students across Kerala and India."
-    />
-    <meta property="og:image" content="/synapse%20favicon.png" />
-    <meta property="og:locale" content="en_IN" />
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta
-      name="twitter:title"
-      content="Synapse Connect|India's Most Focused Learning Ecosystem"
-    />
-    <meta
-      name="twitter:description"
-      content="Expert mentors, study materials, and online assessments for students across Kerala and India."
-    />
-    <meta name="twitter:image" content="/synapse%20favicon.png" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="canonical" href="https://synapseeduhub.com" />
-    <title>Synapse Connect|India's Most Focused Learning Ecosystem</title>
-  </head>
-  <body>
-    <div id="root">
-      <!-- Initial Splash Screen (Static) -->
-      <div id="initial-splash" style="position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Outfit', sans-serif;">
-        <div style="display: flex; flex-direction: column; align-items: center;">
-          <img id="splash-logo" src="/app-icon-512.png" alt="Synapse" style="height: 120px; width: auto; margin-bottom: 20px; animation: pulse 2s infinite ease-in-out;" />
-          <script>
-            if (window.location.hostname.startsWith('admin') || window.location.port === '5174') {
-              document.getElementById('splash-logo').src = '/y-admin-512.png';
-            }
-          </script>
-          <div style="width: 120px; height: 2px; background: #f1f5f9; border-radius: 2px; overflow: hidden; position: relative;">
-            <div style="position: absolute; inset: 0; background: linear-gradient(90deg, transparent, #06b6d4, transparent); width: 100%; animation: initial-progress 1.5s infinite linear;"></div>
+  <meta property="og:site_name" content="Synapse Connect" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Synapse Connect|India's Most Focused Learning Ecosystem" />
+  <meta property="og:description"
+    content="Expert mentors, study materials, and online assessments for students across Kerala and India." />
+  <meta property="og:image" content="/synapse%20favicon.png" />
+  <meta property="og:locale" content="en_IN" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Synapse Connect|India's Most Focused Learning Ecosystem" />
+  <meta name="twitter:description"
+    content="Expert mentors, study materials, and online assessments for students across Kerala and India." />
+  <meta name="twitter:image" content="/synapse%20favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet" />
+  <link rel="canonical" href="https://synapseeduhub.com" />
+  <title>Synapse Eduhub|India's Most Focused Learning Ecosystem</title>
+</head>
+
+<body>
+  <div id="root">
+    <!-- Initial Splash Screen (Static) -->
+    <div id="initial-splash"
+      style="position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Outfit', sans-serif;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <img id="splash-logo" src="/app-icon-512.png" alt="Synapse"
+          style="height: 120px; width: auto; margin-bottom: 20px; animation: pulse 2s infinite ease-in-out;" />
+        <script>
+          if (window.location.hostname.startsWith('admin') || window.location.port === '5174') {
+            document.getElementById('splash-logo').src = '/y-admin-512.png';
+          }
+        </script>
+        <div
+          style="width: 120px; height: 2px; background: #f1f5f9; border-radius: 2px; overflow: hidden; position: relative;">
+          <div
+            style="position: absolute; inset: 0; background: linear-gradient(90deg, transparent, #06b6d4, transparent); width: 100%; animation: initial-progress 1.5s infinite linear;">
           </div>
         </div>
       </div>
-      <style>
-        @keyframes pulse {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50% { transform: scale(1.05); opacity: 0.8; }
-        }
-        @keyframes initial-progress {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(100%); }
-        }
-      </style>
     </div>
+    <style>
+      @keyframes pulse {
 
-    <script type="module" src="/src/main.jsx"></script>
-  </body>
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        50% {
+          transform: scale(1.05);
+          opacity: 0.8;
+        }
+      }
+
+      @keyframes initial-progress {
+        0% {
+          transform: translateX(-100%);
+        }
+
+        100% {
+          transform: translateX(100%);
+        }
+      }
+    </style>
+  </div>
+
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>

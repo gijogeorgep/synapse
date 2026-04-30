@@ -198,7 +198,7 @@ const AboutPage = () => {
               <div className="flex gap-4">
                 <div className="flex flex-col items-center p-6 bg-slate-50 rounded-3xl border border-slate-100 min-w-[120px]">
                   <span className="text-3xl font-black text-cyan-600">
-                    10k+
+                    100+
                   </span>
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
                     Students
