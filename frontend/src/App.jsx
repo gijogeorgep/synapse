@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, useLocation, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import "./App.css";
@@ -64,12 +64,28 @@ import BlogPost from "./pages/Blogs/BlogPost";
 import ProgramDetail from "./pages/Programs/ProgramDetail";
 import Notifications from "./pages/Notifications/Notifications";
 import { HOME_SCROLL_KEY } from "./utils/scrollToHomeSection";
+import { useAuth } from "./context/AuthContext";
 
 import { getBanners, getSettings } from "./api/services";
 
 function LandingPage() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [activeBanners, setActiveBanners] = useState([]);
   const [showBanners, setShowBanners] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const role = user.role;
+      if (role === "admin" || role === "superadmin") {
+        navigate("/admin/dashboard");
+      } else if (role === "teacher") {
+        navigate("/teacher/dashboard");
+      } else if (role === "student") {
+        navigate("/student/dashboard");
+      }
+    }
+  }, [user, navigate]);
 
   useEffect(() => {
     const fetchBannersAndSettings = async () => {

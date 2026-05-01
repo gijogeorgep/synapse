@@ -100,8 +100,17 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
     }
 
     if (result.success) {
+      const userRole = result.user?.role;
       if (mode === "verify") {
         navigate("/student/select-classroom");
+      } else if (mode === "login") {
+        if (userRole === "teacher") {
+          navigate("/teacher/dashboard");
+        } else if (userRole === "student") {
+          navigate("/student/dashboard");
+        } else if (userRole === "admin" || userRole === "superadmin") {
+          navigate("/admin/dashboard");
+        }
       }
       onClose();
     } else {

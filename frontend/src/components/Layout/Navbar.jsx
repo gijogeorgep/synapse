@@ -71,14 +71,7 @@ const Navbar = () => {
         { name: "Home", sectionId: "home" },
         { name: "About Us", sectionId: "about" },
         { name: "Programs", sectionId: "programs" },
-        {
-            name: "Resources",
-            isDropdown: true,
-            children: [
-                { name: "Study material", sectionId: "materials" },
-                { name: "Online test", sectionId: "tests" }
-            ]
-        },
+
         { name: "Contact", sectionId: "contact" },
         { name: "Blog", href: "/blogs" }
     ];

@@ -184,7 +184,7 @@ const Hero = () => {
                         Pass Rate
                       </p>
                       <p className="text-lg font-bold text-white leading-tight">
-                        99.8%
+                        100%
                       </p>
                     </div>
                   </div>
