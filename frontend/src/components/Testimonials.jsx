@@ -1,4 +1,5 @@
-import { Quote, Star, Sparkles } from "lucide-react";
+import { useState } from "react";
+import { Quote, Star, Sparkles, ChevronDown, ChevronUp } from "lucide-react";
 import useGsapReveal from "../hooks/useGsapReveal";
 import sree_nandana_review from "../assets/sree_nandana.jpeg";
 import fidha from "../assets/fidha.jpeg";
@@ -59,58 +60,83 @@ We are satisfied with her progress and would like her to continue with Synapse C
   },
 ];
 
-const ReviewCard = ({ item, accent, featured = false, delay = 0 }) => (
-  <article
-    data-gsap="reveal"
-    data-y="28"
-    data-scale="0.98"
-    data-delay={String(delay / 1000)}
-    className={`group relative overflow-hidden rounded-[1.75rem] border border-white/45 bg-white/28 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-2xl transition-all duration-700 ease-out hover:-translate-y-1 hover:border-cyan-200/60 hover:bg-white/36 hover:shadow-[0_24px_50px_rgba(14,116,144,0.14)] ${featured ? "md:p-7" : ""} `}
-  >
-    <div
-      className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent} `}
-    />
-    <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),rgba(255,255,255,0.14)_45%,rgba(14,165,233,0.08)_100%)] opacity-90" />
-    <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/80" />
-    <div className="relative z-10">
-      <div className="mb-4 flex items-start justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-white/80 bg-white/40 shadow-[0_12px_24px_rgba(15,23,42,0.12)] ring-4 ring-cyan-100/60">
-            <img
-              src={item.image}
-              alt={item.name}
-              className="h-full w-full object-cover object-center"
-            />
-          </div>
-          <div>
-            <p className="text-sm font-black tracking-tight text-slate-900">
-              {item.name}
-            </p>
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-600">
-              {item.role}
-            </p>
-            <div className="mt-2 flex items-center gap-1 text-amber-400">
-              {Array.from({ length: 5 }).map((_, index) => (
-                <Star
-                  key={`${item.name} -${index} `}
-                  className="h-4 w-4 fill-current"
-                />
-              ))}
+const ReviewCard = ({ item, accent, featured = false, delay = 0 }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const charLimit = 160;
+  const isLongReview = item.review.length > charLimit;
+
+  return (
+    <article
+      data-gsap="reveal"
+      data-y="28"
+      data-scale="0.98"
+      data-delay={String(delay / 1000)}
+      className={`group relative flex h-full flex-col overflow-hidden rounded-[1.75rem] border border-white/45 bg-white/28 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-2xl transition-all duration-700 ease-out hover:-translate-y-1 hover:border-cyan-200/60 hover:bg-white/36 hover:shadow-[0_24px_50px_rgba(14,116,144,0.14)] ${featured ? "md:p-7" : ""} `}
+    >
+      <div
+        className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent} `}
+      />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),rgba(255,255,255,0.14)_45%,rgba(14,165,233,0.08)_100%)] opacity-90" />
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/80" />
+      <div className="relative z-10 flex h-full flex-col">
+        <div className="mb-4 flex items-start justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full border-2 border-white/80 bg-white/40 shadow-[0_12px_24px_rgba(15,23,42,0.12)] ring-4 ring-cyan-100/60">
+              <img
+                src={item.image}
+                alt={item.name}
+                className="h-full w-full object-cover object-center"
+              />
+            </div>
+            <div>
+              <p className="text-sm font-black tracking-tight text-slate-900">
+                {item.name}
+              </p>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-cyan-600">
+                {item.role}
+              </p>
+              <div className="mt-2 flex items-center gap-1 text-amber-400">
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Star
+                    key={`${item.name}-${index}`}
+                    className="h-4 w-4 fill-current"
+                  />
+                ))}
+              </div>
             </div>
           </div>
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/35 bg-white/20 text-slate-700">
+            <Quote className="h-4 w-4" />
+          </div>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-2xl border border-white/35 bg-white/20 text-slate-700">
-          <Quote className="h-4 w-4" />
+        <div className="flex flex-1 flex-col justify-between">
+          <p
+            className={`whitespace-pre-line text-slate-600 ${featured ? "text-base leading-8" : "text-sm leading-7"} `}
+          >
+            "{!isExpanded && isLongReview ? `${item.review.slice(0, charLimit)}...` : item.review}"
+          </p>
+
+          {isLongReview && (
+            <button
+              onClick={() => setIsExpanded(!isExpanded)}
+              className="mt-4 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-cyan-600 transition-colors hover:text-cyan-700 focus:outline-none"
+            >
+              {isExpanded ? (
+                <>
+                  Show Less <ChevronUp className="h-3.5 w-3.5" />
+                </>
+              ) : (
+                <>
+                  Read More <ChevronDown className="h-3.5 w-3.5" />
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
-      <p
-        className={`whitespace-pre-line text-slate-600 ${featured ? "text-base leading-8" : "text-sm leading-7"} `}
-      >
-        "{item.review}"
-      </p>
-    </div>
-  </article>
-);
+    </article>
+  );
+};
 
 const Testimonials = () => {
   const sectionRef = useGsapReveal();
