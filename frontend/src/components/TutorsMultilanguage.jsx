@@ -2,7 +2,7 @@ import React from "react";
 import tutorsImg from "../assets/tutors_img.png";
 import { Languages } from "lucide-react";
 import useGsapReveal from "../hooks/useGsapReveal";
-import synapsespeaksyou  from "../assets/synapse_speaks_you_title.png";
+import synapsespeaksyou from "../assets/synapse_speaks_you_title.png";
 const TutorsMultilanguage = () => {
   const scopeRef = useGsapReveal();
 
@@ -49,7 +49,8 @@ const TutorsMultilanguage = () => {
             At Synapse Connect, we believe that deep understanding happens when
             you learn in the language of your heart. Our Elite Multilingual
             Class System offers a premium, high-tier educational experience for
-            students. Whether it is{" "}
+            students.
+            <br></br>We connect students  with {" "}
             <span className="text-slate-800 font-bold">
               Malayalam, Hindi, Tamil, Telugu, or English
             </span>
@@ -60,7 +61,7 @@ const TutorsMultilanguage = () => {
 
           {/* Supported Language Display */}
           <div className="flex flex-wrap justify-center gap-3">
-            {["Malayalam", "Tamil", "Hindi", "English"].map((lang, index) => (
+            {["Malayalam", "Tamil", "Hindi", "English", "Telugu"].map((lang, index) => (
               <div
                 key={lang}
                 data-gsap="reveal"

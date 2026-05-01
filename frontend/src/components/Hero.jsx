@@ -9,6 +9,10 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import heroimg from "../assets/heroimg.png";
 import sreeNandanaReview from "../assets/sree_nandana.jpeg";
+import varadaReview from "../assets/varada.jpeg";
+import ayshaReview from "../assets/aysha.jpeg";
+import fidhaReview from "../assets/fidha.jpeg";
+import ashinReview from "../assets/ashin.jpeg";
 import AuthModal from "./Shared/AuthModal";
 import useGsapReveal from "../hooks/useGsapReveal";
 import { useAuth } from "../context/AuthContext";
@@ -16,14 +20,10 @@ import { scrollToHomeSection } from "../utils/scrollToHomeSection";
 
 const featuredReviewers = [
   { name: "Sree Nandana", image: sreeNandanaReview },
-  {
-    name: "Adarsh Krishna",
-    image: "https://randomuser.me/api/portraits/men/75.jpg",
-  },
-  {
-    name: "Ananya S",
-    image: "https://randomuser.me/api/portraits/women/65.jpg",
-  },
+  { name: "Varada", image: varadaReview },
+  { name: "Aysha", image: ayshaReview },
+  { name: "Fidha", image: fidhaReview },
+  { name: "Ashin", image: ashinReview },
 ];
 
 const Hero = () => {
@@ -72,15 +72,15 @@ const Hero = () => {
             >
               <div className="space-y-4 sm:space-y-5 w-full">
                 <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-[4rem] font-extrabold text-white leading-[1.2] lg:leading-[1.15] tracking-tight drop-shadow-sm">
-                  <span className="block mb-2">Synapse Connect</span>
+                  <span className="block mb-2">Synapse Edu Hub</span>
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-sky-200">
                     India's Most Focused Learning Ecosystem
                   </span>
                 </h1>
                 <p className="text-base sm:text-lg md:text-xl text-cyan-100 font-normal max-w-xl leading-relaxed mt-2 sm:mt-4 mx-auto lg:mx-0">
-                  Synapse Connect is India's most focused learning ecosystem. We specialize in programs like 
-                  <span className="font-bold text-white"> PRIME ONE, CLUSTER, and DEEP ROOTS</span>, 
-                  and provide expert mock tests and assessments for 
+                  Synapse Edu Hub is India's most focused learning ecosystem. We specialize in programs like
+                  <span className="font-bold text-white"> PRIME ONE, CLUSTER, and DEEP ROOTS</span>,
+                  and provide expert mock tests and assessments for
                   <span className="font-bold text-white"> NEET, JEE, and PSC.</span>
                 </p>
               </div>
@@ -139,7 +139,7 @@ const Hero = () => {
                     ))}
                   </div>
                   <p className="text-[10px] sm:text-sm text-cyan-100 font-medium mt-0.5">
-                    student reviews from across India
+                    Student & Teacher reviews from across India
                   </p>
                   <button
                     type="button"
@@ -170,7 +170,7 @@ const Hero = () => {
                 <div className="relative z-10 p-0 flex items-end justify-center">
                   <img
                     src={heroimg}
-                    alt="Synapse Connect - India's Most Focused Learning Ecosystem"
+                    alt="Synapse Edu Hub - India's Most Focused Learning Ecosystem"
                     className="w-full h-auto relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-100 lg:scale-[1.15] origin-bottom hover:scale-105 lg:hover:scale-[1.20] transition-transform duration-700"
                   />
 

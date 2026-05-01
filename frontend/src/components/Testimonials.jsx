@@ -11,11 +11,11 @@ const facultyReviews = [
     name: "Fidha ",
     role: "PRIME-ONE Faculty (Chemistry)",
     image: fidha,
-    review: `I am happy to be part of Synapse Edu Hub. The institution is highly professional, well-organized, and committed to quality education. The management is supportive, respectful of tutors’ time, and ensures clear communication. It has been a valuable experience for me both professionally and personally. Grateful for the opportunity and guidance`,
+    review: `I am happy to be part of Synapse Connect. The institution is highly professional, well-organized, and committed to quality education. The management is supportive, respectful of tutors’ time, and ensures clear communication. It has been a valuable experience for me both professionally and personally. Grateful for the opportunity and guidance`,
   },
   {
     name: "Varada Menon",
-    role: "Academic Mentor",
+    role: "PRIME-ONE Faculty (Biology)",
     image: varada,
     review:
       `I had a really good experience working here as a Class 11 Biology tutor. It’s a growing institute that genuinely focuses on understanding each student’s needs and providing quality learning. I especially appreciate their multilingual approach, which helps students learn comfortably in their mother tongue. It’s a supportive place where students show real progress. I would definitely recommend this institute to parents looking for a caring and effective learning environment`
@@ -27,20 +27,17 @@ const studentReviews = [
     name: "SREE NANDANA",
     role: "+1 PRIME-ONE STUDENT",
     image: sree_nandana_review,
-    review: `Choosing Synapse for my online tuition was the best decision I made for my studies. Covering Physics, Chemistry, Biology, and Maths all at once is usually a huge challenge, but the one-to-one personalized sessions made everything so much easier to handle.
-The tutors really helped me get a solid grip on the core topics without making me feel any pressure or difficulty. 
-
-What made the biggest difference for me, though, was the exam preparation. We spent a lot of time going through Previous Year Questions and having detailed question paper discussions.
-I was able to go into my final exams feeling calm and prepared. I didn't have the usual stress or last-minute panic because I knew exactly what to expect.`,
+    review: `Choosing Synapse for my online tuition was one of the best decisions I made. Managing Physics, Chemistry, Biology, and Maths together felt overwhelming at first, but the one-to-one personalized sessions made it much easier.
+The tutors helped me build a strong understanding of core concepts without any pressure. What truly stood out was the exam preparation—especially the focus on PYQs and detailed question paper discussions. Because of this, I entered my final exams feeling calm, confident, and fully prepared, without any last-minute stress. `,
   },
   {
     name: "Liya",
     role: "Student",
     image: liya,
-    review: ` have participated in both the online and offline classes of this tuition centre, and it has been a very good experience for me. The topics are explained clearly, and the teachers also cover related concepts beyond the syllabus, helping to build a strong foundation.
-The teachers are friendly and approachable, and the WhatsApp channel allows flexible learning anytime. The free online classes are especially helpful during exams for quick revision.
+    review: ` I have participated in both the online and offline classes of this tuition centre, and it has been a very good experience for me.The topics are explained clearly, and the teachers also cover related concepts beyond the syllabus, helping to build a strong foundation.
+The teachers are friendly and approachable, and the WhatsApp channel allows flexible learning anytime.The free online classes are especially helpful during exams for quick revision.
 
-Overall, I am very satisfied with my learning experience here`,
+      Overall, I am very satisfied with my learning experience here`,
   },
 ];
 
@@ -49,16 +46,16 @@ const parentReviews = [
     name: "Karthik",
     role: "Parent (Karthik - PRIME-ONE Student, Class 5)",
     image: karthik,
-    review: `Karthik joined lately the online class hoping to cover a lot of material quickly. We were all surprised by how well the classes were run and how dedicated the tutors were helping us finish everything. Honestly it's one of the best online tutorials we've experienced`,
+    review: `Karthik joined lately the online class hoping to cover a lot of material quickly.We were all surprised by how well the classes were run and how dedicated the tutors were helping us finish everything.Honestly it's one of the best online tutorials we've experienced`,
   },
   {
     name: "Infa Aysha",
     role: "Parent (INFA AYSHA PRIME-ONE STUDENT class 4)",
     image: aysha,
-    review: `We are very happy that our daughter joined SYNAPSE EDU HUB. It has made a big positive change in her studies.
+    review: `We are very happy that our daughter joined Synapse Connect. It has made a big positive change in her studies.
 Her exam marks have improved after joining the tuition. Especially in Science, which was difficult for her before, she is now doing much better and scoring good marks.
 The classes are clear and easy to understand, and the teacher is very helpful.
-We are satisfied with her progress and would like her to continue with SYNAPSE EDU HU`,
+We are satisfied with her progress and would like her to continue with Synapse Connect`,
   },
 ];
 
@@ -68,10 +65,10 @@ const ReviewCard = ({ item, accent, featured = false, delay = 0 }) => (
     data-y="28"
     data-scale="0.98"
     data-delay={String(delay / 1000)}
-    className={`group relative overflow-hidden rounded-[1.75rem] border border-white/45 bg-white/28 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-2xl transition-all duration-700 ease-out hover:-translate-y-1 hover:border-cyan-200/60 hover:bg-white/36 hover:shadow-[0_24px_50px_rgba(14,116,144,0.14)] ${featured ? "md:p-7" : ""}`}
+    className={`group relative overflow-hidden rounded-[1.75rem] border border-white/45 bg-white/28 p-5 shadow-[0_18px_40px_rgba(15,23,42,0.08)] backdrop-blur-2xl transition-all duration-700 ease-out hover:-translate-y-1 hover:border-cyan-200/60 hover:bg-white/36 hover:shadow-[0_24px_50px_rgba(14,116,144,0.14)] ${featured ? "md:p-7" : ""} `}
   >
     <div
-      className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent}`}
+      className={`pointer-events-none absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${accent} `}
     />
     <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(135deg,rgba(255,255,255,0.42),rgba(255,255,255,0.14)_45%,rgba(14,165,233,0.08)_100%)] opacity-90" />
     <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-white/80" />
@@ -95,7 +92,7 @@ const ReviewCard = ({ item, accent, featured = false, delay = 0 }) => (
             <div className="mt-2 flex items-center gap-1 text-amber-400">
               {Array.from({ length: 5 }).map((_, index) => (
                 <Star
-                  key={`${item.name}-${index}`}
+                  key={`${item.name} -${index} `}
                   className="h-4 w-4 fill-current"
                 />
               ))}
@@ -107,7 +104,7 @@ const ReviewCard = ({ item, accent, featured = false, delay = 0 }) => (
         </div>
       </div>
       <p
-        className={`whitespace-pre-line text-slate-600 ${featured ? "text-base leading-8" : "text-sm leading-7"}`}
+        className={`whitespace-pre-line text-slate-600 ${featured ? "text-base leading-8" : "text-sm leading-7"} `}
       >
         "{item.review}"
       </p>
@@ -178,7 +175,7 @@ const Testimonials = () => {
             </div>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2">
+          <div className="flex flex-col gap-10">
             <div className="md:col-span-2">
               <div className="mb-3 flex items-center gap-3">
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
@@ -187,20 +184,21 @@ const Testimonials = () => {
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
               </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <ReviewCard
+                  item={parentReviews[0]}
+                  accent="from-cyan-500 via-sky-500 to-blue-500"
+                  featured
+                  delay={120}
+                />
+                <ReviewCard
+                  item={parentReviews[1]}
+                  accent="from-sky-500 via-cyan-500 to-blue-500"
+                  delay={220}
+                />
+              </div>
             </div>
-
-            <ReviewCard
-              item={parentReviews[0]}
-              accent="from-cyan-500 via-sky-500 to-blue-500"
-              featured
-              delay={120}
-            />
-
-            <ReviewCard
-              item={parentReviews[1]}
-              accent="from-sky-500 via-cyan-500 to-blue-500"
-              delay={220}
-            />
 
             <div className="md:col-span-2 pt-2">
               <div className="mb-3 flex items-center gap-3">
@@ -210,19 +208,21 @@ const Testimonials = () => {
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-cyan-300 to-transparent" />
               </div>
-              <ReviewCard
-                item={studentReviews[0]}
-                accent="from-cyan-500 via-teal-500 to-sky-500"
-                featured
-                delay={320}
-              />
-            </div>
 
-            <ReviewCard
-              item={studentReviews[1]}
-              accent="from-sky-500 via-slate-500 to-cyan-500"
-              delay={420}
-            />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <ReviewCard
+                  item={studentReviews[0]}
+                  accent="from-cyan-500 via-teal-500 to-sky-500"
+                  featured
+                  delay={320}
+                />
+                <ReviewCard
+                  item={studentReviews[1]}
+                  accent="from-sky-500 via-slate-500 to-cyan-500"
+                  delay={420}
+                />
+              </div>
+            </div>
 
             <div className="md:col-span-2 pt-2">
               <div className="mb-3 flex items-center gap-3">
@@ -232,18 +232,20 @@ const Testimonials = () => {
                 </span>
                 <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-300 to-transparent" />
               </div>
-            </div>
 
-            <ReviewCard
-              item={facultyReviews[0]}
-              accent="from-slate-900 via-cyan-700 to-cyan-500"
-              delay={520}
-            />
-            <ReviewCard
-              item={facultyReviews[1]}
-              accent="from-cyan-700 via-slate-700 to-slate-900"
-              delay={620}
-            />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                <ReviewCard
+                  item={facultyReviews[0]}
+                  accent="from-slate-900 via-cyan-700 to-cyan-500"
+                  delay={520}
+                />
+                <ReviewCard
+                  item={facultyReviews[1]}
+                  accent="from-cyan-700 via-slate-700 to-slate-900"
+                  delay={620}
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
