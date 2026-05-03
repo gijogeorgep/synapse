@@ -65,6 +65,27 @@ const StudentSettings = () => {
         setPasswords((prev) => ({ ...prev, [name]: value }));
     };
 
+    const calculateStrength = (password) => {
+        if (!password) return 0;
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (/[a-zA-Z]/.test(password)) strength++;
+        if (/[0-9]/.test(password)) strength++;
+        if (/[^a-zA-Z0-9]/.test(password)) strength++;
+        return strength;
+    };
+
+    const getStrengthConfig = (strength) => {
+        if (strength === 0) return { label: "", color: "bg-slate-200", width: "0%" };
+        if (strength <= 1) return { label: "Weak", color: "bg-red-500", width: "25%" };
+        if (strength === 2) return { label: "Fair", color: "bg-orange-500", width: "50%" };
+        if (strength === 3) return { label: "Good", color: "bg-yellow-500", width: "75%" };
+        return { label: "Strong", color: "bg-emerald-500", width: "100%" };
+    };
+
+    const strength = calculateStrength(passwords.newPassword);
+    const strengthConfig = getStrengthConfig(strength);
+
     const handleAvatarChange = async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
@@ -373,6 +394,28 @@ const StudentSettings = () => {
                                         : "border-slate-100 bg-slate-50 text-slate-500 cursor-not-allowed"
                                 }`}
                             />
+                            {isEditingPassword && passwords.newPassword && (
+                                <div className="mt-2 px-1">
+                                    <div className="flex justify-between items-center mb-1">
+                                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                                            Password Strength
+                                        </span>
+                                        <span className={`text-[10px] font-bold uppercase ${strengthConfig.color.replace('bg-', 'text-')}`}>
+                                            {strengthConfig.label}
+                                        </span>
+                                    </div>
+                                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                                        <div 
+                                            className={`h-full ${strengthConfig.color} transition-all duration-500 ease-out`}
+                                            style={{ width: strengthConfig.width }}
+                                        />
+                                    </div>
+                                    <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                                        <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                                        Must be at least 8 characters with letters & numbers
+                                    </p>
+                                </div>
+                            )}
                         </div>
 
                         <div className="space-y-1.5">

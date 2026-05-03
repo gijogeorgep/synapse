@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { GraduationCap, Award, ClipboardCheck, BookOpen, TrendingUp, ArrowRight, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getMyResults, getMyClassrooms } from "../../api/services";
+import { getMyResults, getMyClassrooms, getMyStudentStats, getExams } from "../../api/services";
 
 const StudentDashboard = () => {
     const { user } = useAuth();
@@ -11,6 +11,8 @@ const StudentDashboard = () => {
     const [loadingResults, setLoadingResults] = useState(true);
     const [classrooms, setClassrooms] = useState([]);
     const [loadingClassrooms, setLoadingClassrooms] = useState(true);
+    const [analytics, setAnalytics] = useState(null);
+    const [upcomingExams, setUpcomingExams] = useState([]);
 
     const subjects = user?.subjects || ["Physics", "Chemistry", "Mathematics", "Biology"];
     const userClass = user?.class || "10";
@@ -21,15 +23,19 @@ const StudentDashboard = () => {
                 setLoadingResults(true);
                 setLoadingClassrooms(true);
 
-                // Fetch results and classrooms in parallel using standardized services
-                const [resultsData, classroomsData] = await Promise.all([
+                // Fetch results, classrooms, analytics, and exams in parallel
+                const [resultsData, classroomsData, analyticsData, examsData] = await Promise.all([
                     getMyResults().catch(() => []),
-                    getMyClassrooms().catch(() => [])
+                    getMyClassrooms().catch(() => []),
+                    getMyStudentStats().catch(() => null),
+                    getExams().catch(() => [])
                 ]);
 
-                setResults(Array.isArray(resultsData) ? resultsData : []);
+                setResults(Array.isArray(resultsData) ? resultsData.filter(r => r.exam) : []);
                 const fetchedClassrooms = Array.isArray(classroomsData) ? classroomsData : [];
                 setClassrooms(fetchedClassrooms);
+                setAnalytics(analyticsData);
+                setUpcomingExams(Array.isArray(examsData) ? examsData : []);
 
                 // Redirect independent students to selection if no classrooms
                 if (user?.userType === 'independent' && fetchedClassrooms.length === 0) {
@@ -107,7 +113,7 @@ const StudentDashboard = () => {
             </div>
 
             {/* Overview stats */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 {[
                     {
                         label: "Exams attended",
@@ -126,12 +132,6 @@ const StudentDashboard = () => {
                         value: String(avgGrade),
                         icon: Award,
                         tone: "bg-emerald-50 text-emerald-700 border-emerald-100",
-                    },
-                    {
-                        label: "Rank",
-                        value: String(rank),
-                        icon: TrendingUp,
-                        tone: "bg-amber-50 text-amber-700 border-amber-100",
                     },
                 ].map((stat) => (
                     <div
@@ -201,15 +201,23 @@ const StudentDashboard = () => {
                                     </div>
 
                                     <div className="mt-6 flex items-center justify-between border-t border-slate-50 pt-4">
-                                        <div className="flex -space-x-2">
-                                            {c.teachers?.slice(0, 3).map((t, idx) => (
-                                                <div key={t._id} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-indigo-700 text-[10px] font-bold shrink-0 z-10" title={t.name}>
-                                                    {t.name?.charAt(0)}
+                                        <div className="flex -space-x-2 overflow-hidden">
+                                            {/* Combined stack of teachers and students */}
+                                            {c.teachers?.slice(0, 2).map((t) => (
+                                                <div key={t._id} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-indigo-700 text-[10px] font-bold shrink-0 z-10 overflow-hidden" title={`Teacher: ${t.name}`}>
+                                                    {t.avatarUrl ? <img src={t.avatarUrl} alt={t.name} className="w-full h-full object-cover" /> : t.name?.charAt(0)}
                                                 </div>
                                             ))}
-                                            <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-50 flex items-center justify-center text-slate-400 text-[10px] font-bold shrink-0">
-                                                <GraduationCap className="w-4 h-4" />
-                                            </div>
+                                            {c.students?.slice(0, 5).map((s, sIdx) => (
+                                                <div key={s._id || sIdx} className="w-8 h-8 rounded-full border-2 border-white bg-cyan-100 flex items-center justify-center text-cyan-700 text-[10px] font-bold shrink-0 overflow-hidden" title={s.name}>
+                                                    {s.avatarUrl ? <img src={s.avatarUrl} alt={s.name} className="w-full h-full object-cover" /> : s.name?.charAt(0)}
+                                                </div>
+                                            ))}
+                                            {c.students?.length > 5 && (
+                                                <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-50 flex items-center justify-center text-slate-400 text-[10px] font-bold shrink-0">
+                                                    +{c.students.length - 5}
+                                                </div>
+                                            )}
                                         </div>
                                         <span className="text-xs font-semibold text-slate-400 hover:text-cyan-600 transition-colors">Enter</span>
                                     </div>
@@ -268,7 +276,7 @@ const StudentDashboard = () => {
                                             Grade {grade}
                                         </span>
                                     </div>
-                                    <h3 className="font-bold text-slate-900 truncate mb-1">{res.exam?.title || 'Unknown Exam'}</h3>
+                                    <h3 className="font-bold text-slate-900 truncate mb-1">{res.exam.title}</h3>
                                     <p className="text-xs text-slate-500 mb-4">{res.exam?.subject || 'General'} • {new Date(res.createdAt).toLocaleDateString()}</p>
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-1.5 text-slate-900">
@@ -287,149 +295,8 @@ const StudentDashboard = () => {
                 </div>
             </div>
 
-            {/* Performance line graph (exam-wise by month) */}
-            <div className="bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
-                <div className="flex items-center justify-between gap-4">
-                    <div>
-                        <h2 className="text-lg md:text-xl font-semibold text-slate-900">
-                            Performance over time
-                        </h2>
-                        <p className="text-sm text-slate-500">
-                            Line graph of exam scores by month so you can track your growth.
-                        </p>
-                    </div>
-                    <button
-                        type="button"
-                        onClick={() => navigate("/student/exams")}
-                        className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 transition-colors"
-                    >
-                        <span>View all results</span>
-                        <ArrowRight className="w-4 h-4" />
-                    </button>
-                </div>
 
-                {(() => {
-                    const points = [
-                        { month: "Jan", exam: "Mid-term", score: 72 },
-                        { month: "Feb", exam: "Unit Test 2", score: 78 },
-                        { month: "Mar", exam: "Revision Test", score: 84 },
-                        { month: "Apr", exam: "Model Exam", score: 90 },
-                    ];
-                    const maxScore = 100;
-                    const paddingX = 24;
-                    const paddingY = 16;
-                    const width = 600;
-                    const height = 200;
-                    const stepX =
-                        points.length > 1
-                            ? (width - paddingX * 2) / (points.length - 1)
-                            : 0;
-
-                    const toSvgX = (index) => paddingX + index * stepX;
-                    const toSvgY = (score) =>
-                        paddingY + (1 - score / maxScore) * (height - paddingY * 2);
-
-                    const polylinePoints = points
-                        .map((p, i) => `${toSvgX(i)},${toSvgY(p.score)}`)
-                        .join(" ");
-
-                    return (
-                        <div className="w-full overflow-x-auto">
-                            <svg
-                                viewBox={`0 0 ${width} ${height}`}
-                                className="w-full max-w-full"
-                            >
-                                {/* Horizontal grid lines */}
-                                {[0, 25, 50, 75, 100].map((val) => {
-                                    const y =
-                                        paddingY +
-                                        (1 - val / maxScore) * (height - paddingY * 2);
-                                    return (
-                                        <g key={val}>
-                                            <line
-                                                x1={paddingX}
-                                                y1={y}
-                                                x2={width - paddingX}
-                                                y2={y}
-                                                stroke="#e2e8f0"
-                                                strokeWidth="1"
-                                                strokeDasharray="4 4"
-                                            />
-                                            <text
-                                                x={8}
-                                                y={y + 4}
-                                                fontSize="10"
-                                                fill="#94a3b8"
-                                            >
-                                                {val}
-                                            </text>
-                                        </g>
-                                    );
-                                })}
-
-                                {/* Line */}
-                                <polyline
-                                    fill="none"
-                                    stroke="url(#scoreGradient)"
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    points={polylinePoints}
-                                />
-
-                                {/* Gradient definition */}
-                                <defs>
-                                    <linearGradient
-                                        id="scoreGradient"
-                                        x1="0"
-                                        y1="0"
-                                        x2="1"
-                                        y2="0"
-                                    >
-                                        <stop offset="0%" stopColor="#06b6d4" />
-                                        <stop offset="100%" stopColor="#6366f1" />
-                                    </linearGradient>
-                                </defs>
-
-                                {/* Points */}
-                                {points.map((p, i) => (
-                                    <g key={p.month}>
-                                        <circle
-                                            cx={toSvgX(i)}
-                                            cy={toSvgY(p.score)}
-                                            r={5}
-                                            fill="white"
-                                            stroke="#06b6d4"
-                                            strokeWidth="2"
-                                        />
-                                    </g>
-                                ))}
-
-                                {/* X-axis labels */}
-                                {points.map((p, i) => (
-                                    <text
-                                        key={`${p.month}-label`}
-                                        x={toSvgX(i)}
-                                        y={height - 4}
-                                        fontSize="11"
-                                        textAnchor="middle"
-                                        fill="#64748b"
-                                    >
-                                        {p.month}
-                                    </text>
-                                ))}
-                            </svg>
-                        </div>
-                    );
-                })()}
-
-                <p className="text-[11px] text-slate-400">
-                    These values are for display only right now. When your exam API is ready, you can
-                    feed real monthly scores here.
-                </p>
-            </div>
-
-            {/* Detailed performance, notifications & calendar */}
+            {/* Detailed performance & calendar */}
             <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1.3fr)] gap-6">
                 {/* Subject-wise performance */}
                 <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-7 space-y-4">
@@ -444,106 +311,61 @@ const StudentDashboard = () => {
                         </div>
                     </div>
                     <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {(user?.subjectStats ||
+                        {(analytics?.subjectPerformance || 
                             subjects.map((s, i) => ({
                                 subject: s,
-                                grade: ["A+", "A", "B+"][i % 3],
-                                score: [92, 88, 80, 85][i % 4],
+                                average: 0,
+                                examsTaken: 0
                             }))
-                        ).map((s) => (
-                            <div
-                                key={s.subject}
-                                className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-100 bg-slate-50"
-                            >
-                                <div>
-                                    <p className="text-sm font-semibold text-slate-900">
-                                        {s.subject}
-                                    </p>
-                                    <p className="text-xs text-slate-500">
-                                        Avg. score {s.score}% • Grade {s.grade}
-                                    </p>
-                                    <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden">
-                                        <div
-                                            className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500"
-                                            style={{ width: `${Math.min(s.score, 100)}%` }}
-                                        />
+                        ).map((s) => {
+                            const grade = s.average >= 90 ? "A+" : s.average >= 80 ? "A" : s.average >= 70 ? "B+" : s.average >= 60 ? "B" : s.average >= 50 ? "C" : "D";
+                            return (
+                                <div
+                                    key={s.subject}
+                                    className="flex items-center justify-between gap-3 p-3 rounded-2xl border border-slate-100 bg-slate-50"
+                                >
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-900">
+                                            {s.subject}
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                            Avg. score {s.average}% • {s.examsTaken} exams
+                                        </p>
+                                        <div className="mt-2 h-1.5 rounded-full bg-slate-200 overflow-hidden">
+                                            <div
+                                                className="h-full rounded-full bg-gradient-to-r from-cyan-500 to-indigo-500"
+                                                style={{ width: `${Math.min(s.average, 100)}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex flex-col items-center">
+                                        <span className={`inline-flex items-center justify-center w-9 h-9 rounded-full text-xs font-bold ${s.average >= 50 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'}`}>
+                                            {grade}
+                                        </span>
+                                        <span className="mt-1 text-[10px] text-slate-400 uppercase tracking-wide">
+                                            Grade
+                                        </span>
                                     </div>
                                 </div>
-                                <div className="flex flex-col items-center">
-                                    <span className="inline-flex items-center justify-center w-9 h-9 rounded-full bg-emerald-50 text-emerald-700 text-xs font-bold">
-                                        {s.grade}
-                                    </span>
-                                    <span className="mt-1 text-[10px] text-slate-400 uppercase tracking-wide">
-                                        Grade
-                                    </span>
-                                </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 </div>
 
-                <div className="space-y-6">
-                    {/* Notifications */}
-                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-7 space-y-4">
-                        <div className="flex items-center justify-between gap-4">
-                            <div>
-                                <h3 className="text-lg font-semibold text-slate-900">
-                                    Notifications
-                                </h3>
-                                <p className="text-sm text-slate-500">
-                                    Latest updates from Synapse and your teachers.
-                                </p>
-                            </div>
-                        </div>
-                        <div className="space-y-3 max-h-44 overflow-y-auto pr-1">
-                            {(user?.notifications || [
-                                {
-                                    id: 1,
-                                    type: "exam",
-                                    title: "Physics chapter test on Friday",
-                                    time: "2 days left",
-                                },
-                                {
-                                    id: 2,
-                                    type: "class",
-                                    title: "Extra Math doubt-clearing session added",
-                                    time: "Tomorrow, 7:00 PM",
-                                },
-                                {
-                                    id: 3,
-                                    type: "material",
-                                    title: "New Algebra notes uploaded to Materials",
-                                    time: "Just now",
-                                },
-                            ]).map((n) => (
-                                <div
-                                    key={n.id}
-                                    className="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 hover:bg-cyan-50/60 border border-slate-100 hover:border-cyan-100 transition-colors"
-                                >
-                                    <div className="mt-0.5 h-2 w-2 rounded-full bg-cyan-500" />
-                                    <div className="flex-1">
-                                        <p className="text-sm font-medium text-slate-900">
-                                            {n.title}
-                                        </p>
-                                        <p className="text-xs text-slate-500 mt-0.5">{n.time}</p>
-                                    </div>
-                                </div>
-                            ))}
+                {/* Calendar */}
+                <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-7 space-y-4">
+                    <div className="flex items-center justify-between gap-4">
+                        <div>
+                            <h3 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
+                                <Award className="w-5 h-5 text-indigo-600" />
+                                Calendar
+                            </h3>
+                            <p className="text-sm text-slate-500">
+                                Upcoming exams and key events this month.
+                            </p>
                         </div>
                     </div>
 
-                    {/* Calendar */}
-                    <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-7 space-y-4">
-                        <div className="flex items-center justify-between gap-4">
-                            <div>
-                                <h3 className="text-lg font-semibold text-slate-900">
-                                    Calendar
-                                </h3>
-                                <p className="text-sm text-slate-500">
-                                    Upcoming exams and key events this month.
-                                </p>
-                            </div>
-                        </div>
 
                         {(() => {
                             const monthNames = [
@@ -567,24 +389,27 @@ const StudentDashboard = () => {
                                 0
                             ).getDate();
 
-                            const examEvents =
-                                user?.examEvents || [
-                                    {
-                                        date: 5,
-                                        label: "Math unit test",
-                                    },
-                                    {
-                                        date: 12,
-                                        label: "Science quiz",
-                                    },
-                                    {
-                                        date: 24,
-                                        label: "Model exam",
-                                    },
-                                ];
+                            const examEvents = [
+                                ...upcomingExams.map(e => ({
+                                    date: new Date(e.date).getDate(),
+                                    month: new Date(e.date).getMonth(),
+                                    year: new Date(e.date).getFullYear(),
+                                    label: e.title,
+                                    type: 'upcoming'
+                                })),
+                                ...results.map(r => ({
+                                    date: new Date(r.exam?.date || r.createdAt).getDate(),
+                                    month: new Date(r.exam?.date || r.createdAt).getMonth(),
+                                    year: new Date(r.exam?.date || r.createdAt).getFullYear(),
+                                    label: r.exam?.title || 'Exam',
+                                    type: 'past'
+                                }))
+                            ];
 
                             const eventByDate = examEvents.reduce((map, e) => {
-                                map[e.date] = e;
+                                if (e.month === currentMonth && e.year === currentYear) {
+                                    map[e.date] = e;
+                                }
                                 return map;
                             }, {});
 
@@ -649,9 +474,8 @@ const StudentDashboard = () => {
                         })()}
                     </div>
                 </div>
-            </div>
 
-            {/* Quick access */}
+                {/* Quick access */}
             <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
                 <div className="flex items-center justify-between gap-4">
                     <div>

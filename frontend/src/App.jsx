@@ -32,6 +32,7 @@ import StudentDashboard from "./pages/Student/Dashboard";
 import StudentExams from "./pages/Student/Exams";
 import StudentClassrooms from "./pages/Student/Classrooms";
 import StudentMaterials from "./pages/Student/Materials";
+import StudentAnalytics from "./pages/Student/Analytics";
 import TeacherDashboard from "./pages/Teacher/Dashboard";
 import TeacherClassrooms from "./pages/Teacher/Classrooms";
 import TeacherClassroom from "./pages/Teacher/Classroom";
@@ -352,7 +353,7 @@ function AppContent() {
                 <Route path="/student/classrooms" element={<StudentClassrooms />} />
                 <Route path="/student/exams" element={<StudentExams />} />
                 <Route path="/student/materials" element={<StudentMaterials />} />
-                <Route path="/student/history" element={<div className="p-8"><h1>Exam History</h1></div>} />
+                <Route path="/student/analytics" element={<StudentAnalytics />} />
                 <Route path="/student/settings" element={<StudentSettings />} />
                 <Route path="/student/classroom" element={<StudentClassroom />} />
                 <Route path="/student/select-classroom" element={<ClassroomSelection />} />

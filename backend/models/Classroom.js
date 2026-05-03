@@ -42,10 +42,22 @@ const classroomSchema = mongoose.Schema(
             type: String,
             default: "",
         },
+        classLinks: [
+            {
+                title: String,
+                url: String,
+                teacher: {
+                    type: mongoose.Schema.Types.ObjectId,
+                    ref: "User",
+                },
+                subject: String,
+            },
+        ],
         lectureNotes: [
             {
                 title: String,
                 url: String,
+                subject: String,
                 createdAt: {
                     type: Date,
                     default: Date.now,

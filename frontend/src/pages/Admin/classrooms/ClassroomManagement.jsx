@@ -9,6 +9,7 @@ import {
 import { X, GraduationCap, Users, PlusCircle, CheckCircle2, AlertCircle, BookOpen, MoreVertical, Edit, Trash2, Search, ChevronDown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { toast } from 'react-hot-toast';
 const ClassroomManagement = () => {
     const navigate = useNavigate();
     const [classrooms, setClassrooms] = useState([])
@@ -109,7 +110,7 @@ const ClassroomManagement = () => {
             }
         } catch (error) {
             console.error("Error fetching data:", error);
-            setStatus({ type: 'error', message: 'Failed to load data.' });
+            toast.error('Failed to load data.');
         } finally {
             setLoading(false);
         }
@@ -143,7 +144,7 @@ const ClassroomManagement = () => {
 
         try {
             await createAdminClassroom(formData);
-            setStatus({ type: 'success', message: 'Classroom created successfully!' });
+            toast.success('Classroom created successfully!');
             setIsCreateModalOpen(false);
 
             setFormData({
@@ -160,9 +161,8 @@ const ClassroomManagement = () => {
                 imageUrl: ''
             });
             fetchData();
-            setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Error creating classroom' });
+            toast.error(error || 'Error creating classroom');
         } finally {
             setIsSubmitting(false);
         }
@@ -193,11 +193,11 @@ const ClassroomManagement = () => {
         setIsSubmitting(true);
         try {
             await updateAdminClassroom(selectedClassroom._id, editFormData);
-            setStatus({ type: 'success', message: 'Classroom updated successfully!' });
+            toast.success('Classroom updated successfully!');
             setIsEditModalOpen(false);
             fetchData();
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Error updating classroom' });
+            toast.error(error || 'Error updating classroom');
         } finally {
             setIsSubmitting(false);
         }
@@ -225,11 +225,11 @@ const ClassroomManagement = () => {
         setIsSubmitting(true);
         try {
             await deleteAdminClassroom(selectedClassroom._id);
-            setStatus({ type: 'success', message: 'Classroom deleted successfully!' });
+            toast.success('Classroom deleted successfully!');
             setIsDeleteModalOpen(false);
             fetchData();
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Error deleting classroom' });
+            toast.error(error || 'Error deleting classroom');
         } finally {
             setIsSubmitting(false);
         }
@@ -252,14 +252,13 @@ const ClassroomManagement = () => {
                 role: assignData.role
             });
 
-            setStatus({ type: 'success', message: `${assignData.userIds.length} ${assignData.role}${assignData.userIds.length > 1 ? 's' : ''} assigned successfully!` });
+            toast.success(`${assignData.userIds.length} ${assignData.role}${assignData.userIds.length > 1 ? 's' : ''} assigned successfully!`);
             setAssignData(prev => ({ ...prev, userIds: [] }));
             setAssignUserPickerOpen(false);
             setAssignUserSearch('');
             fetchData(); // Refresh classrooms with new data
-            setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Error assigning user' });
+            toast.error(error || 'Error assigning user');
         } finally {
             setIsSubmitting(false);
         }
@@ -621,13 +620,6 @@ const ClassroomManagement = () => {
                 </button>
             </div>
 
-            {status.message && (
-                <div className={`p-4 rounded-xl flex items-start space-x-3 animate-in fade-in duration-300 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                    {status.type === 'success' ? <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" /> : <AlertCircle className="w-5 h-5 mt-0.5 shrink-0" />}
-                    <p className="font-medium">{status.message}</p>
-                    <button onClick={() => setStatus({ type: '', message: '' })} className="ml-auto hover:bg-black/5 p-1 rounded-lg transition-colors"><X className="w-4 h-4" /></button>
-                </div>
-            )}
 
             <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
                 <div className="flex items-center space-x-3 mb-6">

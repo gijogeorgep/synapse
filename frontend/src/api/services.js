@@ -86,6 +86,10 @@ export const getTeacherClassrooms = () =>
   apiClient("/classrooms/my-classrooms");
 export const getMyTeacherStats = () =>
   apiClient("/reports/my-teacher-stats");
+export const getMyStudentStats = () =>
+  apiClient("/reports/my-student-stats");
+export const getClassroomRank = (classroomId) =>
+  apiClient(`/reports/classroom-rank/${classroomId}`);
 export const deleteMaterial = (id) =>
   apiClient(`/materials/${id}`, { method: "DELETE" });
 export const getClassroomById = (id) => apiClient(`/classrooms/${id}`);

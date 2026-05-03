@@ -46,6 +46,7 @@ const LibraryManagement = () => {
             }
         } catch (error) {
             console.error("Error fetching data:", error);
+            toast.error('Failed to load data.');
         } finally {
             setLoading(false);
         }
@@ -56,7 +57,6 @@ const LibraryManagement = () => {
         const loadId = toast.loading('Adding resource...');
         try {
             await createAdminResource(formData);
-            setStatus({ type: 'success', message: 'Resource added to library!' });
             toast.success('Resource added to library!', { id: loadId });
             setIsModalOpen(false);
             setFormData({ title: '', description: '', fileType: 'pdf', fileUrl: '', subject: '', classroom: classrooms[0]?._id || '', category: 'study_material', year: '' });
@@ -64,7 +64,6 @@ const LibraryManagement = () => {
             fetchData();
         } catch (error) {
             const msg = error.response?.data?.message || error.message || 'Failed to add resource.';
-            setStatus({ type: 'error', message: msg });
             toast.error(msg, { id: loadId });
         }
     };
@@ -82,12 +81,10 @@ const LibraryManagement = () => {
         try {
             const data = await (isImage ? uploadImage(formDataPayload) : uploadFile(formDataPayload));
             setFormData(prev => ({ ...prev, fileUrl: data.url, public_id: data.public_id }));
-            setStatus({ type: 'success', message: 'File uploaded successfully' });
             toast.success('File uploaded successfully', { id: loadId });
         } catch (error) {
             console.error('File upload failed:', error);
             const msg = 'File upload failed';
-            setStatus({ type: 'error', message: msg });
             toast.error(msg, { id: loadId });
         } finally {
             setUploading(false);
@@ -117,12 +114,6 @@ const LibraryManagement = () => {
                 </button>
             </div>
 
-            {status.message && (
-                <div className={`p-4 rounded-xl flex items-center space-x-3 text-sm font-medium animate-in zoom-in-95 duration-200 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                    {status.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                    <span>{status.message}</span>
-                </div>
-            )}
 
             {loading ? (
                 <div className="flex justify-center py-20">
@@ -164,11 +155,9 @@ const LibraryManagement = () => {
                                                 const loadId = toast.loading('Deleting resource...');
                                                 try {
                                                     await deleteAdminResource(res._id);
-                                                    setStatus({ type: 'success', message: 'Resource deleted' });
                                                     toast.success('Resource deleted', { id: loadId });
                                                     fetchData();
                                                 } catch (error) {
-                                                    setStatus({ type: 'error', message: 'Failed to delete resource' });
                                                     toast.error('Failed to delete resource', { id: loadId });
                                                 }
                                             }

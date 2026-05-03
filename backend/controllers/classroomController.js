@@ -16,16 +16,16 @@ export const getMyClassrooms = async (req, res) => {
         if (role === 'student') {
             classrooms = await Classroom.find({ students: userId })
                 .populate('teachers', 'name email avatarUrl')
-                .populate('students', 'name email');
+                .populate('students', 'name email avatarUrl');
         } else if (role === 'teacher') {
             classrooms = await Classroom.find({ teachers: userId })
                 .populate('teachers', 'name email avatarUrl')
                 .populate('students', 'name email avatarUrl uniqueId');
-        } else if (role === 'admin') {
-            // Admin can see all classrooms
+        } else if (role === 'admin' || role === 'superadmin') {
+            // Admin/Superadmin can see all classrooms
             classrooms = await Classroom.find()
-                .populate('teachers', 'name email')
-                .populate('students', 'name email');
+                .populate('teachers', 'name email avatarUrl')
+                .populate('students', 'name email avatarUrl');
         } else {
             return res.status(403).json({ message: "Role not authorized for this operation" });
         }
@@ -42,7 +42,7 @@ export const getMyClassrooms = async (req, res) => {
 // @access  Private (Teacher/Admin)
 export const updateClassroomResources = async (req, res) => {
     try {
-        const { onlineClassLink, lectureNote } = req.body;
+        const { onlineClassLink, classLinks, lectureNote } = req.body;
         const classroom = await Classroom.findById(req.params.id);
 
         if (!classroom) {
@@ -60,7 +60,12 @@ export const updateClassroomResources = async (req, res) => {
             classroom.onlineClassLink = onlineClassLink;
         }
 
+        if (classLinks !== undefined) {
+            classroom.classLinks = classLinks;
+        }
+
         if (lectureNote) {
+            // Support adding subject to lecture note
             classroom.lectureNotes.push(lectureNote);
         }
 

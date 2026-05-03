@@ -45,7 +45,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             { name: "Classroom", icon: GraduationCap, path: "/student/classrooms" },
             { name: "Exams", icon: FileText, path: "/student/exams" },
             { name: "Materials", icon: BookOpen, path: "/student/materials" },
-            { name: "History", icon: History, path: "/student/history" },
+            { name: "Analytics", icon: BarChart3, path: "/student/analytics" },
             { name: "Settings", icon: Settings, path: "/student/settings" },
         ],
         teacher: [
@@ -113,12 +113,12 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
                 <div className={`flex items-center gap-3 ${collapsed ? "lg:justify-center px-3 py-5" : "justify-between px-6 py-5"} ${isMobileOpen ? 'justify-between' : ''}`}>
                     {!collapsed && (
                         <NavLink to="/" className="flex items-center">
-                            <img src={logo} alt="Synapse" className="h-20 w-auto object-contain" />
+                            <img src={logo} alt="Synapse" className="h-28 w-auto object-contain" />
                         </NavLink>
                     )}
                     {collapsed && (
                         <NavLink to="/" className="flex items-center">
-                            <img src={logoIcon} alt="Synapse" className="h-14 w-auto object-contain" />
+                            <img src={logoIcon} alt="Synapse" className="h-16 w-auto object-contain" />
                         </NavLink>
                     )}
                     

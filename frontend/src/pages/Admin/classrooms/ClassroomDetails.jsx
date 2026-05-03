@@ -39,8 +39,13 @@ const AdminClassroomDetails = () => {
     const [uploadingImg, setUploadingImg] = useState({}); // { [qIdx]: true|false }
 
     // Study material form
-    const [materialForm, setMaterialForm] = useState({ title: '', url: '' });
+    const [materialForm, setMaterialForm] = useState({ title: '', url: '', subject: '' });
     const [isUploadingMaterial, setIsUploadingMaterial] = useState(false);
+
+    // Class links management
+    const [classLinks, setClassLinks] = useState([]);
+    const [isUpdatingLinks, setIsUpdatingLinks] = useState(false);
+    const [newLink, setNewLink] = useState({ title: '', url: '', subject: '' });
 
     const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
     const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
@@ -52,7 +57,14 @@ const AdminClassroomDetails = () => {
             setLoading(true);
             const data = await getAdminClassrooms();
             const found = data.find(c => c._id === id);
-            if (found) setClassroom(found);
+            if (found) {
+                setClassroom(found);
+                setClassLinks(found.classLinks || []);
+                if (found.subjects && found.subjects.length > 0) {
+                    setMaterialForm(prev => ({ ...prev, subject: found.subjects[0] }));
+                    setNewLink(prev => ({ ...prev, subject: found.subjects[0] }));
+                }
+            }
             else setError('Classroom not found.');
         } catch (err) {
             setError('Failed to load classroom details.');
@@ -227,15 +239,54 @@ const AdminClassroomDetails = () => {
         setIsUploadingMaterial(true);
         try {
             await updateClassroomResources(id, {
-                lectureNote: { title: materialForm.title, url: materialForm.url }
+                lectureNote: { 
+                    title: materialForm.title, 
+                    url: materialForm.url,
+                    subject: materialForm.subject 
+                }
             });
             showStatus('success', 'Study material saved!');
-            setMaterialForm({ title: '', url: '' });
+            setMaterialForm({ title: '', url: '', subject: classroom?.subjects?.[0] || '' });
             fetchClassroomDetails();
         } catch (err) {
             showStatus('error', err.response?.data?.message || 'Failed to save material.');
         } finally {
             setIsUploadingMaterial(false);
+        }
+    };
+
+    const handleAddLink = async () => {
+        if (!newLink.title || !newLink.url) {
+            showStatus('error', 'Title and URL are required.');
+            return;
+        }
+        setIsUpdatingLinks(true);
+        try {
+            const updatedLinks = [...classLinks, newLink];
+            await updateClassroomResources(id, { classLinks: updatedLinks });
+            setClassLinks(updatedLinks);
+            setNewLink({ title: '', url: '', subject: classroom?.subjects?.[0] || '' });
+            showStatus('success', 'Class link added!');
+            fetchClassroomDetails();
+        } catch (err) {
+            showStatus('error', 'Failed to add link.');
+        } finally {
+            setIsUpdatingLinks(false);
+        }
+    };
+
+    const handleRemoveLink = async (index) => {
+        setIsUpdatingLinks(true);
+        try {
+            const updatedLinks = classLinks.filter((_, i) => i !== index);
+            await updateClassroomResources(id, { classLinks: updatedLinks });
+            setClassLinks(updatedLinks);
+            showStatus('success', 'Link removed!');
+            fetchClassroomDetails();
+        } catch (err) {
+            showStatus('error', 'Failed to remove link.');
+        } finally {
+            setIsUpdatingLinks(false);
         }
     };
 
@@ -316,6 +367,7 @@ const AdminClassroomDetails = () => {
                     { key: 'students', label: 'Students', icon: GraduationCap },
                     { key: 'exams', label: 'Create Exam (MCQ)', icon: FileText },
                     { key: 'materials', label: 'Study Materials', icon: Upload },
+                    { key: 'links', label: 'Class Links', icon: Eye },
                 ].map(({ key, label, icon: Icon }) => (
                     <button key={key} onClick={() => setActiveTab(key)}
                         className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-bold transition-all ${activeTab === key ? 'bg-white text-cyan-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
@@ -690,11 +742,25 @@ const AdminClassroomDetails = () => {
                             </div>
                         </div>
                         <form onSubmit={handleAddMaterial} className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-semibold text-slate-700 mb-1">Material Title <span className="text-rose-500">*</span></label>
-                                <input required value={materialForm.title} onChange={e => setMaterialForm({ ...materialForm, title: e.target.value })}
-                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
-                                    placeholder="e.g. Chapter 1 – Cell Biology Notes" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Material Title <span className="text-rose-500">*</span></label>
+                                    <input required value={materialForm.title} onChange={e => setMaterialForm({ ...materialForm, title: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm"
+                                        placeholder="e.g. Chapter 1 – Cell Biology Notes" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
+                                    <select 
+                                        value={materialForm.subject} 
+                                        onChange={e => setMaterialForm({ ...materialForm, subject: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none text-sm font-bold text-slate-700"
+                                    >
+                                        {(classroom?.subjects || []).map(sub => (
+                                            <option key={sub} value={sub}>{sub}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-2">Upload File (PDF or Image) <span className="text-rose-500">*</span></label>
@@ -744,7 +810,10 @@ const AdminClassroomDetails = () => {
                                             <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
                                                 <BookOpen className="w-4 h-4 text-emerald-600" />
                                             </div>
-                                            <span className="text-sm font-semibold text-slate-700 line-clamp-1">{note.title || 'Untitled'}</span>
+                                            <div className="flex flex-col">
+                                                <span className="text-sm font-semibold text-slate-700 line-clamp-1">{note.title || 'Untitled'}</span>
+                                                {note.subject && <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{note.subject}</span>}
+                                            </div>
                                         </div>
                                         <a href={note.url} target="_blank" rel="noreferrer"
                                             className="text-xs font-bold text-cyan-600 hover:text-cyan-700 hover:underline shrink-0">View →</a>
@@ -755,6 +824,91 @@ const AdminClassroomDetails = () => {
                     ) : (
                         <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-slate-200 text-slate-400 text-sm font-medium">
                             No materials added yet. Add the first one above.
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* ── CLASS LINKS TAB ── */}
+            {activeTab === 'links' && (
+                <div className="space-y-6 max-w-2xl">
+                    <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                        <div className="flex items-center gap-3 mb-5">
+                            <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl"><Eye className="w-5 h-5" /></div>
+                            <div>
+                                <h2 className="text-lg font-bold text-slate-800">Add Live Class Link</h2>
+                                <p className="text-xs text-slate-400 mt-0.5">Add meeting links for different subjects or teachers.</p>
+                            </div>
+                        </div>
+                        <div className="space-y-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Link Title (e.g. Physics - Mr. X) <span className="text-rose-500">*</span></label>
+                                    <input value={newLink.title} onChange={e => setNewLink({ ...newLink, title: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                        placeholder="e.g. Biology Main Class" />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
+                                    <select 
+                                        value={newLink.subject} 
+                                        onChange={e => setNewLink({ ...newLink, subject: e.target.value })}
+                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-slate-700"
+                                    >
+                                        {(classroom?.subjects || []).map(sub => (
+                                            <option key={sub} value={sub}>{sub}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-semibold text-slate-700 mb-1">Meeting URL <span className="text-rose-500">*</span></label>
+                                <input value={newLink.url} onChange={e => setNewLink({ ...newLink, url: e.target.value })}
+                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
+                                    placeholder="https://meet.google.com/..." />
+                            </div>
+                            <button onClick={handleAddLink} disabled={isUpdatingLinks || !newLink.title || !newLink.url}
+                                className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/20 active:scale-95">
+                                {isUpdatingLinks ? <Loader2 className="w-5 h-5 animate-spin" /> : <PlusCircle className="w-5 h-5" />}
+                                {isUpdatingLinks ? 'Adding Link...' : 'Add Class Link'}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Existing Links */}
+                    {classLinks.length > 0 ? (
+                        <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
+                            <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Active Links ({classLinks.length})</h3>
+                            <div className="space-y-3">
+                                {classLinks.map((link, i) => (
+                                    <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 group">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                                                <Eye className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-bold text-slate-800">{link.title}</p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    {link.subject && <span className="text-[10px] font-black text-indigo-500 uppercase">{link.subject}</span>}
+                                                    <span className="text-[10px] text-slate-400 truncate max-w-[200px]">{link.url}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-2">
+                                            <a href={link.url} target="_blank" rel="noreferrer" className="p-2 text-indigo-600 hover:bg-white rounded-lg transition-colors">
+                                                <Eye className="w-4 h-4" />
+                                            </a>
+                                            <button onClick={() => handleRemoveLink(i)} className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-slate-200 text-slate-400 text-sm font-medium">
+                            No class links added yet. Add the first one above.
                         </div>
                     )}
                 </div>

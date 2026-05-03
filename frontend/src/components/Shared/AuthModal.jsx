@@ -49,6 +49,27 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
     if (error) setError("");
   };
 
+  const calculateStrength = (password) => {
+    if (!password) return 0;
+    let strength = 0;
+    if (password.length >= 8) strength++;
+    if (/[a-zA-Z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^a-zA-Z0-9]/.test(password)) strength++;
+    return strength;
+  };
+
+  const getStrengthConfig = (strength) => {
+    if (strength === 0) return { label: "", color: "bg-slate-200", width: "0%" };
+    if (strength <= 1) return { label: "Weak", color: "bg-red-500", width: "25%" };
+    if (strength === 2) return { label: "Fair", color: "bg-orange-500", width: "50%" };
+    if (strength === 3) return { label: "Good", color: "bg-yellow-500", width: "75%" };
+    return { label: "Strong", color: "bg-emerald-500", width: "100%" };
+  };
+
+  const strength = calculateStrength(formData.password);
+  const strengthConfig = getStrengthConfig(strength);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -60,6 +81,16 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
     } else if (mode === "register") {
       if (formData.password !== formData.confirmPassword) {
         const msg = "Passwords do not match";
+        setError(msg);
+        toast.error(msg);
+        setLoading(false);
+        return;
+      }
+
+      // Password Strength Validation - Min 8 chars, letters and numbers
+      const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+      if (!passwordRegex.test(formData.password)) {
+        const msg = "Password must be at least 8 characters and contain both letters and numbers";
         setError(msg);
         toast.error(msg);
         setLoading(false);
@@ -282,6 +313,28 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
                   onChange={handleChange}
                   className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
                 />
+                {mode === "register" && formData.password && (
+                  <div className="mt-2 px-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Password Strength
+                      </span>
+                      <span className={`text-[10px] font-bold uppercase ${strengthConfig.color.replace('bg-', 'text-')}`}>
+                        {strengthConfig.label}
+                      </span>
+                    </div>
+                    <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full ${strengthConfig.color} transition-all duration-500 ease-out`}
+                        style={{ width: strengthConfig.width }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1.5 flex items-center gap-1">
+                      <span className="w-1 h-1 bg-slate-300 rounded-full" />
+                      Must be at least 8 characters with letters & numbers
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 

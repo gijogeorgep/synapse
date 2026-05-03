@@ -36,10 +36,11 @@ const StudentExams = () => {
             try {
                 // Fetch real student results
                 const resultsData = await getMyResults();
-                setCompletedExams(resultsData);
+                const filteredResults = (Array.isArray(resultsData) ? resultsData : []).filter(r => r.exam);
+                setCompletedExams(filteredResults);
 
                 const submittedExamIds = new Set(
-                    (Array.isArray(resultsData) ? resultsData : [])
+                    filteredResults
                         .map((result) => result.exam?._id)
                         .filter(Boolean)
                 );
@@ -436,7 +437,7 @@ const StudentExams = () => {
                                     >
                                         <div className="space-y-1">
                                             <p className="text-sm font-bold text-slate-900">
-                                                {result.exam?.title || 'Unknown Exam'}
+                                                {result.exam.title}
                                             </p>
                                             <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
                                                 {result.exam?.subject || 'General'} • {new Date(result.createdAt).toLocaleDateString()}

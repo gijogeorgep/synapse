@@ -9,7 +9,9 @@ import {
     getTeacherStats,
     getAdminStats,
     getStudentDeepDive,
-    getMyTeacherStats
+    getMyTeacherStats,
+    getMyStudentStats,
+    getClassroomRank
 } from "../controllers/reportController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
@@ -17,8 +19,10 @@ const router = express.Router();
 
 router.use(protect);
 
-// Teacher self-stats (accessible by teachers, before admin-only gate)
+// Self-stats (accessible by respective roles, before admin-only gate)
 router.get("/my-teacher-stats", authorize("teacher", "admin", "superadmin"), getMyTeacherStats);
+router.get("/my-student-stats", authorize("student", "admin", "superadmin"), getMyStudentStats);
+router.get("/classroom-rank/:classroomId", authorize("student", "admin", "superadmin"), getClassroomRank);
 
 router.use(authorize("admin", "superadmin"));
 

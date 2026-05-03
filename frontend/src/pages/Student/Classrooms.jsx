@@ -123,15 +123,21 @@ const StudentClassrooms = () => {
                             {/* Card Content */}
                             <div className="p-6">
                                 <div className="flex items-center justify-between mb-6">
-                                    <div className="flex -space-x-2">
-                                        {c.teachers?.slice(0, 3).map((t) => (
-                                            <div key={t._id} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700" title={t.name}>
-                                                {t.name?.charAt(0)}
+                                    <div className="flex -space-x-2 overflow-hidden">
+                                        {/* Combined stack of teachers and students */}
+                                        {c.teachers?.slice(0, 2).map((t) => (
+                                            <div key={t._id} className="w-8 h-8 rounded-full border-2 border-white bg-indigo-100 flex items-center justify-center text-[10px] font-bold text-indigo-700 z-10 overflow-hidden" title={`Teacher: ${t.name}`}>
+                                                {t.avatarUrl ? <img src={t.avatarUrl} alt={t.name} className="w-full h-full object-cover" /> : t.name?.charAt(0)}
                                             </div>
                                         ))}
-                                        {c.teachers?.length === 0 && (
-                                            <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-400">
-                                                T
+                                        {c.students?.slice(0, 5).map((s, sIdx) => (
+                                            <div key={s._id || sIdx} className="w-8 h-8 rounded-full border-2 border-white bg-cyan-100 flex items-center justify-center text-[10px] font-bold text-cyan-700 overflow-hidden" title={s.name}>
+                                                {s.avatarUrl ? <img src={s.avatarUrl} alt={s.name} className="w-full h-full object-cover" /> : s.name?.charAt(0)}
+                                            </div>
+                                        ))}
+                                        {c.students?.length > 5 && (
+                                            <div className="w-8 h-8 rounded-full border-2 border-white bg-slate-50 flex items-center justify-center text-slate-400 text-[10px] font-bold shrink-0">
+                                                +{c.students.length - 5}
                                             </div>
                                         )}
                                     </div>

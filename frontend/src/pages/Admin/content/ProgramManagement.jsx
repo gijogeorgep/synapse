@@ -25,6 +25,7 @@ import {
     uploadImage 
 } from "../../../api/services";
 import { AlertCircle, X as CloseIcon } from "lucide-react";
+import { toast } from "react-hot-toast";
 
 const iconsList = [
     { name: "Zap", icon: Zap },
@@ -70,7 +71,7 @@ const ProgramManagement = () => {
             setPrograms(data);
         } catch (error) {
             console.error("Error fetching admin programs:", error);
-            setStatus({ type: 'error', message: "Failed to fetch programs: " + (error.message || error) });
+            toast.error("Failed to fetch programs: " + (error.message || error));
         } finally {
             setLoading(false);
         }
@@ -153,10 +154,9 @@ const ProgramManagement = () => {
             uploadFormData.append("image", file);
             const response = await uploadImage(uploadFormData);
             setFormData({ ...formData, [field]: response.url });
-            setStatus({ type: 'success', message: "Image uploaded successfully" });
-            setTimeout(() => setStatus({ type: '', message: '' }), 3000);
+            toast.success("Image uploaded successfully");
         } catch (error) {
-            setStatus({ type: 'error', message: "Failed to upload image" });
+            toast.error("Failed to upload image");
         } finally {
             setIsUploading(false);
         }
@@ -171,16 +171,15 @@ const ProgramManagement = () => {
 
             if (editingProgram) {
                 await updateProgram(editingProgram._id, payload);
-                setStatus({ type: 'success', message: "Program updated successfully" });
+                toast.success("Program updated successfully");
             } else {
                 await createProgram(payload);
-                setStatus({ type: 'success', message: "Program created successfully" });
+                toast.success("Program created successfully");
             }
             fetchPrograms();
             handleCloseModal();
-            setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: error.message || "Something went wrong" });
+            toast.error(error.message || "Something went wrong");
         }
     };
 
@@ -188,11 +187,10 @@ const ProgramManagement = () => {
         if (window.confirm("Are you sure you want to delete this program?")) {
             try {
                 await deleteProgram(id);
-                setStatus({ type: 'success', message: "Program deleted successfully" });
+                toast.success("Program deleted successfully");
                 fetchPrograms();
-                setTimeout(() => setStatus({ type: '', message: '' }), 3000);
             } catch (error) {
-                setStatus({ type: 'error', message: "Failed to delete program" });
+                toast.error("Failed to delete program");
             }
         }
     };
@@ -200,11 +198,10 @@ const ProgramManagement = () => {
     const togglePublish = async (program) => {
         try {
             await updateProgram(program._id, { isPublished: !program.isPublished });
-            setStatus({ type: 'success', message: `Program ${!program.isPublished ? 'published' : 'unpublished'}` });
+            toast.success(`Program ${!program.isPublished ? 'published' : 'unpublished'}`);
             fetchPrograms();
-            setTimeout(() => setStatus({ type: '', message: '' }), 3000);
         } catch (error) {
-            setStatus({ type: 'error', message: "Failed to update status" });
+            toast.error("Failed to update status");
         }
     };
 
@@ -224,15 +221,6 @@ const ProgramManagement = () => {
                 </button>
             </div>
 
-            {status.message && (
-                <div className={`p-4 rounded-xl flex items-center justify-between space-x-3 text-sm font-medium animate-in zoom-in-95 duration-200 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                    <div className="flex items-center space-x-3">
-                        {status.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                        <span>{status.message}</span>
-                    </div>
-                    <button onClick={() => setStatus({ type: '', message: '' })}><CloseIcon className="w-4 h-4" /></button>
-                </div>
-            )}
 
             {loading ? (
                 <div className="flex items-center justify-center h-64">

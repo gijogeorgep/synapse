@@ -512,3 +512,131 @@ export const getMyTeacherStats = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Get dashboard stats for logged-in student
+// @route   GET /api/reports/my-student-stats
+// @access  Private (Student)
+export const getMyStudentStats = async (req, res) => {
+    try {
+        const studentId = req.user._id;
+        
+        // 1. Fetch all results for this student
+        const resultsData = await Result.find({ student: studentId })
+            .populate('exam', 'title subject totalMarks date duration')
+            .sort({ createdAt: 1 })
+            .lean();
+
+        // Filter out results where the exam no longer exists
+        const results = resultsData.filter(r => r.exam);
+
+        // 2. Performance History (Trends)
+        const performanceHistory = results.map(r => ({
+            date: r.exam?.date || r.createdAt,
+            examTitle: r.exam.title,
+            subject: r.exam?.subject || 'General',
+            score: r.marksObtained || 0,
+            totalMarks: r.exam?.totalMarks || 100,
+            percentage: Math.round(((r.marksObtained || 0) / (r.exam?.totalMarks || 100)) * 100)
+        }));
+
+        // 3. Subject-wise Performance
+        const subjectStats = {};
+        results.forEach(r => {
+            const subject = r.exam?.subject || 'General';
+            if (!subjectStats[subject]) {
+                subjectStats[subject] = { totalPercentage: 0, count: 0 };
+            }
+            subjectStats[subject].totalPercentage += ((r.marksObtained || 0) / (r.exam?.totalMarks || 100)) * 100;
+            subjectStats[subject].count += 1;
+        });
+
+        const subjectPerformance = Object.keys(subjectStats).map(subject => ({
+            subject,
+            average: Math.round(subjectStats[subject].totalPercentage / subjectStats[subject].count),
+            examsTaken: subjectStats[subject].count
+        }));
+
+        // 4. Assignment Stats
+        const submissions = await Submission.find({ student: studentId })
+            .populate('assignment', 'title dueDate maxPoints')
+            .lean();
+        
+        const totalSubmissions = submissions.length;
+        const gradedSubmissions = submissions.filter(s => s.status === 'Graded').length;
+
+        // 5. Overall Stats
+        const overallAverage = performanceHistory.length > 0
+            ? Math.round(performanceHistory.reduce((acc, h) => acc + h.percentage, 0) / performanceHistory.length)
+            : 0;
+
+        res.json({
+            performanceHistory,
+            subjectPerformance,
+            overallAverage,
+            totalExams: results.length,
+            totalSubmissions,
+            gradedSubmissions,
+            improvementIndex: performanceHistory.length > 1 
+                ? performanceHistory[performanceHistory.length - 1].percentage - performanceHistory[0].percentage
+                : 0
+        });
+    } catch (error) {
+        console.error("[MY_STUDENT_STATS] Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+export const getClassroomRank = async (req, res) => {
+    try {
+        const { classroomId } = req.params;
+        const studentId = req.user._id;
+
+        // 1. Get all exams for this classroom
+        const exams = await Exam.find({ classroom: classroomId }).select('_id').lean();
+        const examIds = exams.map(e => e._id);
+
+        if (examIds.length === 0) {
+            return res.json({ rank: 0, totalStudents: 0, average: 0 });
+        }
+
+        // 2. Get all results for these exams
+        const allResults = await Result.find({ exam: { $in: examIds } })
+            .populate('exam', 'duration')
+            .lean();
+
+        // 3. Group by student and calculate average
+        const studentStats = {};
+        allResults.forEach(r => {
+            if (!r.exam) return;
+            const sid = r.student.toString();
+            if (!studentStats[sid]) {
+                studentStats[sid] = { totalPercentage: 0, count: 0 };
+            }
+            const percentage = (r.score / r.exam.duration) * 100;
+            studentStats[sid].totalPercentage += percentage;
+            studentStats[sid].count += 1;
+        });
+
+        const ranking = Object.keys(studentStats).map(sid => ({
+            student: sid,
+            average: studentStats[sid].totalPercentage / studentStats[sid].count
+        }));
+
+        // 4. Sort by average
+        ranking.sort((a, b) => b.average - a.average);
+
+        // 5. Find rank
+        const myIndex = ranking.findIndex(r => r.student === studentId.toString());
+        const myRank = myIndex !== -1 ? myIndex + 1 : 0;
+        const myAverage = myIndex !== -1 ? ranking[myIndex].average : 0;
+
+        res.json({
+            rank: myRank,
+            totalStudents: ranking.length,
+            average: Math.round(myAverage)
+        });
+    } catch (error) {
+        console.error("[GET_CLASSROOM_RANK] Error:", error);
+        res.status(500).json({ message: error.message });
+    }
+};

@@ -84,12 +84,11 @@ export const getExams = async (req, res) => {
                     query.examType = { $in: ['subject-wise', 'mock', 'official'] };
                 }
             }
-            // Institutional students: filter by their class level AND their enrolled classrooms
+            // Institutional students: filter by their enrolled classrooms
             else if (req.user.role === 'student' && req.user.userType === 'institutional') {
                 const studentClassrooms = await Classroom.find({ students: req.user._id });
                 const classroomIds = studentClassrooms.map(c => c._id);
-                const classLevels = studentClassrooms.map(c => c.className);
-                if (!classLevel) query.classLevel = { $in: classLevels };
+                query.classroom = { $in: classroomIds };
             }
         }
 

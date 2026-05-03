@@ -14,6 +14,7 @@ import {
     Search
 } from 'lucide-react';
 import blogService from '../../../api/blogService';
+import { toast } from 'react-hot-toast';
 
 const BlogManagement = () => {
     const [blogs, setBlogs] = useState([]);
@@ -42,7 +43,7 @@ const BlogManagement = () => {
             setBlogs(data);
         } catch (error) {
             console.error("Error fetching blogs:", error);
-            setStatus({ type: 'error', message: 'Failed to fetch blogs.' });
+            toast.error('Failed to fetch blogs.');
         } finally {
             setLoading(false);
         }
@@ -92,16 +93,16 @@ const BlogManagement = () => {
 
             if (editingBlog) {
                 await blogService.updateBlog(editingBlog._id, blogData);
-                setStatus({ type: 'success', message: 'Blog updated successfully!' });
+                toast.success('Blog updated successfully!');
             } else {
                 await blogService.createBlog(blogData);
-                setStatus({ type: 'success', message: 'Blog created successfully!' });
+                toast.success('Blog created successfully!');
             }
             
             handleCloseModal();
             fetchBlogs();
         } catch (error) {
-            setStatus({ type: 'error', message: error || 'Failed to save blog.' });
+            toast.error(error || 'Failed to save blog.');
         }
     };
 
@@ -109,11 +110,11 @@ const BlogManagement = () => {
         if (!window.confirm("Are you sure you want to delete this blog post?")) return;
         try {
             await blogService.deleteBlog(id);
-            setStatus({ type: 'success', message: 'Blog deleted successfully!' });
+            toast.success('Blog deleted successfully!');
             fetchBlogs();
         } catch (error) {
             console.error("Error deleting blog:", error);
-            setStatus({ type: 'error', message: 'Failed to delete blog.' });
+            toast.error('Failed to delete blog.');
         }
     };
 
@@ -138,15 +139,6 @@ const BlogManagement = () => {
                 </button>
             </div>
 
-            {status.message && (
-                <div className={`p-4 rounded-xl flex items-center justify-between space-x-3 text-sm font-medium animate-in zoom-in-95 duration-200 ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                    <div className="flex items-center space-x-3">
-                        {status.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-                        <span>{status.message}</span>
-                    </div>
-                    <button onClick={() => setStatus({ type: '', message: '' })}><X className="w-4 h-4" /></button>
-                </div>
-            )}
 
             <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />

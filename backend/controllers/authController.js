@@ -52,6 +52,12 @@ export const registerUser = async (req, res) => {
         return res.status(400).json({ message: "Name, email, phone number, password, and OTP are required" });
     }
 
+    // Password Complexity Validation - Min 8 chars, at least one letter and one number
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(password)) {
+        return res.status(400).json({ message: "Password must be at least 8 characters long and contain both letters and numbers" });
+    }
+
     // Phone Number Validation - Exactly 10 digits
     const phoneRegex = /^\d{10}$/;
     if (!phoneRegex.test(phoneNumber.replace(/\s+/g, ""))) {
@@ -243,6 +249,12 @@ export const updateUserProfile = async (req, res) => {
 export const updateUserPassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
     const user = await User.findById(req.user._id);
+
+    // Password Complexity Validation - Min 8 chars, at least one letter and one number
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+        return res.status(400).json({ message: "New password must be at least 8 characters long and contain both letters and numbers" });
+    }
 
     if (user && (await user.matchPassword(currentPassword))) {
         user.password = newPassword;

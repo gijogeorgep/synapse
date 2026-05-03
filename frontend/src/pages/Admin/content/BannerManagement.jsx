@@ -24,6 +24,7 @@ import {
     getSettings,
     updateSettings 
 } from "../../../api/services";
+import { toast } from "react-hot-toast";
 
 const BannerManagement = () => {
     const [banners, setBanners] = useState([]);
@@ -65,7 +66,7 @@ const BannerManagement = () => {
             setBanners(data);
         } catch (error) {
             console.error("Error fetching banners:", error);
-            setStatus({ type: "error", message: "Failed to load banners." });
+            toast.error("Failed to load banners.");
         } finally {
             setLoading(false);
         }
@@ -76,29 +77,28 @@ const BannerManagement = () => {
         if (!file) return;
 
         try {
-            setStatus({ type: "info", message: `Uploading ${type} image...` });
             const uploadData = new FormData();
             uploadData.append("image", file);
             
             const response = await uploadImage(uploadData);
             setFormData(prev => ({ ...prev, [type]: response.url }));
-            setStatus({ type: "success", message: `${type} image uploaded!` });
+            toast.success(`${type} image uploaded!`);
         } catch (error) {
-            setStatus({ type: "error", message: "Image upload failed." });
+            toast.error("Image upload failed.");
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (!formData.desktopImageUrl || !formData.mobileImageUrl) {
-            setStatus({ type: "error", message: "Please provide both desktop and mobile images." });
+            toast.error("Please provide both desktop and mobile images.");
             return;
         }
 
         try {
             setIsSaving(true);
             await createBanner(formData);
-            setStatus({ type: "success", message: "Banner created successfully!" });
+            toast.success("Banner created successfully!");
             setShowAddModal(false);
             setFormData({
                 title: "",
@@ -110,7 +110,7 @@ const BannerManagement = () => {
             });
             fetchBanners();
         } catch (error) {
-            setStatus({ type: "error", message: error.response?.data?.message || "Failed to create banner." });
+            toast.error(error.response?.data?.message || "Failed to create banner.");
         } finally {
             setIsSaving(false);
         }
@@ -122,9 +122,9 @@ const BannerManagement = () => {
             const newStatus = !showBanners;
             await updateSettings({ showBanners: newStatus });
             setShowBanners(newStatus);
-            setStatus({ type: "success", message: `Banners are now ${newStatus ? 'enabled' : 'disabled'} on the website.` });
+            toast.success(`Banners are now ${newStatus ? 'enabled' : 'disabled'} on the website.`);
         } catch (error) {
-            setStatus({ type: "error", message: "Failed to update global setting." });
+            toast.error("Failed to update global setting.");
         } finally {
             setIsToggling(false);
         }
@@ -135,7 +135,7 @@ const BannerManagement = () => {
             await updateBanner(banner._id, { isActive: !banner.isActive });
             fetchBanners();
         } catch (error) {
-            setStatus({ type: "error", message: "Failed to update status." });
+            toast.error("Failed to update status.");
         }
     };
 
@@ -144,9 +144,9 @@ const BannerManagement = () => {
         try {
             await deleteBanner(id);
             fetchBanners();
-            setStatus({ type: "success", message: "Banner deleted." });
+            toast.success("Banner deleted.");
         } catch (error) {
-            setStatus({ type: "error", message: "Failed to delete banner." });
+            toast.error("Failed to delete banner.");
         }
     };
 
@@ -181,18 +181,6 @@ const BannerManagement = () => {
                 </div>
             </div>
 
-            {status.message && (
-                <div className={`p-4 rounded-2xl flex items-center gap-3 text-sm font-bold animate-in zoom-in-95 duration-200 ${
-                    status.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 
-                    status.type === 'error' ? 'bg-rose-50 text-rose-700 border border-rose-100' :
-                    'bg-cyan-50 text-cyan-700 border border-cyan-100'
-                }`}>
-                    {status.type === 'success' ? <CheckCircle2 className="w-5 h-5" /> : 
-                     status.type === 'error' ? <XCircle className="w-5 h-5" /> : 
-                     <AlertCircle className="w-5 h-5" />}
-                    <span>{status.message}</span>
-                </div>
-            )}
 
             {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-4">

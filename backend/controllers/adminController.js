@@ -296,6 +296,7 @@ export const updateClassroom = async (req, res) => {
       showOnHome,
       description,
       imageUrl,
+      classLinks,
     } = req.body;
 
     const classroom = await Classroom.findById(id);
@@ -332,6 +333,7 @@ export const updateClassroom = async (req, res) => {
     if (showOnHome !== undefined) classroom.showOnHome = showOnHome;
     if (description !== undefined) classroom.description = description;
     if (imageUrl !== undefined) classroom.imageUrl = imageUrl;
+    if (classLinks !== undefined) classroom.classLinks = classLinks;
 
     const updatedClassroom = await classroom.save();
     res.status(200).json(updatedClassroom);

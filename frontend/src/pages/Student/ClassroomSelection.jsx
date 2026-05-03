@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, CheckCircle2, ArrowRight, Loader2, CreditCard } from "lucide-react";
+import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { getPublicClassrooms, enrollInClassroom } from "../../api/services";
 
@@ -44,6 +45,7 @@ const ClassroomSelection = () => {
             await enrollInClassroom(classroomId);
             
             // Success! Update local storage or user context if needed
+            toast.success("Enrolled successfully!");
             // For now, let's just navigate to dashboard
             navigate("/student/dashboard");
         } catch (err) {
