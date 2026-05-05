@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { BookOpen, Clock, Loader2, Search, ArrowRight, Tag, User } from "lucide-react";
 import blogService from "../../api/blogService";
+import SEO from "../../components/Shared/SEO";
 
 const Blogs = () => {
   const [blogs, setBlogs] = useState([]);
@@ -41,6 +42,11 @@ const Blogs = () => {
 
   return (
     <div className="bg-slate-50/30 min-h-screen pb-20">
+      <SEO 
+        title="Educational Blogs & Study Resources"
+        description="Explore expert-crafted study guides, exam strategies, and educational insights from Synapse Edu Hub to help you excel in NEET, JEE, and PSC exams."
+        keywords="educational blog, study tips, exam strategies, NEET resources, JEE preparation, Synapse Edu Hub blogs"
+      />
       <div className="max-w-7xl mx-auto px-4 space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
         <header className="pt-12 md:pt-20 text-center space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-50 border border-cyan-100 text-cyan-700 text-[10px] font-bold uppercase tracking-widest mb-2">
