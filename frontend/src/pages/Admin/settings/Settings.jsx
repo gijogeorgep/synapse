@@ -245,6 +245,21 @@ const AdminSettings = () => {
                                             )}
                                         </div>
                                     </div>
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-black text-slate-700 uppercase tracking-wider">Teacher Tracker Link</label>
+                                        <div className="relative">
+                                            <input
+                                                type="url"
+                                                defaultValue={settings?.teacherTrackerLink}
+                                                onBlur={e => handleFieldBlur('teacherTrackerLink', e.target.value)}
+                                                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-slate-900 outline-none transition-all font-medium pr-10"
+                                                placeholder="e.g. https://docs.google.com/spreadsheets/..."
+                                            />
+                                            {savingField === 'teacherTrackerLink' && (
+                                                <span className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-slate-300 border-t-slate-700 rounded-full animate-spin" />
+                                            )}
+                                        </div>
+                                    </div>
                                 </div>
 
                                 {/* Banner Advertisements toggle */}

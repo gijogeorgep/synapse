@@ -20,6 +20,10 @@ const globalSettingsSchema = new mongoose.Schema({
     showBanners: {
         type: Boolean,
         default: true
+    },
+    teacherTrackerLink: {
+        type: String,
+        default: ""
     }
 }, {
     timestamps: true

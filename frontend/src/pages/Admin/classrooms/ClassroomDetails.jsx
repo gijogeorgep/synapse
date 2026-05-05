@@ -256,39 +256,37 @@ const AdminClassroomDetails = () => {
     };
 
     const handleAddLink = async () => {
-        if (!newLink.title || !newLink.url) {
-            showStatus('error', 'Title and URL are required.');
+        if (!newLink.url) {
+            showStatus('error', 'Meeting URL is required.');
             return;
         }
         setIsUpdatingLinks(true);
         try {
-            const updatedLinks = [...classLinks, newLink];
-            await updateClassroomResources(id, { classLinks: updatedLinks });
-            setClassLinks(updatedLinks);
+            await updateClassroomResources(id, { onlineClassLink: newLink.url });
+            setClassroom(prev => ({ ...prev, onlineClassLink: newLink.url }));
             setNewLink({ title: '', url: '', subject: classroom?.subjects?.[0] || '' });
-            showStatus('success', 'Class link added!');
-            fetchClassroomDetails();
+            showStatus('success', 'Master Class link updated!');
         } catch (err) {
-            showStatus('error', 'Failed to add link.');
+            showStatus('error', err.response?.data?.message || 'Failed to update link.');
         } finally {
             setIsUpdatingLinks(false);
         }
     };
 
-    const handleRemoveLink = async (index) => {
+    const handleRemoveLink = async () => {
         setIsUpdatingLinks(true);
         try {
-            const updatedLinks = classLinks.filter((_, i) => i !== index);
-            await updateClassroomResources(id, { classLinks: updatedLinks });
-            setClassLinks(updatedLinks);
-            showStatus('success', 'Link removed!');
-            fetchClassroomDetails();
+            await updateClassroomResources(id, { onlineClassLink: '' });
+            setClassroom(prev => ({ ...prev, onlineClassLink: '' }));
+            showStatus('success', 'Master Class link removed!');
         } catch (err) {
-            showStatus('error', 'Failed to remove link.');
+            showStatus('error', err.response?.data?.message || 'Failed to remove link.');
         } finally {
             setIsUpdatingLinks(false);
         }
     };
+
+
 
     // ─── Loading / Error ──────────────────────────────────────────
     if (loading) return (
@@ -836,79 +834,56 @@ const AdminClassroomDetails = () => {
                         <div className="flex items-center gap-3 mb-5">
                             <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl"><Eye className="w-5 h-5" /></div>
                             <div>
-                                <h2 className="text-lg font-bold text-slate-800">Add Live Class Link</h2>
-                                <p className="text-xs text-slate-400 mt-0.5">Add meeting links for different subjects or teachers.</p>
+                                <h2 className="text-lg font-bold text-slate-800">Set Master Live Class Link</h2>
+                                <p className="text-xs text-slate-400 mt-0.5">This link will be shown to students as the "Join Class" button.</p>
                             </div>
                         </div>
                         <div className="space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Link Title (e.g. Physics - Mr. X) <span className="text-rose-500">*</span></label>
-                                    <input value={newLink.title} onChange={e => setNewLink({ ...newLink, title: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
-                                        placeholder="e.g. Biology Main Class" />
-                                </div>
-                                <div>
-                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Subject</label>
-                                    <select 
-                                        value={newLink.subject} 
-                                        onChange={e => setNewLink({ ...newLink, subject: e.target.value })}
-                                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm font-bold text-slate-700"
-                                    >
-                                        {(classroom?.subjects || []).map(sub => (
-                                            <option key={sub} value={sub}>{sub}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            </div>
                             <div>
                                 <label className="block text-sm font-semibold text-slate-700 mb-1">Meeting URL <span className="text-rose-500">*</span></label>
                                 <input value={newLink.url} onChange={e => setNewLink({ ...newLink, url: e.target.value })}
                                     className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none text-sm"
                                     placeholder="https://meet.google.com/..." />
                             </div>
-                            <button onClick={handleAddLink} disabled={isUpdatingLinks || !newLink.title || !newLink.url}
+                            <button onClick={handleAddLink} disabled={isUpdatingLinks || !newLink.url}
                                 className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/20 active:scale-95">
                                 {isUpdatingLinks ? <Loader2 className="w-5 h-5 animate-spin" /> : <PlusCircle className="w-5 h-5" />}
-                                {isUpdatingLinks ? 'Adding Link...' : 'Add Class Link'}
+                                {isUpdatingLinks ? 'Saving Link...' : 'Save Master Link'}
                             </button>
                         </div>
                     </div>
 
-                    {/* Existing Links */}
-                    {classLinks.length > 0 ? (
+                    {/* Existing Link */}
+                    {classroom.onlineClassLink ? (
                         <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
-                            <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Active Links ({classLinks.length})</h3>
+                            <h3 className="text-sm font-bold text-slate-700 mb-4 uppercase tracking-wider">Current Master Link</h3>
                             <div className="space-y-3">
-                                {classLinks.map((link, i) => (
-                                    <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 group">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
-                                                <Eye className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-bold text-slate-800">{link.title}</p>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    {link.subject && <span className="text-[10px] font-black text-indigo-500 uppercase">{link.subject}</span>}
-                                                    <span className="text-[10px] text-slate-400 truncate max-w-[200px]">{link.url}</span>
-                                                </div>
-                                            </div>
+                                <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 group">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-indigo-100 flex items-center justify-center text-indigo-600 shrink-0">
+                                            <Eye className="w-5 h-5" />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <a href={link.url} target="_blank" rel="noreferrer" className="p-2 text-indigo-600 hover:bg-white rounded-lg transition-colors">
-                                                <Eye className="w-4 h-4" />
-                                            </a>
-                                            <button onClick={() => handleRemoveLink(i)} className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
+                                        <div>
+                                            <p className="text-sm font-bold text-slate-800">Live Class</p>
+                                            <div className="flex items-center gap-2 mt-0.5">
+                                                <span className="text-[10px] text-slate-400 truncate max-w-[200px]">{classroom.onlineClassLink}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                ))}
+                                    <div className="flex items-center gap-2">
+                                        <a href={classroom.onlineClassLink} target="_blank" rel="noreferrer" className="p-2 text-indigo-600 hover:bg-white rounded-lg transition-colors">
+                                            <Eye className="w-4 h-4" />
+                                        </a>
+                                        <button onClick={handleRemoveLink} className="p-2 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     ) : (
                         <div className="text-center py-10 bg-white rounded-3xl border border-dashed border-slate-200 text-slate-400 text-sm font-medium">
-                            No class links added yet. Add the first one above.
+                            No master link set.
                         </div>
                     )}
                 </div>

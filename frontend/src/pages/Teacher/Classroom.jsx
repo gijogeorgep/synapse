@@ -50,7 +50,6 @@ const TeacherClassroom = () => {
 
     useEffect(() => {
         setMeetLink(classroom?.onlineClassLink || "");
-        setIsEditingLink(!classroom?.onlineClassLink);
     }, [classroom?._id, classroom?.onlineClassLink]);
 
     const fallbackSubject = classroom?.subjects?.[0] || classroom?.name || "Subject";
@@ -59,8 +58,6 @@ const TeacherClassroom = () => {
     const [meetLink, setMeetLink] = useState(
         classroom?.onlineClassLink || ""
     );
-    const [isEditingLink, setIsEditingLink] = useState(!classroom?.onlineClassLink);
-    const [linkSaved, setLinkSaved] = useState(false);
 
     // Real data hooks
     const [students] = useState(classroom?.students || []);
@@ -201,21 +198,7 @@ const TeacherClassroom = () => {
         };
     }, [previewSubmission?._id]);
 
-    const handleSaveLink = async (e) => {
-        e.preventDefault();
-        try {
-            await updateClassroomResources(classroom._id, {
-                onlineClassLink: meetLink
-            });
-            
-            setLinkSaved(true);
-            setIsEditingLink(false);
-            setTimeout(() => setLinkSaved(false), 2000);
-        } catch (error) {
-            console.error("Error saving link:", error);
-            toast.error("Failed to save link");
-        }
-    };
+
 
     const handleCreateAssignment = async (e) => {
         e.preventDefault();
@@ -331,107 +314,38 @@ const TeacherClassroom = () => {
                 Back to classrooms
             </button>
 
-            <header>
-                <p className="text-xs font-semibold text-cyan-600 uppercase tracking-[0.16em] mb-1">
-                    Manage classroom
-                </p>
-                <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
-                    {classroom?.name || fallbackSubject}
-                </h1>
-                <div className="flex items-center gap-2 mt-2">
-                    <span className="px-2.5 py-1 rounded-md bg-cyan-50 text-cyan-700 text-xs font-bold uppercase tracking-wider">
-                        Class {fallbackClass}
-                    </span>
-                    <span className="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">
-                        {classroom?.board || "Board"}
-                    </span>
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+                <div>
+                    <p className="text-xs font-semibold text-cyan-600 uppercase tracking-[0.16em] mb-1">
+                        Manage classroom
+                    </p>
+                    <h1 className="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">
+                        {classroom?.name || fallbackSubject}
+                    </h1>
+                    <div className="flex items-center gap-2 mt-2">
+                        <span className="px-2.5 py-1 rounded-md bg-cyan-50 text-cyan-700 text-xs font-bold uppercase tracking-wider">
+                            Class {fallbackClass}
+                        </span>
+                        <span className="px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-700 text-xs font-bold uppercase tracking-wider">
+                            {classroom?.board || "Board"}
+                        </span>
+                    </div>
+                    <p className="mt-2 text-slate-500">
+                        Post live link, upload lecture notes, and view student submissions.
+                    </p>
                 </div>
-                <p className="mt-2 text-slate-500">
-                    Post live link, upload lecture notes, and view student submissions.
-                </p>
+                <div className="flex flex-wrap gap-3">
+                    {meetLink && (
+                        <a href={meetLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-200 hover:bg-cyan-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
+                            <Video className="w-5 h-5" />Start Class
+                        </a>
+                    )}
+                </div>
             </header>
 
             <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] gap-8">
                 <div className="space-y-6">
-                    {/* Live class link */}
-                    <section className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">
-                        <div className="flex items-center gap-2 mb-4">
-                            <Video className="w-5 h-5 text-cyan-600" />
-                            <h2 className="text-lg font-semibold text-slate-900">
-                                Live class link
-                            </h2>
-                        </div>
 
-                        {!isEditingLink ? (
-                            <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
-                                {meetLink ? (
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <p className="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-1">
-                                                Current link
-                                            </p>
-                                            <a
-                                                href={meetLink}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="text-sm font-semibold text-cyan-700 hover:text-cyan-800 break-all"
-                                            >
-                                                {meetLink}
-                                            </a>
-                                        </div>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsEditingLink(true)}
-                                            className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-semibold hover:border-cyan-200 hover:text-cyan-700 transition-colors"
-                                        >
-                                            <Save className="w-3.5 h-3.5" />
-                                            Edit
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="flex items-center justify-between gap-3">
-                                        <p className="text-sm text-slate-500">
-                                            No live class link has been added yet.
-                                        </p>
-                                        <button
-                                            type="button"
-                                            onClick={() => setIsEditingLink(true)}
-                                            className="shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-cyan-600 text-white text-xs font-semibold hover:bg-cyan-700 transition-colors"
-                                        >
-                                            <Plus className="w-3.5 h-3.5" />
-                                            Add link
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-                        ) : (
-                            <form onSubmit={handleSaveLink} className="space-y-3">
-                                <div className="flex gap-3">
-                                    <div className="relative flex-1">
-                                        <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                        <input
-                                            type="url"
-                                            value={meetLink}
-                                            onChange={(e) => setMeetLink(e.target.value)}
-                                            placeholder="https://meet.google.com/..."
-                                            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500 text-sm"
-                                            autoFocus
-                                        />
-                                    </div>
-                                    <button
-                                        type="submit"
-                                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-cyan-600 text-white text-sm font-semibold hover:bg-cyan-700 transition-colors"
-                                    >
-                                        <Save className="w-4 h-4" />
-                                        {linkSaved ? "Saved" : "Save"}
-                                    </button>
-                                </div>
-                                <p className="text-xs text-slate-500">
-                                    Students will see a "Join Class" button in their portal when you save a link here.
-                                </p>
-                            </form>
-                        )}
-                    </section>
 
                     {/* Upload lecture notes */}
                     <section className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8">

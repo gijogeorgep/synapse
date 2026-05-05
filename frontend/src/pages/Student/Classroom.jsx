@@ -253,11 +253,6 @@ const StudentClassroom = () => {
               <Video className="w-5 h-5" />Join Class
             </a>
           )}
-          {classroom?.classLinks?.map((link, idx) => (
-            <a key={idx} href={link.url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
-              <Video className="w-5 h-5" />{link.title || "Join Class"}
-            </a>
-          ))}
         </div>
       </header>
 

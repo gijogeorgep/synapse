@@ -13,11 +13,12 @@ import {
     AlertCircle,
     Loader2,
     TrendingUp,
+    Table,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
-import { getTeacherClassrooms, getMyTeacherStats } from "../../api/services";
+import { getTeacherClassrooms, getMyTeacherStats, getSettings } from "../../api/services";
 
 const TeacherDashboard = () => {
     const { user } = useAuth();
@@ -27,6 +28,7 @@ const TeacherDashboard = () => {
     const [loadingClassrooms, setLoadingClassrooms] = useState(true);
     const [stats, setStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
+    const [settings, setSettings] = useState(null);
 
     useEffect(() => {
         const fetchClassrooms = async () => {
@@ -56,6 +58,18 @@ const TeacherDashboard = () => {
             }
         };
         fetchStats();
+    }, []);
+
+    useEffect(() => {
+        const fetchSettings = async () => {
+            try {
+                const data = await getSettings();
+                setSettings(data);
+            } catch (error) {
+                console.error("Error fetching settings:", error);
+            }
+        };
+        fetchSettings();
     }, []);
 
     const totalStudents = stats?.totalStudents ?? 0;
@@ -351,7 +365,7 @@ const TeacherDashboard = () => {
                     Post live links, upload lecture notes, and review student submissions.
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     {[
                         {
                             title: "Classrooms",
@@ -370,6 +384,18 @@ const TeacherDashboard = () => {
                             desc: "Add lecture notes, PPT, PDF to your classes.",
                             icon: Upload,
                             onClick: () => navigate("/teacher/classrooms"),
+                        },
+                        {
+                            title: "Update Tracker Sheet",
+                            desc: "Update the student tracking excel or google sheet.",
+                            icon: Table,
+                            onClick: () => {
+                                if (settings?.teacherTrackerLink) {
+                                    window.open(settings.teacherTrackerLink, "_blank");
+                                } else {
+                                    alert("Tracker link has not been set by the admin.");
+                                }
+                            },
                         },
                     ].map((card) => (
                         <button

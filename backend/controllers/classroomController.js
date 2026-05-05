@@ -57,7 +57,12 @@ export const updateClassroomResources = async (req, res) => {
         }
 
         if (onlineClassLink !== undefined) {
-            classroom.onlineClassLink = onlineClassLink;
+            // Only admin/superadmin can update the onlineClassLink
+            if (isAdmin) {
+                classroom.onlineClassLink = onlineClassLink;
+            } else {
+                return res.status(403).json({ message: "Only admins can update the live class link." });
+            }
         }
 
         if (classLinks !== undefined) {

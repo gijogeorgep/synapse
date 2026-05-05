@@ -38,7 +38,7 @@ router.patch("/", protect, authorize("superadmin", "admin"), async (req, res) =>
             settings = new GlobalSettings();
         }
 
-        const fields = ['siteName', 'contactEmail', 'contactPhone', 'maintenanceMode', 'showBanners'];
+        const fields = ['siteName', 'contactEmail', 'contactPhone', 'maintenanceMode', 'showBanners', 'teacherTrackerLink'];
         fields.forEach(field => {
             if (req.body[field] !== undefined) {
                 settings[field] = req.body[field];
