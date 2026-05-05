@@ -22,6 +22,7 @@ import {
     ChevronRight,
     X,
     Image as ImageIcon,
+    FileSpreadsheet,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -51,6 +52,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
         teacher: [
             { name: "Dashboard", icon: LayoutDashboard, path: "/teacher/dashboard" },
             { name: "Classroom", icon: GraduationCap, path: "/teacher/classrooms" },
+            { name: "Lesson Tracker", icon: FileSpreadsheet, path: "/teacher/lesson-tracker" },
             { name: "Manage Exams", icon: FileText, path: "/teacher/exams" },
             { name: "Materials", icon: BookOpen, path: "/teacher/materials" },
             { name: "Analytics", icon: BarChart3, path: "/teacher/analytics" },
@@ -70,6 +72,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             {name: "Banner Ads", icon: ImageIcon, path: "/admin/banners" },
             {name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
+            { name: "Lesson Tracker", icon: FileSpreadsheet, path: "/admin/lesson-tracker" },
         ],
         superadmin: [
             { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -86,6 +89,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             {name: "Audit Logs", icon: History, path: "/admin/audit-logs" },
             { name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
+            { name: "Lesson Tracker", icon: FileSpreadsheet, path: "/admin/lesson-tracker" },
         ],
     };
 

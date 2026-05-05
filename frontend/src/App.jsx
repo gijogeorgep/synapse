@@ -40,6 +40,8 @@ import TeacherExams from "./pages/Teacher/Exams";
 import TeacherSettings from "./pages/Teacher/Settings";
 import TeacherAnalytics from "./pages/Teacher/Analytics";
 import TeacherMaterials from "./pages/Teacher/Materials";
+import LessonTracker from "./pages/Teacher/LessonTracker";
+
 import AdminDashboard from "./pages/Admin/dashboard/Dashboard";
 import AdminUserManagement from "./pages/Admin/users/UserManagement";
 import AdminClassroomManagement from "./pages/Admin/classrooms/ClassroomManagement";
@@ -369,6 +371,7 @@ function AppContent() {
                 <Route path="/teacher/classroom" element={<TeacherClassroom />} />
                 <Route path="/teacher/exams" element={<TeacherExams />} />
                 <Route path="/teacher/materials" element={<TeacherMaterials />} />
+                <Route path="/teacher/lesson-tracker" element={<LessonTracker />} />
                 <Route path="/teacher/settings" element={<TeacherSettings />} />
               </Route>
             </Route>
@@ -393,6 +396,7 @@ function AppContent() {
                   <Route index element={<AdminAuditLogs />} />
                 </Route>
                 <Route path="/admin/payments" element={<div className="p-8"><h1>Payment Settings</h1></div>} />
+                <Route path="/admin/lesson-tracker" element={<LessonTracker />} />
                 <Route path="/admin/settings" element={<AdminSettings />} />
                 <Route path="/admin/profile" element={<AdminProfile />} />
               </Route>

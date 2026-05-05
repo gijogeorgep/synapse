@@ -17,6 +17,8 @@ import assignmentRoutes from "./routes/assignmentRoutes.js";
 import sitemapRoutes from "./routes/sitemapRoutes.js";
 import bannerRoutes from "./routes/bannerRoutes.js";
 import settingsRoutes from "./routes/settingsRoutes.js";
+import lessonReportRoutes from "./routes/lessonReportRoutes.js";
+
 
 dotenv.config();
 
@@ -47,6 +49,8 @@ app.use("/api/contact", contactRoutes);
 app.use("/api/assignments", assignmentRoutes);
 app.use("/api/banners", bannerRoutes);
 app.use("/api/settings", settingsRoutes);
+app.use("/api/lesson-reports", lessonReportRoutes);
+
 app.use("/api/sitemap", sitemapRoutes);
 app.use("/", sitemapRoutes); // Allow /sitemap.xml at root level
 
