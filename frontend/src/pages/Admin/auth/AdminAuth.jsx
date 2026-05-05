@@ -85,7 +85,7 @@ const AdminAuth = () => {
                         <div className="relative inline-block">
                             <div className="absolute inset-0 bg-cyan-500/20 blur-xl rounded-full" />
                             <div className="relative w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-cyan-500/20 ring-1 ring-white/20 overflow-hidden">
-                                <img src="/synapse favicon.png" alt="Synapse Logo" className="w-10 h-10 object-contain" />
+                                <img src="/y-admin-512.png" alt="Synapse Logo" className="w-10 h-10 object-contain" />
                             </div>
                         </div>
                         <h1 className="text-3xl font-black text-white tracking-tight mb-1">

@@ -103,7 +103,7 @@ const BlogPost = () => {
       name: "Synapse Edu Hub",
       logo: {
         "@type": "ImageObject",
-        url: siteUrl ? `${siteUrl}/synapse%20favicon.png` : undefined,
+        url: siteUrl ? `${siteUrl}/app-icon-512.png` : undefined,
       },
     },
     mainEntityOfPage: siteUrl ? `${siteUrl}${canonicalBlogPath}` : canonicalBlogPath,
@@ -119,7 +119,7 @@ const BlogPost = () => {
             ? `${blog.tags.join(", ")}, Synapse Edu Hub blog, study tips`
             : "Synapse Edu Hub blog, study tips, exam preparation"
         }
-        image={blog.featuredImage || "/synapse favicon.png"}
+        image={blog.featuredImage || "/app-icon-512.png"}
         canonicalPath={canonicalBlogPath}
         type="article"
         author={blog.author?.name || "Synapse Expert"}

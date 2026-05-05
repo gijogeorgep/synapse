@@ -72,7 +72,7 @@ const SEO = ({
   title = SITE_NAME,
   description = DEFAULT_DESCRIPTION,
   keywords = DEFAULT_KEYWORDS,
-  image = "/synapse favicon.png",
+  image = "/app-icon-512.png",
   url,
   canonicalPath,
   type = "website",

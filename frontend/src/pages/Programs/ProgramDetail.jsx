@@ -128,7 +128,7 @@ const ProgramDetail = () => {
                 title={program.title}
                 description={programDescription}
                 keywords={`${program.title}, ${program.subtitle || "academic program"}, Synapse Edu Hub, coaching Kerala`}
-                image={heroImage || "/synapse favicon.png"}
+                image={heroImage || "/app-icon-512.png"}
                 canonicalPath={canonicalProgramPath}
                 structuredData={courseSchema}
             />
