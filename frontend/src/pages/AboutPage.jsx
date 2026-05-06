@@ -168,7 +168,7 @@ const AboutPage = () => {
                   </span>
                 </div>
                 <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">
-                  "Beyond the crowd <br />
+                  "Beyond the crowd :<br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">
                     A New Era of Learning
                   </span>
@@ -177,13 +177,13 @@ const AboutPage = () => {
               </div>
               <div className="space-y-6 text-slate-600 text-lg font-medium leading-relaxed">
                 <p>
-                  Synapse Eduhub was never intended to be a 'normal' coaching
+                  Synapse Edu Hub was never intended to be a 'normal' coaching
                   center. While we are still growing and evolving, our mission
                   is clear: to build a focused learning ecosystem that moves
                   away from the noise of mass-crowded classrooms.
                 </p>
                 <p>
-                  We believe that because every student is different, they must
+                  We believe that because every student is unique, they must
                   be treated differently. Our model isn’t about coaching a
                   crowd; it’s about curating small, compact batches where
                   personal attention isn't just a promise—it’s the foundation.
