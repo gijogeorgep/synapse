@@ -168,7 +168,7 @@ const AboutPage = () => {
                   </span>
                 </div>
                 <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight leading-none">
-                  "Beyond the crowd :<br />
+                  "Beyond the crowd -<br />
                   <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-blue-600">
                     A New Era of Learning
                   </span>
