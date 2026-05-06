@@ -129,7 +129,7 @@ function LandingPage() {
         <Hero />
       </section>
       {showBanners && activeBanners.length > 0 && (
-        <PromotionBanner 
+        <PromotionBanner
           banners={activeBanners}
         />
       )}
@@ -139,13 +139,13 @@ function LandingPage() {
       <section id="about" className="scroll-mt-20 md:scroll-mt-24">
         <About />
         <div className="bg-[#f8fafc] pb-20 text-center">
-            <Link 
-                to="/about"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-white text-cyan-700 rounded-2xl font-bold border border-cyan-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
-            >
-                Learn more about our mission
-                <ArrowRight className="w-4 h-4" />
-            </Link>
+          <Link
+            to="/about"
+            className="inline-flex items-center gap-2 px-8 py-4 bg-white text-cyan-700 rounded-2xl font-bold border border-cyan-100 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all"
+          >
+            Learn more about our mission
+            <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
       </section>
       <TutorsMultilanguage />
@@ -175,14 +175,20 @@ function RouteSeo() {
         : ""
   ).replace(/\/$/, "");
 
-  const isPrivateRoute =
-    pathname.startsWith("/student") ||
-    pathname.startsWith("/teacher") ||
-    pathname.startsWith("/admin") ||
-    pathname === "/notifications";
+  if (pathname.startsWith("/student")) {
+    return <SEO title=" Student Portal" description="Secure Student portal for Synapse Edu Hub." noindex />;
+  }
 
-  if (isPrivateRoute) {
-    return <SEO title="Secure Portal" description="Secure Synapse Edu Hub portal area." noindex />;
+  if (pathname.startsWith("/teacher")) {
+    return <SEO title="Secure Portal | Teacher Portal" description="Secure Teacher portal for Synapse Edu Hub." noindex />;
+  }
+
+  if (pathname.startsWith("/admin")) {
+    return <SEO title=" Admin Portal" description="Secure Admin portal for Synapse Edu Hub." noindex />;
+  }
+
+  if (pathname === "/notifications") {
+    return <SEO title=" Notifications" description="View your secure notifications." noindex />;
   }
 
   if (pathname.startsWith("/blogs/") || pathname.startsWith("/programs/")) {
@@ -247,29 +253,29 @@ function RouteSeo() {
         "study tips blog, exam preparation articles, student resources, Synapse Edu Hub blog",
     },
     "/privacy-policy": {
-      title: "Privacy Policy | Synapse Connect",
-      description: "Read how Synapse Connect collects, uses, and protects your personal information.",
-      keywords: "privacy policy, Synapse Connect privacy",
+      title: "Privacy Policy | Synapse Edu Hub",
+      description: "Read how Synapse Edu Hub collects, uses, and protects your personal information.",
+      keywords: "privacy policy, Synapse Edu Hub privacy",
     },
     "/terms-conditions": {
-      title: "Terms & Conditions | Synapse Connect",
-      description: "Review the terms and conditions for using Synapse Connect services and platforms.",
-      keywords: "terms and conditions, Synapse Connect terms",
+      title: "Terms & Conditions | Synapse Edu Hub",
+      description: "Review the terms and conditions for using Synapse Edu Hub services and platforms.",
+      keywords: "terms and conditions, Synapse Edu Hub terms",
     },
     "/maintenance": {
-      title: "Maintenance Update | Synapse Connect",
-      description: "Synapse Connect is temporarily under maintenance. Please check back shortly.",
+      title: "Maintenance Update | Synapse Edu Hub",
+      description: "Synapse Edu Hub is temporarily under maintenance. Please check back shortly.",
       noindex: true,
     },
     "/admin-portal-auth": {
-      title: "Admin Portal Login | Synapse Connect",
-      description: "Secure admin login for Synapse Connect.",
+      title: "Admin Portal Login | Synapse Edu Hub",
+      description: "Secure admin login for Synapse Edu Hub.",
       noindex: true,
     },
   };
 
   const pageSeo = seoByPath[pathname] ?? {
-    title: "Page Not Found | Synapse Connect",
+    title: "Page Not Found | Synapse Edu Hub",
     description: "The page you are looking for does not exist.",
     noindex: true,
   };
@@ -281,7 +287,7 @@ function AppContent() {
   const location = useLocation();
   const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
   const isHostAdmin = hostname.includes('admin.synapseeduhub.com') || hostname.startsWith('admin.');
-  
+
   const isAdminAuth = location.pathname === "/admin-portal-auth" || (isHostAdmin && location.pathname === "/");
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isDashboardRoute =
