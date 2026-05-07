@@ -1,4 +1,5 @@
 import LessonReport from "../models/LessonReport.js";
+import Classroom from "../models/Classroom.js";
 
 // @desc    Create a new lesson report
 // @route   POST /api/lesson-reports
@@ -43,13 +44,26 @@ export const getLessonReports = async (req, res) => {
   try {
     let query = {};
 
-    // If teacher, only show their reports
-    if (req.user.role === "teacher") {
-      query.teacher = req.user._id;
-    }
 
     // Support filtering by class (classroom name)
-    if (req.query.class) {
+    if (req.user.role === "student") {
+      const studentClassrooms = await Classroom.find({ students: req.user._id });
+      const enrolledClassNames = studentClassrooms.map((c) => c.name);
+
+      if (req.query.class) {
+        // If a specific class is requested, check if the student is enrolled in it
+        if (enrolledClassNames.includes(req.query.class)) {
+          query.class = req.query.class;
+        } else {
+          // Student is not enrolled in the requested class
+          return res.json([]); 
+        }
+      } else {
+        // No specific class requested, show reports for all enrolled classes
+        query.class = { $in: enrolledClassNames };
+      }
+    } else if (req.query.class) {
+      // For Teachers/Admins: filter by class if requested
       query.class = req.query.class;
     }
 

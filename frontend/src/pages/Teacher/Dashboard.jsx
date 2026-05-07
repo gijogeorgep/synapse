@@ -447,14 +447,20 @@ const TeacherDashboard = () => {
                             // Find matching breakdown for real per-classroom stats
                             const bd = classroomBreakdown.find(b => b._id === c._id) || {};
                             return (
-                                <div key={c._id} onClick={() => navigate("/teacher/classrooms")} className="p-5 border border-slate-100 rounded-3xl bg-white shadow-sm hover:shadow-md hover:border-indigo-200 cursor-pointer transition-all relative overflow-hidden group">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-indigo-50/80 to-transparent -mr-16 -mt-16 rounded-full group-hover:scale-150 transition-transform duration-700 z-0"></div>
+                                <div key={c._id} onClick={() => navigate("/teacher/classrooms")} className="p-5 border border-slate-100 rounded-3xl bg-white shadow-sm hover:shadow-md cursor-pointer transition-all relative overflow-hidden group" style={{ borderColor: c.themeColor ? `${c.themeColor}20` : undefined }}>
+                                    <div 
+                                        className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full group-hover:scale-150 transition-transform duration-700 z-0 opacity-10"
+                                        style={{ background: c.themeColor || '#4f46e5' }}
+                                    ></div>
                                     <div className="relative z-10">
-                                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mb-4">
+                                        <div 
+                                            className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                                            style={{ background: c.themeColor ? `${c.themeColor}15` : '#eef2ff', color: c.themeColor?.startsWith('linear') ? '#4f46e5' : (c.themeColor || '#4f46e5') }}
+                                        >
                                             <GraduationCap className="w-6 h-6" />
                                         </div>
                                         <h3 className="font-bold text-xl text-slate-800 mb-1">{c.name}</h3>
-                                        <p className="text-sm font-medium text-indigo-600">Class {c.className} • {c.board}</p>
+                                        <p className="text-sm font-medium" style={{ color: c.themeColor?.startsWith('linear') ? '#4f46e5' : (c.themeColor || '#4f46e5') }}>Class {c.className} • {c.board}</p>
 
                                         <div className="mt-4 flex flex-wrap gap-2">
                                             {c.subjects?.slice(0, 3).map(sub => (
@@ -474,7 +480,7 @@ const TeacherDashboard = () => {
                                                     {bd.pendingCount} pending
                                                 </span>
                                             )}
-                                            <span className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">Manage</span>
+                                            <span className="text-xs font-semibold text-slate-400 group-hover:text-slate-600 transition-colors">Manage</span>
                                         </div>
                                     </div>
                                 </div>

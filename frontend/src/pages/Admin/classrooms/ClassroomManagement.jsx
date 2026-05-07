@@ -40,7 +40,8 @@ const ClassroomManagement = () => {
         isPublished: false,
         showOnHome: false,
         description: '',
-        imageUrl: ''
+        imageUrl: '',
+        themeColor: '#0891b2'
     });
 
     // When programType changes, reset className to appropriate default
@@ -67,7 +68,8 @@ const ClassroomManagement = () => {
         isPublished: false,
         showOnHome: false,
         description: '',
-        imageUrl: ''
+        imageUrl: '',
+        themeColor: '#0891b2'
     });
 
     // Form for assigning users
@@ -158,7 +160,8 @@ const ClassroomManagement = () => {
                 isPublished: false,
                 showOnHome: false,
                 description: '',
-                imageUrl: ''
+                imageUrl: '',
+                themeColor: '#0891b2'
             });
             fetchData();
         } catch (error) {
@@ -182,6 +185,7 @@ const ClassroomManagement = () => {
             showOnHome: classroom.showOnHome || false,
             description: classroom.description || '',
             imageUrl: classroom.imageUrl || '',
+            themeColor: classroom.themeColor || '#0891b2',
             subjects: Array.isArray(classroom.subjects) ? classroom.subjects : []
         });
         setIsEditModalOpen(true);
@@ -411,6 +415,47 @@ const ClassroomManagement = () => {
                                 <input type="text" name="imageUrl" value={editFormData.imageUrl} onChange={handleEditChange} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-[10px]" />
                             </div>
 
+                            <div>
+                                <label className="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-wider">Theme Color / Gradient</label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {[
+                                        '#0891b2', // Cyan
+                                        '#4f46e5', // Indigo
+                                        '#059669', // Emerald
+                                        '#7c3aed', // Violet
+                                        '#db2777', // Pink
+                                        '#ea580c', // Orange
+                                        'linear-gradient(135deg, #0891b2 0%, #4f46e5 100%)',
+                                        'linear-gradient(135deg, #059669 0%, #0891b2 100%)',
+                                        'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
+                                        'linear-gradient(135deg, #ea580c 0%, #d97706 100%)'
+                                    ].map((color) => (
+                                        <button
+                                            key={color}
+                                            type="button"
+                                            onClick={() => setEditFormData({ ...editFormData, themeColor: color })}
+                                            className={`w-8 h-8 rounded-full border-2 transition-transform hover:scale-110 ${editFormData.themeColor === color ? 'border-slate-900 scale-110' : 'border-transparent'}`}
+                                            style={{ background: color }}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <input
+                                        type="color"
+                                        value={editFormData.themeColor?.startsWith('linear') ? '#0891b2' : editFormData.themeColor}
+                                        onChange={(e) => setEditFormData({ ...editFormData, themeColor: e.target.value })}
+                                        className="w-10 h-10 rounded-lg cursor-pointer border-none bg-transparent"
+                                    />
+                                    <input
+                                        type="text"
+                                        value={editFormData.themeColor}
+                                        onChange={(e) => setEditFormData({ ...editFormData, themeColor: e.target.value })}
+                                        placeholder="Hex or Gradient"
+                                        className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-[10px]"
+                                    />
+                                </div>
+                            </div>
+
                             <div className="flex gap-3 pt-4">
                                 <button type="button" onClick={() => setIsEditModalOpen(false)} className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors">Cancel</button>
                                 <button type="submit" disabled={isSubmitting} className="flex-1 py-3 bg-cyan-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-cyan-700 transition-colors">Save Changes</button>
@@ -590,6 +635,49 @@ const ClassroomManagement = () => {
                                 </div>
                             </div>
 
+                            <div>
+                                <label className="block text-xs font-bold text-slate-500 uppercase mb-2 tracking-widest">Theme Color / Gradient</label>
+                                <div className="flex flex-wrap gap-2 mb-3">
+                                    {[
+                                        '#0891b2', // Cyan
+                                        '#4f46e5', // Indigo
+                                        '#059669', // Emerald
+                                        '#7c3aed', // Violet
+                                        '#db2777', // Pink
+                                        '#ea580c', // Orange
+                                        'linear-gradient(135deg, #0891b2 0%, #4f46e5 100%)',
+                                        'linear-gradient(135deg, #059669 0%, #0891b2 100%)',
+                                        'linear-gradient(135deg, #7c3aed 0%, #db2777 100%)',
+                                        'linear-gradient(135deg, #ea580c 0%, #d97706 100%)'
+                                    ].map((color) => (
+                                        <button
+                                            key={color}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, themeColor: color })}
+                                            className={`w-10 h-10 rounded-xl border-2 transition-all hover:scale-110 ${formData.themeColor === color ? 'border-slate-900 shadow-lg' : 'border-transparent shadow-sm'}`}
+                                            style={{ background: color }}
+                                        />
+                                    ))}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-slate-200">
+                                        <input
+                                            type="color"
+                                            value={formData.themeColor?.startsWith('linear') ? '#0891b2' : formData.themeColor}
+                                            onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
+                                            className="absolute inset-[-10px] w-[200%] h-[200%] cursor-pointer border-none bg-transparent"
+                                        />
+                                    </div>
+                                    <input
+                                        type="text"
+                                        value={formData.themeColor}
+                                        onChange={(e) => setFormData({ ...formData, themeColor: e.target.value })}
+                                        placeholder="Custom Hex or CSS Gradient"
+                                        className="flex-1 px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none text-xs"
+                                    />
+                                </div>
+                            </div>
+
                             <div className="flex gap-3 pt-2">
                                 <button type="button" onClick={() => setIsCreateModalOpen(false)} className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors">Cancel</button>
                                 <button
@@ -642,7 +730,10 @@ const ClassroomManagement = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {classrooms.map((c) => (
                             <div key={c._id} className="p-5 border border-slate-100 rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-cyan-50 to-transparent -mr-12 -mt-12 rounded-full z-0 group-hover:scale-110 transition-transform"></div>
+                                <div 
+                                    className="absolute top-0 right-0 w-24 h-24 -mr-12 -mt-12 rounded-full z-0 group-hover:scale-110 transition-transform opacity-20"
+                                    style={{ background: c.themeColor || '#0891b2' }}
+                                ></div>
 
                                 <div className="relative z-10">
                                     <div className="flex justify-between items-start mb-3">
@@ -656,7 +747,7 @@ const ClassroomManagement = () => {
                                                     {c.isPublished ? 'Live' : 'Draft'}
                                                 </span>
                                             </div>
-                                            <p className="text-xs font-bold text-cyan-600 uppercase tracking-wider">
+                                            <p className="text-xs font-bold uppercase tracking-wider" style={{ color: c.themeColor?.startsWith('linear') ? '#0891b2' : c.themeColor || '#0891b2' }}>
                                                 {c.programType === 'E-Zone'
                                                     ? `${c.className || 'E-Zone'} • Entrance/Exam`
                                                     : `Class ${c.className} • ${c.board}`}

@@ -5,7 +5,7 @@ import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, 
 import { getExams, getExamsBySpecificClassroom, getMyResults, getMaterials, getAssignments, submitHomework, uploadFile, getClassroomRank } from "../../api/services";
 import { getApiUrl } from "../../api/apiClient";
 import { toast } from "react-hot-toast";
-import ClassroomAIChat from "../../components/ClassroomAIChat";
+// import ClassroomAIChat from "../../components/ClassroomAIChat";
 
 const StudentClassroom = () => {
   const { user } = useAuth();
@@ -248,6 +248,13 @@ const StudentClassroom = () => {
           </div>
         </div>
         <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => navigate("/student/lesson-tracker")}
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-slate-700 font-bold border border-slate-200 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all"
+          >
+            <FileText className="w-5 h-5 text-cyan-600" />
+            Lesson History
+          </button>
           {classroom?.onlineClassLink && (
             <a href={classroom.onlineClassLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-200 hover:bg-cyan-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
               <Video className="w-5 h-5" />Join Class
@@ -662,7 +669,7 @@ const StudentClassroom = () => {
           </div>
         </div>
       )}
-      <ClassroomAIChat />
+      {/* <ClassroomAIChat /> */}
     </div>
   );
 };

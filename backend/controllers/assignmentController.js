@@ -68,6 +68,39 @@ export const getClassroomAssignments = async (req, res) => {
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
+};// @desc    Get all assignments for the current student
+// @route   GET /api/assignments/my-assignments
+// @access  Private (Student)
+export const getMyAssignments = async (req, res) => {
+    try {
+        // Find classrooms where the student is enrolled
+        const classrooms = await Classroom.find({ students: req.user._id });
+        const classroomIds = classrooms.map(c => c._id);
+
+        // Find assignments for those classrooms
+        const assignments = await Assignment.find({ classroom: { $in: classroomIds } })
+            .populate('teacher', 'name')
+            .populate('classroom', 'name')
+            .sort({ dueDate: 1 });
+
+        // Get submissions for these assignments
+        const submissions = await Submission.find({ 
+            student: req.user._id,
+            assignment: { $in: assignments.map(a => a._id) }
+        });
+
+        const assignmentsWithSubmissions = assignments.map(assignment => {
+            const submission = submissions.find(s => s.assignment.toString() === assignment._id.toString());
+            return {
+                ...assignment._doc,
+                userSubmission: submission || null
+            };
+        });
+
+        res.status(200).json(assignmentsWithSubmissions);
+    } catch (error) {
+        res.status(500).json({ message: "Server error", error: error.message });
+    }
 };
 
 // @desc    Submit assignment

@@ -9,6 +9,7 @@ import {
     Upload,
     Users,
     FileCheck,
+    FileSpreadsheet,
     ArrowLeft,
     Save,
     ExternalLink,
@@ -335,6 +336,13 @@ const TeacherClassroom = () => {
                     </p>
                 </div>
                 <div className="flex flex-wrap gap-3">
+                    <button
+                        onClick={() => navigate("/teacher/lesson-tracker")}
+                        className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-white text-slate-700 font-bold border border-slate-200 shadow-sm hover:shadow-md hover:bg-slate-50 transition-all"
+                    >
+                        <FileSpreadsheet className="w-5 h-5 text-cyan-600" />
+                        Lesson Tracker
+                    </button>
                     {meetLink && (
                         <a href={meetLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-200 hover:bg-cyan-700 hover:scale-[1.02] active:scale-[0.98] transition-all">
                             <Video className="w-5 h-5" />Start Class

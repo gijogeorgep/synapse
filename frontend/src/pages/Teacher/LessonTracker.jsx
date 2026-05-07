@@ -138,6 +138,8 @@ const LessonTracker = () => {
 
   const userInfo = JSON.parse(localStorage.getItem('userInfo')) || {};
   const isAdmin = ['admin', 'superadmin'].includes(userInfo.role);
+  const isStudent = userInfo.role === 'student';
+  const canManage = !isStudent; // Teachers and Admins can manage
 
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
@@ -399,29 +401,31 @@ const LessonTracker = () => {
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Lesson Tracker</h1>
           <p className="text-slate-500 text-sm">Digital version of the teacher's lesson tracking spreadsheet</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={exportToExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-semibold text-sm border border-emerald-100"
-          >
-            <FileSpreadsheet className="w-4 h-4" />
-            EXPORT EXCEL
-          </button>
-          <button
-            onClick={exportToPDF}
-            className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition-colors font-semibold text-sm border border-rose-100"
-          >
-            <FileText className="w-4 h-4" />
-            EXPORT PDF
-          </button>
-          <button
-            onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 px-5 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-all font-bold text-sm shadow-lg shadow-cyan-100"
-          >
-            {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
-            {showForm ? 'CANCEL' : 'ADD NEW ENTRY'}
-          </button>
-        </div>
+        {canManage && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={exportToExcel}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg hover:bg-emerald-100 transition-colors font-semibold text-sm border border-emerald-100"
+            >
+              <FileSpreadsheet className="w-4 h-4" />
+              EXPORT EXCEL
+            </button>
+            <button
+              onClick={exportToPDF}
+              className="flex items-center gap-2 px-4 py-2 bg-rose-50 text-rose-700 rounded-lg hover:bg-rose-100 transition-colors font-semibold text-sm border border-rose-100"
+            >
+              <FileText className="w-4 h-4" />
+              EXPORT PDF
+            </button>
+            <button
+              onClick={() => setShowForm(!showForm)}
+              className="flex items-center gap-2 px-5 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-all font-bold text-sm shadow-lg shadow-cyan-100"
+            >
+              {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+              {showForm ? 'CANCEL' : 'ADD NEW ENTRY'}
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Form Section */}
@@ -770,7 +774,7 @@ const LessonTracker = () => {
                 <th className="px-3 py-4 border border-slate-300 w-32">REMARK</th>
                 <th className="px-3 py-4 border border-slate-300 w-32">CLASS</th>
                 {isAdmin && <th className="px-3 py-4 border border-slate-300 w-32">TEACHER</th>}
-                <th className="px-3 py-4 border border-slate-300 w-24 text-center"></th>
+                {canManage && <th className="px-3 py-4 border border-slate-300 w-24 text-center"></th>}
               </tr>
             </thead>
             <tbody className="text-[12px] text-slate-700 divide-y divide-slate-200">
@@ -827,24 +831,26 @@ const LessonTracker = () => {
                         </div>
                       </td>
                     )}
-                    <td className="px-3 py-3 border border-slate-100 text-center">
-                      <div className="flex items-center justify-center gap-1">
-                        <button
-                          onClick={() => handleEdit(report)}
-                          className="p-1.5 text-slate-300 hover:text-cyan-600 transition-colors rounded-md hover:bg-cyan-50"
-                          title="Edit Entry"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(report._id)}
-                          className="p-1.5 text-slate-300 hover:text-rose-600 transition-colors rounded-md hover:bg-rose-50"
-                          title="Delete Entry"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+                    {canManage && (
+                      <td className="px-3 py-3 border border-slate-100 text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          <button
+                            onClick={() => handleEdit(report)}
+                            className="p-1.5 text-slate-300 hover:text-cyan-600 transition-colors rounded-md hover:bg-cyan-50"
+                            title="Edit Entry"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(report._id)}
+                            className="p-1.5 text-slate-300 hover:text-rose-600 transition-colors rounded-md hover:bg-rose-50"
+                            title="Delete Entry"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    )}
                   </tr>
                 ))
               )}
@@ -875,20 +881,22 @@ const LessonTracker = () => {
                     </span>
                     <span className="text-sm font-bold text-slate-800">{report.subject}</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => handleEdit(report)}
-                      className="p-2 text-slate-300 hover:text-cyan-600 transition-colors"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(report._id)}
-                      className="p-2 text-slate-300 hover:text-rose-600 transition-colors"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {canManage && (
+                    <div className="flex items-center gap-1">
+                      <button
+                        onClick={() => handleEdit(report)}
+                        className="p-2 text-slate-300 hover:text-cyan-600 transition-colors"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(report._id)}
+                        className="p-2 text-slate-300 hover:text-rose-600 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

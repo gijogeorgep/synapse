@@ -59,6 +59,7 @@ import AdminBlogManagement from "./pages/Admin/content/BlogManagement";
 import AdminProgramManagement from "./pages/Admin/content/ProgramManagement";
 import AdminBannerManagement from "./pages/Admin/content/BannerManagement";
 import AdminProfile from "./pages/Admin/profile/AdminProfile";
+import EventManagement from "./pages/Admin/EventManagement";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
 import ClassroomSelection from "./pages/Student/ClassroomSelection";
@@ -365,6 +366,7 @@ function AppContent() {
                 <Route path="/student/settings" element={<StudentSettings />} />
                 <Route path="/student/classroom" element={<StudentClassroom />} />
                 <Route path="/student/select-classroom" element={<ClassroomSelection />} />
+                <Route path="/student/lesson-tracker" element={<LessonTracker />} />
               </Route>
             </Route>
 
@@ -398,6 +400,7 @@ function AppContent() {
                 <Route path="/admin/programs" element={<AdminProgramManagement />} />
                 <Route path="/admin/blogs" element={<AdminBlogManagement />} />
                 <Route path="/admin/banners" element={<AdminBannerManagement />} />
+                <Route path="/admin/events" element={<EventManagement />} />
                 <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
                   <Route index element={<AdminAuditLogs />} />
                 </Route>

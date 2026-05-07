@@ -89,6 +89,10 @@ const classroomSchema = mongoose.Schema(
             type: String,
             default: "",
         },
+        themeColor: {
+            type: String,
+            default: "#0891b2", // default cyan-600
+        },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",

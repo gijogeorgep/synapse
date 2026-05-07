@@ -209,6 +209,7 @@ export const createClassroom = async (req, res) => {
       showOnHome,
       description,
       imageUrl,
+      themeColor,
     } = req.body;
 
     if (!name || !programType) {
@@ -231,6 +232,7 @@ export const createClassroom = async (req, res) => {
       showOnHome: showOnHome || false,
       description: description || "",
       imageUrl: imageUrl || "",
+      themeColor: themeColor || "#0891b2",
       subjects: subjects || [],
       students: [],
       teachers: [],
@@ -297,6 +299,7 @@ export const updateClassroom = async (req, res) => {
       description,
       imageUrl,
       classLinks,
+      themeColor,
     } = req.body;
 
     const classroom = await Classroom.findById(id);
@@ -334,6 +337,7 @@ export const updateClassroom = async (req, res) => {
     if (description !== undefined) classroom.description = description;
     if (imageUrl !== undefined) classroom.imageUrl = imageUrl;
     if (classLinks !== undefined) classroom.classLinks = classLinks;
+    if (themeColor !== undefined) classroom.themeColor = themeColor;
 
     const updatedClassroom = await classroom.save();
     res.status(200).json(updatedClassroom);

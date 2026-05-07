@@ -82,7 +82,7 @@ const StudentClassrooms = () => {
                             className="group relative bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                         >
                             {/* Card Header Illustration/Background */}
-                            <div className={`h-36 relative overflow-hidden p-6 bg-gradient-to-br ${getSubjectColor(c.subjects?.[0])}`}>
+                            <div className="h-36 relative overflow-hidden p-6" style={{ background: c.themeColor || 'linear-gradient(135deg, #0891b2 0%, #4f46e5 100%)' }}>
                                 {c.imageUrl && (
                                     <img
                                         src={c.imageUrl}

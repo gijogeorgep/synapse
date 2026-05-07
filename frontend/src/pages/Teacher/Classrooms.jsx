@@ -76,7 +76,8 @@ const TeacherClassrooms = () => {
                             className="group relative bg-white rounded-[2rem] shadow-sm border border-slate-100 overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                         >
                             <div
-                                className={`h-36 bg-gradient-to-br ${getSubjectColor(c.subjects?.[0])} p-6 relative overflow-hidden`}
+                                className="h-36 p-6 relative overflow-hidden"
+                                style={{ background: c.themeColor || 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)' }}
                             >
                                 <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-white/10 rounded-full blur-2xl" />
                                 <h3 className="text-2xl font-bold text-white tracking-tight leading-tight">

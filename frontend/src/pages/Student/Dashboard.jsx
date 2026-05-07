@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { GraduationCap, Award, ClipboardCheck, BookOpen, TrendingUp, ArrowRight, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { getMyResults, getMyClassrooms, getMyStudentStats, getExams } from "../../api/services";
+import { getMyResults, getMyClassrooms, getMyStudentStats, getExams, getEvents, getMyAssignments } from "../../api/services";
 
 const StudentDashboard = () => {
     const { user } = useAuth();
@@ -13,6 +13,8 @@ const StudentDashboard = () => {
     const [loadingClassrooms, setLoadingClassrooms] = useState(true);
     const [analytics, setAnalytics] = useState(null);
     const [upcomingExams, setUpcomingExams] = useState([]);
+    const [events, setEvents] = useState([]);
+    const [assignments, setAssignments] = useState([]);
 
     const subjects = user?.subjects || ["Physics", "Chemistry", "Mathematics", "Biology"];
     const userClass = user?.class || "10";
@@ -24,11 +26,13 @@ const StudentDashboard = () => {
                 setLoadingClassrooms(true);
 
                 // Fetch results, classrooms, analytics, and exams in parallel
-                const [resultsData, classroomsData, analyticsData, examsData] = await Promise.all([
+                const [resultsData, classroomsData, analyticsData, examsData, eventsData, assignmentsData] = await Promise.all([
                     getMyResults().catch(() => []),
                     getMyClassrooms().catch(() => []),
                     getMyStudentStats().catch(() => null),
-                    getExams().catch(() => [])
+                    getExams().catch(() => []),
+                    getEvents().catch(() => []),
+                    getMyAssignments().catch(() => [])
                 ]);
 
                 setResults(Array.isArray(resultsData) ? resultsData.filter(r => r.exam) : []);
@@ -36,6 +40,8 @@ const StudentDashboard = () => {
                 setClassrooms(fetchedClassrooms);
                 setAnalytics(analyticsData);
                 setUpcomingExams(Array.isArray(examsData) ? examsData : []);
+                setEvents(Array.isArray(eventsData) ? eventsData : []);
+                setAssignments(Array.isArray(assignmentsData) ? assignmentsData : []);
 
                 // Redirect independent students to selection if no classrooms
                 if (user?.userType === 'independent' && fetchedClassrooms.length === 0) {
@@ -183,14 +189,20 @@ const StudentDashboard = () => {
                         </div>
                     ) : (
                         classrooms.slice(0, 3).map(c => (
-                            <div key={c._id} onClick={() => navigate("/student/classrooms")} className="p-5 border border-slate-100 rounded-3xl bg-white shadow-sm hover:shadow-md hover:border-cyan-200 cursor-pointer transition-all relative overflow-hidden group">
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-cyan-50/80 to-transparent -mr-16 -mt-16 rounded-full group-hover:scale-150 transition-transform duration-700 z-0"></div>
+                            <div key={c._id} onClick={() => navigate("/student/classrooms")} className="p-5 border border-slate-100 rounded-3xl bg-white shadow-sm hover:shadow-md cursor-pointer transition-all relative overflow-hidden group" style={{ borderColor: c.themeColor ? `${c.themeColor}20` : undefined }}>
+                                <div 
+                                    className="absolute top-0 right-0 w-32 h-32 -mr-16 -mt-16 rounded-full group-hover:scale-150 transition-transform duration-700 z-0 opacity-10"
+                                    style={{ background: c.themeColor || '#0891b2' }}
+                                ></div>
                                 <div className="relative z-10">
-                                    <div className="w-12 h-12 rounded-2xl bg-cyan-50 border border-cyan-100 text-cyan-600 flex items-center justify-center mb-4">
+                                    <div 
+                                        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-4"
+                                        style={{ background: c.themeColor ? `${c.themeColor}15` : '#ecfeff', color: c.themeColor?.startsWith('linear') ? '#0891b2' : (c.themeColor || '#0891b2') }}
+                                    >
                                         <BookOpen className="w-6 h-6" />
                                     </div>
                                     <h3 className="font-bold text-xl text-slate-800 mb-1">{c.name}</h3>
-                                    <p className="text-sm font-medium text-cyan-600">Class {c.className} • {c.board}</p>
+                                    <p className="text-sm font-medium" style={{ color: c.themeColor?.startsWith('linear') ? '#0891b2' : (c.themeColor || '#0891b2') }}>Class {c.className} • {c.board}</p>
 
                                     <div className="mt-4 flex flex-wrap gap-2">
                                         {c.subjects?.slice(0, 3).map(sub => (
@@ -219,7 +231,7 @@ const StudentDashboard = () => {
                                                 </div>
                                             )}
                                         </div>
-                                        <span className="text-xs font-semibold text-slate-400 hover:text-cyan-600 transition-colors">Enter</span>
+                                        <span className="text-xs font-semibold text-slate-400 group-hover:text-slate-600 transition-colors">Enter</span>
                                     </div>
                                 </div>
                             </div>
@@ -389,26 +401,34 @@ const StudentDashboard = () => {
                                 0
                             ).getDate();
 
-                            const examEvents = [
+                            const calendarEvents = [
                                 ...upcomingExams.map(e => ({
                                     date: new Date(e.date).getDate(),
                                     month: new Date(e.date).getMonth(),
                                     year: new Date(e.date).getFullYear(),
-                                    label: e.title,
-                                    type: 'upcoming'
+                                    label: `Exam: ${e.title}`,
+                                    type: 'exam'
                                 })),
-                                ...results.map(r => ({
-                                    date: new Date(r.exam?.date || r.createdAt).getDate(),
-                                    month: new Date(r.exam?.date || r.createdAt).getMonth(),
-                                    year: new Date(r.exam?.date || r.createdAt).getFullYear(),
-                                    label: r.exam?.title || 'Exam',
-                                    type: 'past'
+                                ...assignments.map(a => ({
+                                    date: new Date(a.dueDate).getDate(),
+                                    month: new Date(a.dueDate).getMonth(),
+                                    year: new Date(a.dueDate).getFullYear(),
+                                    label: `Assignment: ${a.title}`,
+                                    type: 'assignment'
+                                })),
+                                ...events.map(ev => ({
+                                    date: new Date(ev.date).getDate(),
+                                    month: new Date(ev.date).getMonth(),
+                                    year: new Date(ev.date).getFullYear(),
+                                    label: `${ev.type === 'holiday' ? 'Holiday' : 'Event'}: ${ev.title}`,
+                                    type: ev.type
                                 }))
                             ];
 
-                            const eventByDate = examEvents.reduce((map, e) => {
+                            const eventByDate = calendarEvents.reduce((map, e) => {
                                 if (e.month === currentMonth && e.year === currentYear) {
-                                    map[e.date] = e;
+                                    if (!map[e.date]) map[e.date] = [];
+                                    map[e.date].push(e);
                                 }
                                 return map;
                             }, {});
@@ -447,27 +467,45 @@ const StudentDashboard = () => {
                                                 day === today.getDate() &&
                                                 currentMonth === today.getMonth() &&
                                                 currentYear === today.getFullYear();
-                                            const event = eventByDate[day];
+                                            const dayEvents = eventByDate[day] || [];
+                                            const hasExam = dayEvents.some(e => e.type === 'exam');
+                                            const hasAssignment = dayEvents.some(e => e.type === 'assignment');
+                                            const hasHoliday = dayEvents.some(e => e.type === 'holiday');
+                                            const hasEvent = dayEvents.some(e => e.type === 'event');
+
                                             return (
                                                 <div
                                                     key={day}
-                                                    className={`h-7 flex flex-col items-center justify-center rounded-md border text-[11px] ${event
-                                                        ? "border-cyan-400 bg-cyan-50 text-cyan-700"
-                                                        : "border-slate-100 text-slate-600"
-                                                        } ${isToday ? "ring-1 ring-indigo-400" : ""}`}
-                                                    title={event?.label || ""}
+                                                    className={`h-9 flex flex-col items-center justify-center rounded-xl border text-[11px] relative transition-all ${dayEvents.length > 0
+                                                        ? "border-indigo-100 bg-indigo-50/30 text-indigo-700 font-bold"
+                                                        : "border-slate-50 text-slate-600 hover:bg-slate-50"
+                                                        } ${isToday ? "ring-2 ring-cyan-500 ring-offset-1" : ""}`}
+                                                    title={dayEvents.map(e => e.label).join('\n')}
                                                 >
                                                     <span>{day}</span>
-                                                    {event && (
-                                                        <span className="w-1 h-1 rounded-full bg-cyan-500 mt-0.5" />
-                                                    )}
+                                                    <div className="flex gap-0.5 mt-0.5">
+                                                        {hasExam && <span className="w-1 h-1 rounded-full bg-rose-500" title="Exam" />}
+                                                        {hasAssignment && <span className="w-1 h-1 rounded-full bg-amber-500" title="Assignment" />}
+                                                        {hasHoliday && <span className="w-1 h-1 rounded-full bg-emerald-500" title="Holiday" />}
+                                                        {hasEvent && <span className="w-1 h-1 rounded-full bg-cyan-500" title="Event" />}
+                                                    </div>
                                                 </div>
                                             );
                                         })}
                                     </div>
-                                    <div className="text-[11px] text-slate-400">
-                                        Dates highlighted in cyan indicate upcoming exams or important
-                                        events.
+                                    <div className="flex flex-wrap gap-x-4 gap-y-2 pt-2">
+                                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" /> Exam
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" /> Assignment
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Holiday
+                                        </div>
+                                        <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-medium">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-cyan-500" /> Event
+                                        </div>
                                     </div>
                                 </div>
                             );

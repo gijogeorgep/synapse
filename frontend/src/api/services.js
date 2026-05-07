@@ -165,6 +165,7 @@ export const clearAllNotifications = () =>
 // Assignment Services
 export const getAssignments = (classroomId) =>
   apiClient(`/assignments/classroom/${classroomId}`);
+export const getMyAssignments = () => apiClient("/assignments/my-assignments");
 export const createAssignment = (assignmentData) =>
   apiClient("/assignments", { method: "POST", body: assignmentData });
 export const deleteAssignment = (assignmentId) =>
@@ -226,3 +227,9 @@ export const deleteBanner = (id) =>
 export const getSettings = () => apiClient("/settings");
 export const updateSettings = (settingsData) =>
   apiClient("/settings", { method: "PATCH", body: settingsData });
+
+// Event Services
+export const getEvents = () => apiClient("/events");
+export const createEvent = (eventData) => apiClient("/events", { method: "POST", body: eventData });
+export const updateEvent = (id, eventData) => apiClient(`/events/${id}`, { method: "PUT", body: eventData });
+export const deleteEvent = (id) => apiClient(`/events/${id}`, { method: "DELETE" });

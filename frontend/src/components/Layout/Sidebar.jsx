@@ -23,6 +23,7 @@ import {
     X,
     Image as ImageIcon,
     FileSpreadsheet,
+    Calendar,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -63,6 +64,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             { name: "Users", icon: Users, path: "/admin/users" },
             { name: "Classrooms", icon: GraduationCap, path: "/admin/classrooms" },
             { name: "Announcements", icon: Megaphone, path: "/admin/announcements" },
+            { name: "Calendar Events", icon: Calendar, path: "/admin/events" },
             { name: "Exams & Results", icon: Award, path: "/admin/exams" },
             { name: "Reports", icon: BarChart3, path: "/admin/reports" },
             { name: "Bulk Promotions", icon: ArrowUpCircle, path: "/admin/promotions" },
@@ -79,6 +81,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             { name: "Users", icon: Users, path: "/admin/users" },
             { name: "Classrooms", icon: GraduationCap, path: "/admin/classrooms" },
             { name: "Announcements", icon: Megaphone, path: "/admin/announcements" },
+            { name: "Calendar Events", icon: Calendar, path: "/admin/events" },
             { name: "Exams & Results", icon: Award, path: "/admin/exams" },
             { name: "Reports", icon: BarChart3, path: "/admin/reports" },
             { name: "Bulk Promotions", icon: ArrowUpCircle, path: "/admin/promotions" },
