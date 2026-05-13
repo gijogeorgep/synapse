@@ -4,11 +4,14 @@
  */
 
 export const getPublicSiteUrl = () => {
-    // In production, always point to the main public frontend
-    if (import.meta.env.PROD) {
-        return import.meta.env.VITE_PUBLIC_SITE_URL || "https://synapseeduhub.com";
-    }
-    // In dev, point to the frontend dev server
+    // Prefer explicit configuration in all environments
+    const configured = import.meta.env.VITE_PUBLIC_SITE_URL;
+    if (configured) return configured;
+
+    // In production, fall back to the canonical public domain
+    if (import.meta.env.PROD) return "https://synapseeduhub.com";
+
+    // In dev, fall back to the assumed frontend dev server
     return "http://localhost:5173";
 };
 
@@ -18,8 +21,8 @@ export const getFormLink = (slug) => {
 };
 
 export const getAdminUrl = () => {
-    if (import.meta.env.PROD) {
-        return import.meta.env.VITE_SITE_URL || "https://admin.synapseeduhub.com";
-    }
+    const configured = import.meta.env.VITE_SITE_URL;
+    if (configured) return configured;
+    if (import.meta.env.PROD) return "https://admin.synapseeduhub.com";
     return "http://localhost:5174";
 };

@@ -27,6 +27,7 @@ import EventManagement from "./pages/Admin/EventManagement";
 import EnquiryFormList from "./pages/Admin/enquiry/EnquiryFormList";
 import EnquiryFormBuilder from "./pages/Admin/enquiry/EnquiryFormBuilder";
 import EnquiryResponses from "./pages/Admin/enquiry/EnquiryResponses";
+import PublicForm from "./pages/Public/EnquiryForm/PublicForm";
 import LessonTracker from "./pages/Teacher/LessonTracker"; // Shared component
 import Notifications from "./pages/Notifications/Notifications";
 import { useAuth } from "./context/AuthContext";
@@ -61,6 +62,7 @@ function AppContent() {
           <Route path="/" element={<AdminAuth />} />
           <Route path="/login" element={<AdminAuth />} />
           <Route path="/admin-portal-auth" element={<AdminAuth />} />
+          <Route path="/form/:slug" element={<PublicForm />} />
 
           {/* Admin Routes */}
           <Route element={<ProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
