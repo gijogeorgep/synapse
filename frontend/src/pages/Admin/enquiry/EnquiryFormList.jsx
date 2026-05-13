@@ -62,7 +62,8 @@ const EnquiryFormList = () => {
     };
 
     const copyLink = (slug) => {
-        const url = `${window.location.origin}/form/${slug}`;
+        const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, "");
+        const url = `${siteUrl}/form/${slug}`;
         navigator.clipboard.writeText(url);
         toast.success("Link copied to clipboard!");
     };
@@ -191,7 +192,7 @@ const EnquiryFormList = () => {
                                         Link
                                     </button>
                                     <a
-                                        href={`${window.location.origin}/form/${form.slug}`}
+                                        href={`${(import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, "")}/form/${form.slug}`}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all col-span-2"

@@ -106,14 +106,16 @@ const EnquiryFormBuilder = () => {
 
     const copyLink = () => {
         if (!createdForm) return;
-        const url = `${window.location.origin}/form/${createdForm.slug}`;
+        const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, "");
+        const url = `${siteUrl}/form/${createdForm.slug}`;
         navigator.clipboard.writeText(url);
         toast.success("Link copied to clipboard!");
     };
 
     const shareWhatsApp = () => {
         if (!createdForm) return;
-        const url = `${window.location.origin}/form/${createdForm.slug}`;
+        const siteUrl = (import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, "");
+        const url = `${siteUrl}/form/${createdForm.slug}`;
         const text = `Please fill out this form: ${createdForm.title}\n\nLink: ${url}`;
         window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
     };
@@ -334,7 +336,7 @@ const EnquiryFormBuilder = () => {
                                         <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Shareable Link</p>
                                         <div className="flex items-center gap-3 bg-white p-3 rounded-xl border border-slate-100">
                                             <span className="flex-1 text-sm font-bold text-slate-600 truncate">
-                                                {window.location.origin}/form/{createdForm?.slug}
+                                                {(import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, "")}/form/{createdForm?.slug}
                                             </span>
                                             <button
                                                 onClick={copyLink}
@@ -355,7 +357,7 @@ const EnquiryFormBuilder = () => {
                                             WhatsApp
                                         </button>
                                         <a
-                                            href={`/form/${createdForm?.slug}`}
+                                            href={`${(import.meta.env.VITE_SITE_URL || window.location.origin).replace(/\/$/, "")}/form/${createdForm?.slug}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
                                             className="flex items-center justify-center gap-3 p-4 bg-slate-900 hover:bg-black text-white rounded-2xl font-black transition-all shadow-lg shadow-slate-200"
