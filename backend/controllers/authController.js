@@ -150,6 +150,9 @@ export const authUser = async (req, res) => {
 
             const sessionToken = crypto.randomUUID();
             user.sessionToken = sessionToken;
+            user.lastLoginAt = new Date();
+            user.lastLoginIp = (req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.ip || "").trim();
+            user.lastLoginUserAgent = (req.headers["user-agent"] || "").toString().slice(0, 512);
             await user.save();
 
             res.json({
@@ -288,6 +291,9 @@ export const adminLogin = async (req, res) => {
 
                 const sessionToken = crypto.randomUUID();
                 user.sessionToken = sessionToken;
+                user.lastLoginAt = new Date();
+                user.lastLoginIp = (req.headers["x-forwarded-for"]?.toString().split(",")[0] || req.ip || "").trim();
+                user.lastLoginUserAgent = (req.headers["user-agent"] || "").toString().slice(0, 512);
                 await user.save();
 
                 const token = generateToken(user._id, sessionToken);

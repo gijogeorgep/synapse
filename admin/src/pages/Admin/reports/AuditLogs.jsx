@@ -6,6 +6,7 @@ const AuditLogs = () => {
     const [logs, setLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [error, setError] = useState(null);
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
     useEffect(() => {
@@ -15,20 +16,26 @@ const AuditLogs = () => {
     const fetchLogs = async () => {
         try {
             setLoading(true);
+            setError(null);
             const data = await getAuditLogs();
             setLogs(Array.isArray(data) ? data : []);
         } catch (error) {
             console.error("Error fetching logs:", error);
+            setLogs([]);
+            setError("Failed to load audit logs.");
         } finally {
             setLoading(false);
         }
     };
 
-    const filteredLogs = logs.filter(log => 
-        log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (log.user && log.user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-        (log.details && log.details.toLowerCase().includes(searchTerm.toLowerCase()))
-    );
+    const query = (searchTerm || "").toLowerCase().trim();
+    const filteredLogs = logs.filter((log) => {
+        if (!query) return true;
+        const action = (log?.action || "").toLowerCase();
+        const userName = (log?.user?.name || "").toLowerCase();
+        const details = (log?.details || "").toLowerCase();
+        return action.includes(query) || userName.includes(query) || details.includes(query);
+    });
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -52,6 +59,12 @@ const AuditLogs = () => {
                         />
                     </div>
                 </div>
+
+                {error && (
+                    <div className="mb-6 rounded-2xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700">
+                        {error}
+                    </div>
+                )}
 
                 {loading ? (
                     <div className="flex justify-center items-center py-20">

@@ -167,6 +167,15 @@ function RouteSeo() {
     return null;
   }
 
+  if (pathname.startsWith("/form/")) {
+    return (
+      <SEO
+        title="Synapse Forms | Synapse Edu Hub"
+        description="Fill out the Synapse Edu Hub form to submit your enquiry."
+      />
+    );
+  }
+
   const websiteSchema = {
     "@context": "https://schema.org",
     "@type": "WebSite",
@@ -354,7 +363,15 @@ function AppContent() {
 }
 
 function App() {
-  const [showSplash, setShowSplash] = useState(true);
+  const shouldSkipSplash = (() => {
+    try {
+      return window.location.pathname.startsWith("/form");
+    } catch {
+      return false;
+    }
+  })();
+
+  const [showSplash, setShowSplash] = useState(!shouldSkipSplash);
 
   return (
     <>

@@ -79,6 +79,18 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
     },
+    lastLoginAt: {
+      type: Date,
+      default: null,
+    },
+    lastLoginIp: {
+      type: String,
+      default: "",
+    },
+    lastLoginUserAgent: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,

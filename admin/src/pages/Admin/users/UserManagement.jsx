@@ -611,6 +611,9 @@ const UserManagement = () => {
                   <th className="py-4 text-sm font-semibold text-slate-600 px-6">
                     Joined
                   </th>
+                  <th className="py-4 text-sm font-semibold text-slate-600 px-6">
+                    Last Login
+                  </th>
                   <th className="py-4 text-sm font-semibold text-slate-600 px-6 text-right">
                     Actions
                   </th>
@@ -771,6 +774,9 @@ const UserManagement = () => {
                     </td>
                     <td className="py-4 px-6 text-sm text-slate-500 whitespace-nowrap">
                       {new Date(user.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="py-4 px-6 text-sm text-slate-500 whitespace-nowrap">
+                      {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "—"}
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end space-x-2">

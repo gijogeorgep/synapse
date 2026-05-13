@@ -72,6 +72,15 @@
     <div id="initial-splash"
       style="position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Outfit', sans-serif;">
       <div style="display: flex; flex-direction: column; align-items: center;">
+        <script>
+          (function () {
+            // Skip splash on public form deep-links
+            if (window.location.pathname.startsWith('/form')) {
+              var el = document.getElementById('initial-splash');
+              if (el) el.style.display = 'none';
+            }
+          })();
+        </script>
         <img id="splash-logo" src="/app-icon-512.png" alt="Synapse"
           style="height: 120px; width: auto; margin-bottom: 20px; animation: pulse 2s infinite ease-in-out;" />
         <script>
