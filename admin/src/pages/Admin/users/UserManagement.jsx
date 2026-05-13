@@ -20,6 +20,25 @@ import {
 } from "../../../api/services";
 import { useNavigate } from "react-router-dom";
 
+const formatLastLogin = (lastLoginAt) => {
+  if (!lastLoginAt) return "Never";
+
+  const d = new Date(lastLoginAt);
+  if (Number.isNaN(d.getTime())) return "—";
+
+  const now = new Date();
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  // Compare by local calendar day to avoid timezone/parse edge-cases
+  if (d.toDateString() === now.toDateString()) return `Today ${time}`;
+
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (d.toDateString() === yesterday.toDateString()) return `Yesterday ${time}`;
+
+  return d.toLocaleString();
+};
+
 const UserManagement = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
@@ -776,7 +795,7 @@ const UserManagement = () => {
                       {new Date(user.createdAt).toLocaleDateString()}
                     </td>
                     <td className="py-4 px-6 text-sm text-slate-500 whitespace-nowrap">
-                      {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : "—"}
+                      {formatLastLogin(user.lastLoginAt)}
                     </td>
                     <td className="py-4 px-6">
                       <div className="flex items-center justify-end space-x-2">
