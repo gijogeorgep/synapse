@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, useLocation, Link, useNavigate } from "react-router-dom";
+import { getPublicSiteUrl } from "./utils/urlHelper";
 import { useEffect, useState } from "react";
 import { ArrowRight } from "lucide-react";
 import "./App.css";
@@ -172,13 +173,7 @@ function LandingPage() {
 function RouteSeo() {
   const location = useLocation();
   const pathname = location.pathname;
-  const siteUrl = (
-    import.meta.env.VITE_SITE_URL && !import.meta.env.VITE_SITE_URL.includes("your-domain.com")
-      ? import.meta.env.VITE_SITE_URL
-      : typeof window !== "undefined"
-        ? window.location.origin
-        : ""
-  ).replace(/\/$/, "");
+  const siteUrl = getPublicSiteUrl();
 
   if (pathname.startsWith("/student")) {
     return <SEO title=" Student Portal" description="Secure Student portal for Synapse Edu Hub." noindex />;
