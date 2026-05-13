@@ -4,31 +4,36 @@
  * then falls back to stripping 'admin.' from the current origin if applicable.
  */
 export const getPublicSiteUrl = () => {
-  if (typeof window !== "undefined") {
-    const hostname = window.location.hostname;
-    const origin = window.location.origin;
-
-    // If we're on localhost, always stay on localhost
-    if (hostname === "localhost" || hostname === "127.0.0.1") {
-      return origin.replace(/\/$/, "");
-    }
-  }
-
   const envSiteUrl = import.meta.env.VITE_SITE_URL;
-  
+  const isDev = import.meta.env.DEV;
+
+  // 1. If we have a canonical URL from environment, use it by default
   if (envSiteUrl && !envSiteUrl.includes("your-domain.com")) {
+    // Exception: Only fallback to localhost if we are explicitly in DEV mode
+    if (isDev && typeof window !== "undefined") {
+      const hostname = window.location.hostname;
+      if (hostname === "localhost" || hostname === "127.0.0.1") {
+        return window.location.origin.replace(/\/$/, "");
+      }
+    }
     return envSiteUrl.replace(/\/$/, "");
   }
 
+  // 2. Fallback for when VITE_SITE_URL is not defined
   if (typeof window !== "undefined") {
     const origin = window.location.origin;
-    // If we're on an admin subdomain, try to guess the public domain
-    if (origin.includes("admin.synapseeduhub.com")) {
+    const hostname = window.location.hostname;
+
+    // Local development fallback
+    if (hostname === "localhost" || hostname === "127.0.0.1") {
+      return origin.replace(/\/$/, "");
+    }
+
+    // Production admin subdomain fallback
+    if (hostname.includes("admin.synapseeduhub.com") || hostname.startsWith("admin.")) {
       return "https://synapseeduhub.com";
     }
-    if (origin.includes("admin.")) {
-      return origin.replace("admin.", "").replace(/\/$/, "");
-    }
+
     return origin.replace(/\/$/, "");
   }
 
