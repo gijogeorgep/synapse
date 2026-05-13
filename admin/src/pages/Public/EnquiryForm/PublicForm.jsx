@@ -83,7 +83,7 @@ const PublicForm = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#f0ebf8] py-8 px-4 font-sans">
+        <div className="min-h-screen bg-gradient-to-b from-cyan-50 via-slate-50 to-white py-8 px-4 font-sans">
             <div className="max-w-2xl mx-auto space-y-4">
                 {/* Header Card */}
                 <motion.div
@@ -91,7 +91,7 @@ const PublicForm = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className="bg-white rounded-xl shadow-sm overflow-hidden border border-slate-200 relative"
                 >
-                    <div className="h-2.5 bg-[#673ab7]" />
+                    <div className="h-2.5 bg-cyan-600" />
                     <div className="p-6 md:p-8">
                         <h1 className="text-3xl font-normal text-slate-900 mb-2">{form.title}</h1>
                         {form.description && (
@@ -127,14 +127,14 @@ const PublicForm = () => {
                                             <textarea
                                                 required={field.required}
                                                 placeholder={field.placeholder || "Your answer"}
-                                                className="w-full py-2 border-b border-slate-300 focus:border-[#673ab7] focus:border-b-2 outline-none transition-all min-h-[100px] bg-transparent text-slate-900"
+                                                className="w-full py-2 border-b border-slate-300 focus:border-cyan-600 focus:border-b-2 outline-none transition-all min-h-[100px] bg-transparent text-slate-900"
                                                 value={responses[field.label] || ""}
                                                 onChange={(e) => handleInputChange(field.label, e.target.value)}
                                             />
                                         ) : field.type === "select" ? (
                                             <select
                                                 required={field.required}
-                                                className="w-full md:w-1/2 p-3 rounded-lg border border-slate-300 focus:border-[#673ab7] outline-none transition-all bg-white text-slate-900"
+                                                className="w-full md:w-1/2 p-3 rounded-lg border border-slate-300 focus:border-cyan-600 outline-none transition-all bg-white text-slate-900"
                                                 value={responses[field.label] || ""}
                                                 onChange={(e) => handleInputChange(field.label, e.target.value)}
                                             >
@@ -152,7 +152,7 @@ const PublicForm = () => {
                                                                 type="radio"
                                                                 name={field.label}
                                                                 required={field.required}
-                                                                className="w-5 h-5 text-[#673ab7] border-slate-400 focus:ring-0 cursor-pointer"
+                                                                className="w-5 h-5 text-cyan-600 border-slate-400 focus:ring-0 cursor-pointer"
                                                                 checked={responses[field.label] === opt}
                                                                 onChange={() => handleInputChange(field.label, opt)}
                                                             />
@@ -167,7 +167,7 @@ const PublicForm = () => {
                                                     <label key={i} className="flex items-center gap-3 cursor-pointer group">
                                                         <input
                                                             type="checkbox"
-                                                            className="w-5 h-5 text-[#673ab7] border-slate-400 rounded-sm focus:ring-0 cursor-pointer"
+                                                            className="w-5 h-5 text-cyan-600 border-slate-400 rounded-sm focus:ring-0 cursor-pointer"
                                                             checked={(responses[field.label] || []).includes(opt)}
                                                             onChange={(e) => handleCheckboxChange(field.label, opt, e.target.checked)}
                                                         />
@@ -180,7 +180,7 @@ const PublicForm = () => {
                                                 type={field.type}
                                                 required={field.required}
                                                 placeholder={field.placeholder || "Your answer"}
-                                                className="w-full md:w-3/4 py-2 border-b border-slate-300 focus:border-[#673ab7] focus:border-b-2 outline-none transition-all bg-transparent text-slate-900"
+                                                className="w-full md:w-3/4 py-2 border-b border-slate-300 focus:border-cyan-600 focus:border-b-2 outline-none transition-all bg-transparent text-slate-900"
                                                 value={responses[field.label] || ""}
                                                 onChange={(e) => handleInputChange(field.label, e.target.value)}
                                             />
@@ -193,7 +193,7 @@ const PublicForm = () => {
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    className="bg-[#673ab7] hover:bg-[#5e35b1] text-white font-medium px-8 py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-70"
+                                    className="bg-cyan-600 hover:bg-cyan-700 text-white font-medium px-8 py-2.5 rounded shadow-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] disabled:opacity-70"
                                 >
                                     {submitting ? (
                                         <>
@@ -207,7 +207,7 @@ const PublicForm = () => {
                                 <button
                                     type="button"
                                     onClick={() => setResponses({})}
-                                    className="text-[#673ab7] font-medium text-sm hover:bg-slate-100 px-4 py-2 rounded transition-colors"
+                                    className="text-cyan-700 font-medium text-sm hover:bg-cyan-50 px-4 py-2 rounded transition-colors"
                                 >
                                     Clear form
                                 </button>
@@ -220,7 +220,7 @@ const PublicForm = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"
                         >
-                            <div className="h-2.5 bg-[#673ab7]" />
+                            <div className="h-2.5 bg-cyan-600" />
                             <div className="p-8">
                                 <h2 className="text-3xl font-normal text-slate-900 mb-4">{form.title}</h2>
                                 <p className="text-sm text-slate-700 mb-6">
@@ -228,7 +228,7 @@ const PublicForm = () => {
                                 </p>
                                 <button
                                     onClick={() => window.location.reload()}
-                                    className="text-[#673ab7] text-sm hover:underline font-normal"
+                                    className="text-cyan-700 text-sm hover:underline font-normal"
                                 >
                                     Submit another response
                                 </button>
