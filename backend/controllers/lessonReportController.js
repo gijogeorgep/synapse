@@ -150,3 +150,86 @@ export const updateLessonReport = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+// @desc    Get lesson report statistics for admin dashboard
+// @route   GET /api/lesson-reports/stats
+// @access  Private (Admin/SuperAdmin)
+export const getLessonStats = async (req, res) => {
+  try {
+    const stats = await LessonReport.aggregate([
+      {
+        $facet: {
+          byFaculty: [
+            { $group: { _id: "$faculty", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+          ],
+          bySubject: [
+            { $group: { _id: "$subject", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+          ],
+          byClass: [
+            { $group: { _id: "$class", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+          ],
+          byDate: [
+            {
+              $group: {
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { _id: 1 } },
+            { $limit: 30 }, // Last 30 days of activity
+          ],
+        },
+      },
+    ]);
+
+    const result = stats[0];
+
+    // Calculate Time-based stats (Parsing duration strings like "1 Hr 30 Mins")
+    const allReports = await LessonReport.find({}, "faculty duration subject");
+    const timeByFaculty = {};
+    const timeBySubject = {};
+
+    allReports.forEach((report) => {
+      const duration = report.duration || "";
+      let minutes = 0;
+      const hrMatch = duration.match(/(\d+)\s*Hr/);
+      const minMatch = duration.match(/(\d+)\s*Min/);
+      if (hrMatch) minutes += parseInt(hrMatch[1]) * 60;
+      if (minMatch) minutes += parseInt(minMatch[1]);
+
+      if (report.faculty) {
+        if (!timeByFaculty[report.faculty]) timeByFaculty[report.faculty] = 0;
+        timeByFaculty[report.faculty] += minutes;
+      }
+
+      if (report.subject) {
+        if (!timeBySubject[report.subject]) timeBySubject[report.subject] = { total: 0, count: 0 };
+        timeBySubject[report.subject].total += minutes;
+        timeBySubject[report.subject].count += 1;
+      }
+    });
+
+    result.timeByFaculty = Object.keys(timeByFaculty)
+      .map((f) => ({
+        _id: f,
+        minutes: timeByFaculty[f],
+        hours: Math.round((timeByFaculty[f] / 60) * 10) / 10,
+      }))
+      .sort((a, b) => b.minutes - a.minutes);
+
+    result.timeBySubject = Object.keys(timeBySubject)
+      .map((s) => ({
+        _id: s,
+        avgMinutes: Math.round(timeBySubject[s].total / timeBySubject[s].count),
+        totalHours: Math.round((timeBySubject[s].total / 60) * 10) / 10,
+      }))
+      .sort((a, b) => b.totalHours - a.totalHours);
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};

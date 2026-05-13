@@ -74,6 +74,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             {name: "Banner Ads", icon: ImageIcon, path: "/admin/banners" },
             {name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
+            { name: "Enquiry Forms", icon: FileText, path: "/admin/enquiry" },
             { name: "Lesson Tracker", icon: FileSpreadsheet, path: "/admin/lesson-tracker" },
         ],
         superadmin: [
@@ -92,6 +93,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             {name: "Audit Logs", icon: History, path: "/admin/audit-logs" },
             { name: "Payments", icon: CreditCard, path: "/admin/payments" },
             { name: "Settings", icon: Settings, path: "/admin/settings" },
+            { name: "Enquiry Forms", icon: FileText, path: "/admin/enquiry" },
             { name: "Lesson Tracker", icon: FileSpreadsheet, path: "/admin/lesson-tracker" },
         ],
     };

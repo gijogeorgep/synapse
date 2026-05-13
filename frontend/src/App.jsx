@@ -60,6 +60,10 @@ import AdminProgramManagement from "./pages/Admin/content/ProgramManagement";
 import AdminBannerManagement from "./pages/Admin/content/BannerManagement";
 import AdminProfile from "./pages/Admin/profile/AdminProfile";
 import EventManagement from "./pages/Admin/EventManagement";
+import EnquiryFormList from "./pages/Admin/enquiry/EnquiryFormList";
+import EnquiryFormBuilder from "./pages/Admin/enquiry/EnquiryFormBuilder";
+import EnquiryResponses from "./pages/Admin/enquiry/EnquiryResponses";
+import PublicForm from "./pages/Public/EnquiryForm/PublicForm";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
 import ClassroomSelection from "./pages/Student/ClassroomSelection";
@@ -349,6 +353,7 @@ function AppContent() {
             <Route path="/blogs" element={<Blogs />} />
             <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
             <Route path="/programs/:id" element={<ProgramDetail />} />
+            <Route path="/form/:slug" element={<PublicForm />} />
 
             {/* General Protected Routes */}
             <Route element={<ProtectedRoute />}>
@@ -401,6 +406,9 @@ function AppContent() {
                 <Route path="/admin/blogs" element={<AdminBlogManagement />} />
                 <Route path="/admin/banners" element={<AdminBannerManagement />} />
                 <Route path="/admin/events" element={<EventManagement />} />
+                <Route path="/admin/enquiry" element={<EnquiryFormList />} />
+                <Route path="/admin/enquiry/create" element={<EnquiryFormBuilder />} />
+                <Route path="/admin/enquiry/responses/:id" element={<EnquiryResponses />} />
                 <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
                   <Route index element={<AdminAuditLogs />} />
                 </Route>

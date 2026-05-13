@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Users, CreditCard, ShieldCheck, GraduationCap, BookOpen } from "lucide-react";
 import { getOverallStats, getClassroomReports } from "../../../api/services";
 import { useAuth } from "../../../context/AuthContext";
+import LessonAnalytics from "./LessonAnalytics";
 
 const formatCurrency = (amount) =>
     new Intl.NumberFormat("en-IN", {
@@ -162,6 +163,8 @@ const AdminDashboard = () => {
                     )}
                 </div>
             </div>
+
+            <LessonAnalytics />
         </div>
     );
 };

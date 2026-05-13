@@ -18,6 +18,7 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { useAuth } from '../../../context/AuthContext';
+import LessonAnalytics from '../dashboard/LessonAnalytics';
 
 const Reports = () => {
     const { user } = useAuth();
@@ -597,6 +598,7 @@ const Reports = () => {
                             </div>
                         </div>
                     </div>
+                    <LessonAnalytics />
                 </div>
             )}
 

@@ -1,23 +1,34 @@
-import { createContext, useState, useEffect, useContext, useCallback } from "react";
+import React from "react";
 import { loginUser, registerUser } from "../api/authService";
 import { toast } from "react-hot-toast";
 
-const AuthContext = createContext();
+const AuthContext = React.createContext();
+
+console.log("[AUTH_DEBUG] Loading AuthContext.jsx module");
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(() => {
-        try {
-            const savedUser = localStorage.getItem("userInfo");
-            return savedUser ? JSON.parse(savedUser) : null;
-        } catch (error) {
-            console.error("[AUTH_CONTEXT] Error parsing saved user info:", error);
-            return null;
-        }
-    });
-    const [loading, setLoading] = useState(true);
-    const [sessionInvalidated, setSessionInvalidated] = useState(false);
+    console.log("[AUTH_DEBUG] Rendering AuthProvider");
+    const [user, setUser] = React.useState(null);
+    const [loading, setLoading] = React.useState(true);
 
-    const logout = useCallback(async ({ invalidated = false } = {}) => {
+    React.useEffect(() => {
+        const initAuth = () => {
+            try {
+                const savedUser = localStorage.getItem("userInfo");
+                if (savedUser) {
+                    setUser(JSON.parse(savedUser));
+                }
+            } catch (error) {
+                console.error("[AUTH_CONTEXT] Error parsing saved user info:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        initAuth();
+    }, []);
+    const [sessionInvalidated, setSessionInvalidated] = React.useState(false);
+
+    const logout = React.useCallback(async ({ invalidated = false } = {}) => {
         // Call backend to clear sessionToken from DB (best effort)
         if (user?.token && !invalidated) {
             try {
@@ -130,9 +141,7 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    useEffect(() => {
-        setLoading(false);
-
+    React.useEffect(() => {
         // Listen for "Session Invalidated" from API client (Single Active Session)
         const handleSessionInvalidated = (e) => {
             console.warn("[AUTH_CONTEXT] Session invalidated detected from API client.");
@@ -162,4 +171,4 @@ export const AuthProvider = ({ children }) => {
     );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = () => React.useContext(AuthContext);

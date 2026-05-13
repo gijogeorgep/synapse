@@ -5,8 +5,11 @@ import {
   getLessonReports,
   deleteLessonReport,
   updateLessonReport,
+  getLessonStats,
 } from "../controllers/lessonReportController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
+
+router.get("/stats", protect, authorize("admin", "superadmin"), getLessonStats);
 
 router
   .route("/")

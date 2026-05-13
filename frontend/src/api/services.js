@@ -233,3 +233,24 @@ export const getEvents = () => apiClient("/events");
 export const createEvent = (eventData) => apiClient("/events", { method: "POST", body: eventData });
 export const updateEvent = (id, eventData) => apiClient(`/events/${id}`, { method: "PUT", body: eventData });
 export const deleteEvent = (id) => apiClient(`/events/${id}`, { method: "DELETE" });
+
+// Lesson Report Services
+export const getLessonStats = () => apiClient("/lesson-reports/stats");
+
+// Enquiry Form Services
+export const getEnquiryForms = () => apiClient("/enquiry/forms");
+export const getEnquiryFormById = (id) => apiClient(`/enquiry/forms/${id}`);
+export const createEnquiryForm = (formData) =>
+  apiClient("/enquiry/forms", { method: "POST", body: formData });
+export const updateEnquiryForm = (id, formData) =>
+  apiClient(`/enquiry/forms/${id}`, { method: "PATCH", body: formData });
+export const deleteEnquiryForm = (id) =>
+  apiClient(`/enquiry/forms/${id}`, { method: "DELETE" });
+export const getEnquiryResponses = (id) =>
+  apiClient(`/enquiry/forms/${id}/responses`);
+export const getPublicForm = (slug) => apiClient(`/enquiry/public/${slug}`);
+export const submitEnquiryResponse = (slug, responseData) =>
+  apiClient(`/enquiry/public/${slug}/submit`, {
+    method: "POST",
+    body: { responses: responseData },
+  });
