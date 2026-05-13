@@ -11,7 +11,7 @@ import SEO from "./components/Shared/SEO";
 import DashboardLayout from "./components/Layout/DashboardLayout";
 import SplashScreen from "./components/Shared/SplashScreen";
 
-// Landing Page Sections (Still in root components for now, can move later)
+// Landing Page Sections
 import Hero from "./components/Hero";
 import Program from "./components/Program";
 import About from "./components/About";
@@ -43,27 +43,6 @@ import TeacherAnalytics from "./pages/Teacher/Analytics";
 import TeacherMaterials from "./pages/Teacher/Materials";
 import LessonTracker from "./pages/Teacher/LessonTracker";
 
-import AdminDashboard from "./pages/Admin/dashboard/Dashboard";
-import AdminUserManagement from "./pages/Admin/users/UserManagement";
-import AdminClassroomManagement from "./pages/Admin/classrooms/ClassroomManagement";
-import AdminClassroomDetails from "./pages/Admin/classrooms/ClassroomDetails";
-import AdminCreateUser from "./pages/Admin/users/CreateUser";
-import AdminAuth from "./pages/Admin/auth/AdminAuth";
-import AdminAnnouncements from "./pages/Admin/content/Announcements";
-import AdminExams from "./pages/Admin/exams/ExamsManagement";
-import AdminPromotions from "./pages/Admin/promotions/Promotions";
-import AdminResources from "./pages/Admin/content/LibraryManagement";
-import AdminSettings from "./pages/Admin/settings/Settings";
-import AdminAuditLogs from "./pages/Admin/reports/AuditLogs";
-import AdminReports from "./pages/Admin/reports/Reports";
-import AdminBlogManagement from "./pages/Admin/content/BlogManagement";
-import AdminProgramManagement from "./pages/Admin/content/ProgramManagement";
-import AdminBannerManagement from "./pages/Admin/content/BannerManagement";
-import AdminProfile from "./pages/Admin/profile/AdminProfile";
-import EventManagement from "./pages/Admin/EventManagement";
-import EnquiryFormList from "./pages/Admin/enquiry/EnquiryFormList";
-import EnquiryFormBuilder from "./pages/Admin/enquiry/EnquiryFormBuilder";
-import EnquiryResponses from "./pages/Admin/enquiry/EnquiryResponses";
 import PublicForm from "./pages/Public/EnquiryForm/PublicForm";
 import StudentSettings from "./pages/Student/Settings";
 import StudentClassroom from "./pages/Student/Classroom";
@@ -86,9 +65,7 @@ function LandingPage() {
   useEffect(() => {
     if (user) {
       const role = user.role;
-      if (role === "admin" || role === "superadmin") {
-        navigate("/admin/dashboard");
-      } else if (role === "teacher") {
+      if (role === "teacher") {
         navigate("/teacher/dashboard");
       } else if (role === "student") {
         navigate("/student/dashboard");
@@ -99,7 +76,6 @@ function LandingPage() {
   useEffect(() => {
     const fetchBannersAndSettings = async () => {
       try {
-        // Fetch settings first
         const settings = await getSettings();
         setShowBanners(settings.showBanners);
 
@@ -183,10 +159,6 @@ function RouteSeo() {
     return <SEO title="Secure Portal | Teacher Portal" description="Secure Teacher portal for Synapse Edu Hub." noindex />;
   }
 
-  if (pathname.startsWith("/admin")) {
-    return <SEO title=" Admin Portal" description="Secure Admin portal for Synapse Edu Hub." noindex />;
-  }
-
   if (pathname === "/notifications") {
     return <SEO title=" Notifications" description="View your secure notifications." noindex />;
   }
@@ -267,11 +239,6 @@ function RouteSeo() {
       description: "Synapse Edu Hub is temporarily under maintenance. Please check back shortly.",
       noindex: true,
     },
-    "/admin-portal-auth": {
-      title: "Admin Portal Login | Synapse Edu Hub",
-      description: "Secure admin login for Synapse Edu Hub.",
-      noindex: true,
-    },
   };
 
   const pageSeo = seoByPath[pathname] ?? {
@@ -285,15 +252,10 @@ function RouteSeo() {
 
 function AppContent() {
   const location = useLocation();
-  const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
-  const isHostAdmin = hostname.includes('admin.synapseeduhub.com') || hostname.startsWith('admin.');
 
-  const isAdminAuth = location.pathname === "/admin-portal-auth" || (isHostAdmin && location.pathname === "/");
-  const isAdminRoute = location.pathname.startsWith("/admin");
   const isDashboardRoute =
     location.pathname.startsWith("/student") ||
-    location.pathname.startsWith("/teacher") ||
-    isAdminRoute;
+    location.pathname.startsWith("/teacher");
 
   // --- Maintenance Mode ---
   const [maintenanceMode, setMaintenanceMode] = useState(false);
@@ -303,16 +265,14 @@ function AppContent() {
     getSettings()
       .then((s) => {
         const mode = !!s?.maintenanceMode;
-        console.log('[MAINTENANCE] maintenanceMode from API:', mode);
         setMaintenanceMode(mode);
       })
       .catch((err) => {
         console.error('[MAINTENANCE] Failed to fetch settings:', err);
       })
       .finally(() => setSettingsLoaded(true));
-  }, []); // run once on mount
+  }, []);
 
-  // Check if logged-in user is admin/superadmin (bypass maintenance)
   const userInfo = (() => {
     try { return JSON.parse(localStorage.getItem("userInfo")) || {}; }
     catch { return {}; }
@@ -320,12 +280,12 @@ function AppContent() {
   const isAdminUser = userInfo?.role === "admin" || userInfo?.role === "superadmin";
 
   // Show maintenance page for non-admins when maintenance mode is on
-  const showMaintenance = settingsLoaded && maintenanceMode && !isAdminUser && !isAdminRoute && !isAdminAuth;
+  const showMaintenance = settingsLoaded && maintenanceMode && !isAdminUser;
 
-  // Hide nav/footer/whatsapp on admin auth, dashboards, or when maintenance is active
-  const showFloatingWhatsApp = !isAdminAuth && !isDashboardRoute && !showMaintenance;
-  const showFooter = !isAdminAuth && !isDashboardRoute && !showMaintenance;
-  const showNavbar = !isAdminAuth && !isDashboardRoute && !showMaintenance;
+  // Hide nav/footer/whatsapp on dashboards or when maintenance is active
+  const showFloatingWhatsApp = !isDashboardRoute && !showMaintenance;
+  const showFooter = !isDashboardRoute && !showMaintenance;
+  const showNavbar = !isDashboardRoute && !showMaintenance;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50">
@@ -337,8 +297,7 @@ function AppContent() {
           <MaintenancePage />
         ) : (
           <Routes>
-            <Route path="/" element={isHostAdmin ? <AdminAuth /> : <LandingPage />} />
-            <Route path="/admin-portal-auth" element={<AdminAuth />} />
+            <Route path="/" element={<LandingPage />} />
 
             {/* Public Pages */}
             <Route path="/about" element={<AboutPage />} />
@@ -381,36 +340,6 @@ function AppContent() {
                 <Route path="/teacher/materials" element={<TeacherMaterials />} />
                 <Route path="/teacher/lesson-tracker" element={<LessonTracker />} />
                 <Route path="/teacher/settings" element={<TeacherSettings />} />
-              </Route>
-            </Route>
-
-            {/* Admin Routes */}
-            <Route element={<ProtectedRoute allowedRoles={["admin", "superadmin"]} />}>
-              <Route element={<DashboardLayout />}>
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/users" element={<AdminUserManagement />} />
-                <Route path="/admin/users/create" element={<AdminCreateUser />} />
-                <Route path="/admin/classrooms" element={<AdminClassroomManagement />} />
-                <Route path="/admin/classrooms/:id" element={<AdminClassroomDetails />} />
-                <Route path="/admin/announcements" element={<AdminAnnouncements />} />
-                <Route path="/admin/exams" element={<AdminExams />} />
-                <Route path="/admin/reports" element={<AdminReports />} />
-                <Route path="/admin/promotions" element={<AdminPromotions />} />
-                <Route path="/admin/resources" element={<AdminResources />} />
-                <Route path="/admin/programs" element={<AdminProgramManagement />} />
-                <Route path="/admin/blogs" element={<AdminBlogManagement />} />
-                <Route path="/admin/banners" element={<AdminBannerManagement />} />
-                <Route path="/admin/events" element={<EventManagement />} />
-                <Route path="/admin/enquiry" element={<EnquiryFormList />} />
-                <Route path="/admin/enquiry/create" element={<EnquiryFormBuilder />} />
-                <Route path="/admin/enquiry/responses/:id" element={<EnquiryResponses />} />
-                <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
-                  <Route index element={<AdminAuditLogs />} />
-                </Route>
-                <Route path="/admin/payments" element={<div className="p-8"><h1>Payment Settings</h1></div>} />
-                <Route path="/admin/lesson-tracker" element={<LessonTracker />} />
-                <Route path="/admin/settings" element={<AdminSettings />} />
-                <Route path="/admin/profile" element={<AdminProfile />} />
               </Route>
             </Route>
 

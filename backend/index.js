@@ -30,10 +30,40 @@ const app = express();
 connectDB();
 
 // Middleware
+const allowedOrigins = [
+    "https://synapseeduhub.com",
+    "https://www.synapseeduhub.com",
+    "https://admin.synapseeduhub.com",
+    "http://localhost:5173",  // frontend dev
+    "http://localhost:5174",  // admin dev
+    "http://localhost:5175",  // extra Vite dev port
+    "http://localhost:3000",
+];
+
 app.use(cors({
-    origin: process.env.FRONTEND_URL || "*",
+    origin: function (origin, callback) {
+        // Allow requests with no origin (mobile apps, curl, etc)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            return callback(null, true);
+        }
+        // Dev convenience: allow localhost/127.0.0.1 on any port when not in production
+        if (process.env.NODE_ENV !== "production") {
+            try {
+                const url = new URL(origin);
+                const isLocalhost = url.hostname === "localhost" || url.hostname === "127.0.0.1";
+                if (url.protocol === "http:" && isLocalhost) return callback(null, true);
+            } catch {
+                // ignore invalid Origin values and fall through to deny
+            }
+        }
+        // Fallback: allow all if FRONTEND_URL env is "*"
+        if (process.env.FRONTEND_URL === "*") return callback(null, true);
+        return callback(new Error(`CORS: Origin ${origin} not allowed`), false);
+    },
     credentials: true,
 }));
+
 app.use(express.json());
 
 // Routes

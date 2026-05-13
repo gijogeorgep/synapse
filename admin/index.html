@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" id="favicon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
+  <link rel="apple-touch-icon" id="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="mask-icon" href="/app-icon-192.png" color="#06b6d4" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description"
+    content="India's most focused learning ecosystem. Synapse Edu Hub & Synapse Connect provide expert mentors, mock tests, and study materials for academic success." />
+  <meta name="keywords"
+    content="Synapse Edu Hub, Synapse Connect, PRIME ONE tuition, CLUSTER coaching, DEEP ROOTS program, mock tests NEET, JEE mock assessments, PSC test series, India's most focused learning ecosystem" />
+  <meta name="author" content="Synapse Edu Hub" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <meta name="theme-color" content="#06b6d4" />
+  <link rel="manifest" href="/manifest.json?v=4" />
+
+
+  <link rel="apple-touch-icon" href="/app-icon-192.png" id="apple-touch-icon" />
+  <script>
+    // Admin portal — always use admin assets
+    document.addEventListener('DOMContentLoaded', function() {
+      const manifest = document.querySelector('link[rel="manifest"]');
+      if (manifest) manifest.setAttribute('href', '/admin-manifest.json');
+      const appleIcon = document.getElementById('apple-touch-icon');
+      if (appleIcon) appleIcon.setAttribute('href', '/y-admin-192.png');
+      const favicon = document.getElementById('favicon');
+      if (favicon) favicon.setAttribute('href', '/y-admin-192.png');
+    });
+  </script>
+
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Synapse Connect" />
+
+
+  <meta property="og:site_name" content="Synapse Edu Hub" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Synapse Edu Hub | Synapse Connect | India's Most Focused Learning Ecosystem" />
+  <meta property="og:description"
+    content="India's most focused learning ecosystem. Synapse Edu Hub & Synapse Connect provide expert mentors, mock tests, and study materials." />
+  <meta property="og:image" content="/app-icon-512.png" />
+  <meta property="og:locale" content="en_IN" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Synapse Edu Hub | Synapse Connect | India's Most Focused Learning Ecosystem" />
+  <meta name="twitter:description"
+    content="India's most focused learning ecosystem. Synapse Edu Hub & Synapse Connect provide expert mentors, mock tests, and study materials." />
+  <meta name="twitter:image" content="/app-icon-512.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap" rel="stylesheet" />
+  <link rel="canonical" href="https://synapseeduhub.com" />
+  <title>Synapse Edu Hub | Synapse Connect | India's Most Focused Learning Ecosystem</title>
+</head>
+
+<body>
+  <div id="root">
+    <!-- Initial Splash Screen (Static) -->
+    <div id="initial-splash"
+      style="position: fixed; inset: 0; background: white; display: flex; align-items: center; justify-content: center; z-index: 10000; font-family: 'Outfit', sans-serif;">
+      <div style="display: flex; flex-direction: column; align-items: center;">
+        <img id="splash-logo" src="/y-admin-512.png" alt="Synapse Admin"
+          style="height: 120px; width: auto; margin-bottom: 20px; animation: pulse 2s infinite ease-in-out;" />
+        <div
+          style="width: 120px; height: 2px; background: #f1f5f9; border-radius: 2px; overflow: hidden; position: relative;">
+          <div
+            style="position: absolute; inset: 0; background: linear-gradient(90deg, transparent, #06b6d4, transparent); width: 100%; animation: initial-progress 1.5s infinite linear;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <style>
+      @keyframes pulse {
+
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+
+        50% {
+          transform: scale(1.05);
+          opacity: 0.8;
+        }
+      }
+
+      @keyframes initial-progress {
+        0% {
+          transform: translateX(-100%);
+        }
+
+        100% {
+          transform: translateX(100%);
+        }
+      }
+    </style>
+  </div>
+
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
+</html>

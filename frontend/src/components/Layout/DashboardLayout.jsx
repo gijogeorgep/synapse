@@ -67,7 +67,7 @@ const DashboardLayout = () => {
                             )}
                         </Link>
                         <Link 
-                            to="/admin/profile"
+                            to={user.role === 'teacher' ? '/teacher/settings' : user.role === 'student' ? '/student/settings' : '/settings'}
                             className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/20 backdrop-blur-lg border border-white/30 shadow-[0_8px_32px_0_rgba(31,38,135,0.07)] transition-all hover:bg-white/40 hover:scale-[1.02] active:scale-95 cursor-pointer group/profile"
                         >
                             <div className="flex flex-col items-end hidden sm:flex">

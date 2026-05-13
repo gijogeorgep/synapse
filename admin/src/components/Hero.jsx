@@ -1,0 +1,220 @@
+import React, { useState } from "react";
+import {
+  ArrowRight,
+  PlayCircle,
+  Star,
+  CheckCircle,
+  Lightbulb,
+} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import heroimg from "../assets/heroimg.png";
+import sreeNandanaReview from "../assets/sree_nandana.jpeg";
+import varadaReview from "../assets/varada.jpeg";
+import ayshaReview from "../assets/aysha.jpeg";
+import fidhaReview from "../assets/fidha.jpeg";
+import ashinReview from "../assets/ashin.jpeg";
+import AuthModal from "./Shared/AuthModal";
+import useGsapReveal from "../hooks/useGsapReveal";
+import { useAuth } from "../context/AuthContext";
+import { scrollToHomeSection } from "../utils/scrollToHomeSection";
+
+const featuredReviewers = [
+  { name: "Sree Nandana", image: sreeNandanaReview },
+  { name: "Varada", image: varadaReview },
+  { name: "Aysha", image: ayshaReview },
+  { name: "Fidha", image: fidhaReview },
+  { name: "Ashin", image: ashinReview },
+];
+
+const Hero = () => {
+  const scopeRef = useGsapReveal();
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const { user, loading } = useAuth();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState("register");
+
+  const dashboardPath =
+    user?.role === "admin" || user?.role === "superadmin"
+      ? "/admin/dashboard"
+      : user?.role
+        ? `/${user.role}/dashboard`
+        : "/";
+
+  const handlePrimaryAction = () => {
+    if (user) {
+      navigate(dashboardPath);
+      return;
+    }
+
+    setAuthMode("register");
+    setIsAuthModalOpen(true);
+  };
+
+  return (
+    <>
+      <section
+        ref={scopeRef}
+        className="relative w-full bg-slate-50 pt-4 sm:pt-8 md:pt-12 pb-2 overflow-hidden"
+      >
+        {/* Background Decorative Elements - NOW CLIPPED BY overflow-hidden */}
+        <div className="absolute top-[0%] left-[-10%] w-[60%] h-[60%] bg-cyan-500 rounded-full mix-blend-multiply filter blur-[80px] md:blur-[120px] opacity-20 animate-pulse duration-[3000ms] pointer-events-none"></div>
+        <div className="absolute bottom-[0%] right-[-10%] w-[60%] h-[60%] bg-sky-400 rounded-full mix-blend-multiply filter blur-[80px] md:blur-[120px] opacity-20 animate-pulse duration-[4000ms] pointer-events-none"></div>
+
+        {/* Blue Container Wrapper */}
+        <div className="relative w-[94%] sm:w-[96%] max-w-[1400px] mx-auto bg-gradient-to-br from-cyan-900 via-cyan-800 to-sky-700 rounded-[2rem] sm:rounded-[2.5rem] pt-10 sm:pt-16 pb-0 px-6 sm:px-10 lg:px-12 xl:px-20 text-white overflow-hidden shadow-[0_20px_50px_rgb(6,182,212,0.2)]">
+          <div className="flex flex-col lg:flex-row items-center lg:items-end justify-between gap-10 lg:gap-16 relative z-10">
+            {/* Left Content Area */}
+            <div
+              data-gsap="reveal"
+              data-y="28"
+              className="w-full lg:w-[55%] flex flex-col items-center lg:items-start text-center lg:text-left space-y-6 sm:space-y-8 z-10 pb-6 sm:pb-16 lg:pb-24"
+            >
+              <div className="space-y-4 sm:space-y-5 w-full">
+                <h1 className="text-3xl sm:text-5xl lg:text-6xl xl:text-[4rem] font-extrabold text-white leading-[1.2] lg:leading-[1.15] tracking-tight drop-shadow-sm">
+                  <span className="block mb-2">Synapse Edu Hub</span>
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-sky-200">
+                    India's Most Focused Learning Ecosystem
+                  </span>
+                </h1>
+                <p className="text-base sm:text-lg md:text-xl text-cyan-100 font-normal max-w-xl leading-relaxed mt-2 sm:mt-4 mx-auto lg:mx-0">
+                  Synapse Edu Hub is India's most focused learning ecosystem. We specialize in programs like
+                  <span className="font-bold text-white"> PRIME ONE, CLUSTER, and DEEP ROOTS</span>,
+                  and provide expert mock tests and assessments for
+                  <span className="font-bold text-white"> NEET, JEE, and PSC.</span>
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto mt-4 sm:mt-6">
+                <button
+                  type="button"
+                  onClick={handlePrimaryAction}
+                  disabled={loading}
+                  className="group w-full sm:w-auto px-6 py-3.5 sm:px-8 sm:py-4 bg-white text-cyan-900 rounded-xl font-bold text-base sm:text-lg shadow-lg hover:shadow-cyan-400/20 hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {user ? "Go to Dashboard" : "Start Learning Now"}
+                  <ArrowRight
+                    size={20}
+                    className="group-hover:translate-x-1 transition-transform"
+                  />
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    scrollToHomeSection("programs", navigate, pathname)
+                  }
+                  className="group w-full sm:w-auto px-6 py-3.5 sm:px-8 sm:py-4 bg-cyan-950/30 text-white border border-cyan-400/30 rounded-xl font-bold text-base sm:text-lg hover:bg-cyan-900/50 backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <PlayCircle
+                    size={22}
+                    className="text-cyan-300 group-hover:scale-110 transition-transform"
+                  />
+                  Explore Courses
+                </button>
+              </div>
+
+              {/* Social Proof */}
+              <div className="pt-6 flex flex-col sm:flex-row items-center gap-4 sm:gap-6 border-t border-cyan-400/20 w-full max-w-xl">
+                <div className="flex -space-x-3">
+                  {featuredReviewers.map((student) => (
+                    <div
+                      key={student.name}
+                      className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border-2 border-cyan-800 bg-cyan-600 overflow-hidden shadow-lg"
+                    >
+                      <img
+                        src={student.image}
+                        alt={student.name}
+                        className="h-full w-full object-cover"
+                      />
+                    </div>
+                  ))}
+                  <div className="min-w-[44px] h-8 sm:h-10 px-2 sm:px-3 rounded-full border-2 border-cyan-800 bg-cyan-100 flex items-center justify-center text-[10px] sm:text-xs font-bold text-cyan-900">
+                    4.9★
+                  </div>
+                </div>
+                <div className="text-center sm:text-left">
+                  <div className="flex justify-center sm:justify-start text-amber-300">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={14} fill="currentColor" />
+                    ))}
+                  </div>
+                  <p className="text-[10px] sm:text-sm text-cyan-100 font-medium mt-0.5">
+                    Student & Teacher reviews from across India
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      scrollToHomeSection("reviews", navigate, pathname)
+                    }
+                    className="mt-2 inline-flex items-center gap-2 text-[11px] sm:text-sm font-semibold text-white/95 hover:text-cyan-200 transition-colors"
+                  >
+                    See testimonials
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Image Area */}
+            <div
+              data-gsap="reveal"
+              data-y="40"
+              data-scale="0.97"
+              data-delay="0.12"
+              className="w-full lg:w-[45%] relative flex justify-center lg:justify-end mt-6 sm:mt-8 lg:mt-0"
+            >
+              <div className="relative w-full max-w-[18rem] sm:max-w-[26rem] md:max-w-[34rem] lg:max-w-2xl xl:max-w-4xl">
+                {/* Image specific background blob */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-gradient-to-tr from-cyan-400 to-sky-300 rounded-full blur-[80px] opacity-30 animate-pulse duration-[5000ms] pointer-events-none"></div>
+
+                <div className="relative z-10 p-0 flex items-end justify-center">
+                  <img
+                    src={heroimg}
+                    alt="Synapse Edu Hub - India's Most Focused Learning Ecosystem"
+                    className="w-full h-auto relative z-10 drop-shadow-2xl animate-float scale-110 sm:scale-100 lg:scale-[1.15] origin-bottom hover:scale-105 lg:hover:scale-[1.20] transition-transform duration-700"
+                  />
+
+                  {/* Floating Stats Cards */}
+                  <div className="absolute top-10 left-[-20px] sm:left-[-40px] bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl shadow-xl hidden sm:flex items-center gap-4 hover:scale-105 transition-transform cursor-pointer z-20">
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                      <CheckCircle size={24} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-cyan-100 font-semibold uppercase tracking-wider">
+                        Pass Rate
+                      </p>
+                      <p className="text-lg font-bold text-white leading-tight">
+                        100%
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="absolute bottom-16 right-[-20px] sm:right-[10px] bg-white/10 backdrop-blur-md border border-white/20 p-4 rounded-2xl shadow-xl hidden sm:flex items-center gap-4 hover:scale-105 transition-transform cursor-pointer z-20">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white shadow-lg">
+                      <Lightbulb size={24} />
+                    </div>
+                    <div>
+                      <p className="text-xs text-cyan-100 font-semibold uppercase tracking-wider">
+                        Expertise
+                      </p>
+                      <p className="text-lg font-bold text-white leading-tight">
+                        Top Mentors
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        initialMode={authMode}
+      />
+    </>
+  );
+};
+
+export default Hero;

@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /admin/
+Disallow: /student
+Disallow: /student/
+Disallow: /teacher
+Disallow: /teacher/
+Disallow: /notifications
+Disallow: /admin-portal-auth
+Disallow: /maintenance
+
+Sitemap: https://synapseeduhub.com/sitemap.xml
