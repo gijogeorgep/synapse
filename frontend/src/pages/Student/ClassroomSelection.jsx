@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GraduationCap, CheckCircle2, ArrowRight, Loader2, CreditCard } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
-import { getPublicClassrooms, enrollInClassroom } from "../../api/services";
+import { getPublicClassrooms, enrollInClassroom, createRazorpayOrder, verifyRazorpayPayment } from "../../api/services";
 
 const ClassroomSelection = () => {
     const { user, logout } = useAuth();
@@ -29,28 +29,83 @@ const ClassroomSelection = () => {
         fetchPublicClassrooms();
     }, []);
 
-    const handleEnroll = async (classroomId) => {
+    const handleEnroll = async (classroom) => {
+        const classroomId = classroom._id;
+        const price = classroom.price || 0;
+
         // Phone Number Validation - Must be 10 digits to enroll
         const phoneRegex = /^\d{10}$/;
         if (!user?.phoneNumber || !phoneRegex.test(user.phoneNumber.replace(/\s+/g, ""))) {
             setError("A valid 10-digit phone number is required to enroll. Please update your profile in settings.");
-            // Scroll to error
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
         }
 
         setEnrolling(classroomId);
         setError("");
+
         try {
-            await enrollInClassroom(classroomId);
-            
-            // Success! Update local storage or user context if needed
-            toast.success("Enrolled successfully!");
-            // For now, let's just navigate to dashboard
-            navigate("/student/dashboard");
+            // If price is 0, enroll directly
+            if (price <= 0) {
+                await enrollInClassroom(classroomId);
+                toast.success("Enrolled successfully!");
+                navigate("/student/dashboard");
+                return;
+            }
+
+            // Payment Flow for Paid Classrooms
+            const order = await createRazorpayOrder(classroomId);
+
+            const options = {
+                key: import.meta.env.VITE_RAZORPAY_KEY_ID,
+                amount: order.amount,
+                currency: order.currency,
+                name: "Synapse Edu Hub",
+                description: `Enrollment for ${classroom.name}`,
+                image: window.location.origin + "/synapse_logo.png",
+                order_id: order.id,
+                handler: async function (response) {
+                    try {
+                        setEnrolling(classroomId);
+                        const verifyRes = await verifyRazorpayPayment({
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_signature: response.razorpay_signature,
+                            classroomId: classroomId
+                        });
+
+                        if (verifyRes.success) {
+                            toast.success("Payment successful! Enrolled in classroom.");
+                            navigate("/student/dashboard");
+                        } else {
+                            setError("Payment verification failed. Please contact support.");
+                        }
+                    } catch (err) {
+                        setError(err.message || "Verification failed");
+                    } finally {
+                        setEnrolling(null);
+                    }
+                },
+                prefill: {
+                    name: user?.name,
+                    email: user?.email,
+                    contact: user?.phoneNumber
+                },
+                theme: {
+                    color: "#06b6d4"
+                },
+                modal: {
+                    ondismiss: function () {
+                        setEnrolling(null);
+                    }
+                }
+            };
+
+            const rzp = new window.Razorpay(options);
+            rzp.open();
+
         } catch (err) {
             setError(err.response?.data?.message || err.message || "Enrollment failed. Please try again.");
-        } finally {
             setEnrolling(null);
         }
     };
@@ -141,7 +196,7 @@ const ClassroomSelection = () => {
                             </div>
 
                             <button
-                                onClick={() => handleEnroll(cls._id)}
+                                onClick={() => handleEnroll(cls)}
                                 disabled={enrolling !== null}
                                 className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 ${
                                     enrolling === cls._id 

@@ -254,3 +254,9 @@ export const submitEnquiryResponse = (slug, responseData) =>
     method: "POST",
     body: { responses: responseData },
   });
+
+// Payment Services
+export const createRazorpayOrder = (classroomId) =>
+  apiClient("/payments/create-order", { method: "POST", body: { classroomId } });
+export const verifyRazorpayPayment = (paymentData) =>
+  apiClient("/payments/verify", { method: "POST", body: paymentData });
