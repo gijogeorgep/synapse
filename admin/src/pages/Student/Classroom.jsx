@@ -567,19 +567,72 @@ const StudentClassroom = () => {
 
             <div className="flex-1 bg-slate-50 relative overflow-hidden">
               {(() => {
-                const url = selectedMaterial.fileUrl || selectedMaterial.url || "";
-                const urlExt = (url.split('?')[0].split('.').pop() || '').toLowerCase();
+                const rawUrl = selectedMaterial.fileUrl || selectedMaterial.url || "";
+                const token = user?.token || "";
+
+                const normalizeUrl = (inputUrl) => {
+                  if (!inputUrl) return "";
+                  if (/^(blob:|data:)/i.test(inputUrl)) return inputUrl;
+                  if (inputUrl.startsWith("/")) return `${getApiUrl()}${inputUrl}`;
+                  return inputUrl;
+                };
+
+                const addTokenIfMissing = (inputUrl) => {
+                  const normalized = normalizeUrl(inputUrl);
+                  if (!normalized || !token) return normalized;
+                  if (normalized.includes("token=")) return normalized;
+                  if (!normalized.startsWith(getApiUrl())) return normalized;
+                  return `${normalized}${normalized.includes("?") ? "&" : "?"}token=${encodeURIComponent(token)}`;
+                };
+
+                const inferExt = (inputUrl, title) => {
+                  const cleaned = (inputUrl || "").split("?")[0];
+                  const fromUrl = (cleaned.split(".").pop() || "").toLowerCase();
+                  if (fromUrl && fromUrl !== cleaned.toLowerCase()) return fromUrl;
+                  const t = (title || "").split("?")[0];
+                  const fromTitle = (t.split(".").pop() || "").toLowerCase();
+                  return fromTitle && fromTitle !== t.toLowerCase() ? fromTitle : "";
+                };
+
+                const lectureNoteId = selectedMaterial?._id || selectedMaterial?.id || "";
+                const lectureProxyUrl = (selectedMaterial.isLecture && classroom?._id && lectureNoteId)
+                  ? `${getApiUrl()}/classrooms/view-note/${classroom?._id}/${lectureNoteId}?token=${encodeURIComponent(token)}`
+                  : "";
+                const lecturePreviewPdfUrl = (selectedMaterial.isLecture && classroom?._id && lectureNoteId)
+                  ? `${getApiUrl()}/classrooms/view-note/${classroom?._id}/${lectureNoteId}/preview.pdf?token=${encodeURIComponent(token)}`
+                  : "";
+
+                const publicUrl = normalizeUrl(rawUrl);
+                const authedApiUrl = addTokenIfMissing(rawUrl);
+
+                // Prefer public URL for type detection + Office viewers (Google can't fetch localhost/private URLs)
+                const urlExt = inferExt(publicUrl, selectedMaterial.title) || inferExt(lectureProxyUrl, selectedMaterial.title);
+
+                // For lecture notes, keep proxy for in-app previews, but keep the original public URL for new tab/download
+                const url = selectedMaterial.isLecture ? (lectureProxyUrl || publicUrl) : (authedApiUrl || publicUrl);
+
+                if (selectedMaterial.isLecture && lecturePreviewPdfUrl) {
+                  return (
+                    <div className="w-full h-full bg-white relative">
+                      <iframe
+                        src={lecturePreviewPdfUrl}
+                        title={selectedMaterial.title}
+                        style={{ width: '100%', height: '100%', border: 'none' }}
+                      />
+                    </div>
+                  );
+                }
 
                 // Enhanced detection logic
                 const isPdf = urlExt === 'pdf' ||
                   (selectedMaterial.fileType || "").toLowerCase() === 'pdf' ||
                   (selectedMaterial.isPdf) ||
-                  url.toLowerCase().includes('.pdf');
+                  (url || rawUrl).toLowerCase().includes('.pdf');
 
                 const isImg = ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(urlExt) ||
                   ['image/jpeg', 'image/png', 'image/jpg'].includes(selectedMaterial.fileType) ||
                   (!isPdf && selectedMaterial.isSubmission) ||
-                  /\.(jpe?g|png|gif|webp)(\?|$)/i.test(url);
+                  /\.(jpe?g|png|gif|webp)(\?|$)/i.test(url || rawUrl);
 
                 const isOffice = ['ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx'].includes(urlExt) ||
                   (selectedMaterial.fileType || "").toLowerCase().includes('presentation') ||
@@ -604,10 +657,16 @@ const StudentClassroom = () => {
                 }
 
                 if (isImg) {
+                  const imgSrc = selectedMaterial.isLecture
+                    ? lectureProxyUrl
+                    : selectedMaterial.isStudyMaterial && selectedMaterial._id
+                      ? `${getApiUrl()}/materials/view/${selectedMaterial._id}/image.${urlExt || 'jpg'}?token=${user?.token}`
+                      : url;
+
                   return (
                     <div className="w-full h-full flex items-center justify-center p-6 bg-white overflow-auto">
                       <img
-                        src={url}
+                        src={imgSrc}
                         alt={selectedMaterial.title}
                         className="max-w-full max-h-full object-contain rounded-xl shadow-lg"
                       />
@@ -615,8 +674,8 @@ const StudentClassroom = () => {
                   );
                 }
 
-                if (isOffice || url.toLowerCase().includes('.ppt') || url.toLowerCase().includes('.doc') || url.toLowerCase().includes('.xls')) {
-                  const directUrl = url.replace('http://', 'https://');
+                if (isOffice || (publicUrl || url || rawUrl).toLowerCase().includes('.ppt') || (publicUrl || url || rawUrl).toLowerCase().includes('.doc') || (publicUrl || url || rawUrl).toLowerCase().includes('.xls')) {
+                  const directUrl = (publicUrl || url || rawUrl).replace('http://', 'https://');
                   const googleUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(directUrl)}&embedded=true`;
                   return (
                     <iframe
@@ -639,16 +698,16 @@ const StudentClassroom = () => {
                     </p>
                     <div className="flex gap-4 mt-6">
                       <a
-                        href={url}
+                        href={publicUrl || url || rawUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-6 py-3 bg-cyan-600 text-white rounded-xl font-bold text-sm"
+                        className={`px-6 py-3 rounded-xl font-bold text-sm ${publicUrl || url || rawUrl ? "bg-cyan-600 text-white" : "bg-slate-200 text-slate-400 pointer-events-none"}`}
                       >
                         Open in New Tab
                       </a>
                       <a
-                        href={`${url}${url.includes('?') ? '&' : '?'}download=true`}
-                        className="px-6 py-3 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm hover:bg-slate-200 transition-colors"
+                        href={`${(publicUrl || url || rawUrl)}${(publicUrl || url || rawUrl).includes('?') ? '&' : '?'}download=true`}
+                        className={`px-6 py-3 rounded-xl font-bold text-sm transition-colors ${publicUrl || url || rawUrl ? "bg-slate-100 text-slate-700 hover:bg-slate-200" : "bg-slate-200 text-slate-400 pointer-events-none"}`}
                       >
                         Download
                       </a>

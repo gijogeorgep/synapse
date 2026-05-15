@@ -14,9 +14,21 @@ const imageStorage = new CloudinaryStorage({
 // PDF/File Storage Configuration
 const fileStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
-    params: {
-        folder: 'synapse/documents',
-        resource_type: 'raw', // Safe storage, proxy handles the MIME type for viewing
+    params: (req, file) => {
+        const originalName = (file?.originalname || "").toLowerCase();
+        const ext = originalName.includes(".") ? originalName.split(".").pop() : "";
+
+        const params = {
+            folder: 'synapse/documents',
+            resource_type: 'raw', // Store non-images as raw
+            allowed_formats: ['pdf', 'ppt', 'pptx', 'doc', 'docx', 'xls', 'xlsx', 'txt'],
+        };
+
+        // If it's an Office document, request Cloudinary to store a PDF rendition.
+        // (If the account doesn't support conversion, the API will still return the original URL.)
+        if (ext && ext !== 'pdf') params.format = 'pdf';
+
+        return params;
     },
 });
 
