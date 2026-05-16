@@ -7,10 +7,17 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET,
-});
+// Helper to get Razorpay instance (prevents crash if env vars missing at boot)
+const getRazorpayInstance = () => {
+    const key_id = process.env.RAZORPAY_KEY_ID;
+    const key_secret = process.env.RAZORPAY_KEY_SECRET;
+
+    if (!key_id || !key_secret) {
+        throw new Error("Razorpay Key ID or Secret is missing in environment variables.");
+    }
+
+    return new Razorpay({ key_id, key_secret });
+};
 
 // @desc    Create Razorpay Order
 // @route   POST /api/payments/create-order
@@ -34,6 +41,7 @@ export const createOrder = async (req, res) => {
             receipt: `receipt_order_${Date.now()}`,
         };
 
+        const razorpay = getRazorpayInstance();
         const order = await razorpay.orders.create(options);
 
         if (!order) {

@@ -3,10 +3,11 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" id="favicon" type="image/x-icon" href="/favicon.ico" />
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.png" />
-  <link rel="apple-touch-icon" id="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" id="favicon-ico" />
+  <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" id="favicon-96" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" id="favicon-32" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" id="favicon-svg" />
+  <link rel="apple-touch-icon" href="/app-icon-192.png" id="apple-touch-icon" />
   <link rel="mask-icon" href="/app-icon-192.png" color="#06b6d4" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
@@ -18,8 +19,6 @@
   <meta name="theme-color" content="#06b6d4" />
   <link rel="manifest" href="/manifest.json?v=4" />
 
-
-  <link rel="apple-touch-icon" href="/app-icon-192.png" id="apple-touch-icon" />
   <script>
     (function () {
       const isAdmin = window.location.hostname.startsWith('admin') || window.location.port === '5174';
@@ -27,11 +26,11 @@
         const manifest = document.querySelector('link[rel="manifest"]');
         if (manifest) manifest.setAttribute('href', '/admin-manifest.json');
 
-        const appleIcon = document.getElementById('apple-touch-icon');
-        if (appleIcon) appleIcon.setAttribute('href', '/y-admin-192.png');
-
-        const favicon = document.getElementById('favicon');
-        if (favicon) favicon.setAttribute('href', '/y-admin-192.png');
+        // Update all favicon variations for admin
+        ['favicon-ico', 'favicon-96', 'favicon-32', 'favicon-svg'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.setAttribute('href', '/y-admin-192.png');
+        });
 
         const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
         if (appleTitle) appleTitle.setAttribute('content', 'Synapse Admin');
