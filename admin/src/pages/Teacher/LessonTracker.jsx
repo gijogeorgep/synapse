@@ -76,8 +76,8 @@ const CustomDatePicker = ({ value, onChange, label }) => {
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-[60]" onClick={() => setIsOpen(false)} />
-          <div className="absolute top-full left-0 mt-2 z-[70] bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 w-64 animate-in fade-in zoom-in-95 duration-200">
+          <div className="fixed inset-0 z-[60] bg-slate-900/20 sm:bg-transparent backdrop-blur-sm sm:backdrop-blur-none" onClick={() => setIsOpen(false)} />
+          <div className="fixed sm:absolute top-1/2 sm:top-full left-1/2 sm:left-0 -translate-x-1/2 sm:translate-x-0 -translate-y-1/2 sm:translate-y-0 sm:mt-2 z-[70] bg-white rounded-2xl shadow-2xl border border-slate-100 p-4 w-[280px] sm:w-64 animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center justify-between mb-4">
               <button onClick={handlePrevMonth} className="p-1 hover:bg-slate-100 rounded-lg transition-colors">
                 <ChevronLeft className="w-4 h-4 text-slate-400" />
@@ -702,27 +702,34 @@ const LessonTracker = () => {
 
           {/* Bottom Bar: Date Range & Quick Filters */}
           <div className="flex flex-col xl:flex-row xl:items-center gap-6 pt-4 border-t border-slate-50">
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 mr-2">
+            <p className="text-[11px] text-cyan-700 font-bold italic md:hidden w-full bg-cyan-50/50 p-2 rounded-lg text-center border border-cyan-100">
+              Swipe right or left to select the dates 👉
+            </p>
+            <div className="flex overflow-x-auto items-center gap-4 pb-2 scrollbar-hide w-full xl:w-auto">
+              <div className="flex items-center gap-2 mr-2 shrink-0">
                 <div className="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center">
                   <Calendar className="w-4 h-4 text-cyan-600" />
                 </div>
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filter Period</span>
               </div>
               
-              <CustomDatePicker 
-                label="From Date"
-                value={dateRange.from}
-                onChange={(val) => setDateRange(prev => ({ ...prev, from: val }))}
-              />
+              <div className="shrink-0">
+                <CustomDatePicker 
+                  label="From Date"
+                  value={dateRange.from}
+                  onChange={(val) => setDateRange(prev => ({ ...prev, from: val }))}
+                />
+              </div>
 
-              <div className="w-4 h-0.5 bg-slate-200 rounded-full" />
+              <div className="w-4 h-0.5 bg-slate-200 rounded-full shrink-0" />
 
-              <CustomDatePicker 
-                label="To Date"
-                value={dateRange.to}
-                onChange={(val) => setDateRange(prev => ({ ...prev, to: val }))}
-              />
+              <div className="shrink-0">
+                <CustomDatePicker 
+                  label="To Date"
+                  value={dateRange.to}
+                  onChange={(val) => setDateRange(prev => ({ ...prev, to: val }))}
+                />
+              </div>
             </div>
 
             <div className="flex items-center gap-2 xl:ml-auto bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
