@@ -33,7 +33,7 @@ import {
     deleteAssignment,
     deleteClassroomResource
 } from "../../api/services";
-import { getApiUrl } from "../../api/apiClient";
+import apiClient, { getApiUrl } from "../../api/apiClient";
 
 const TeacherClassroom = () => {
     const { user } = useAuth();
@@ -92,6 +92,39 @@ const TeacherClassroom = () => {
     const [isGrading, setIsGrading] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState({ isOpen: false, type: null, id: null });
     const [selectedMaterial, setSelectedMaterial] = useState(null);
+
+    // Classroom specific lesson reports
+    const [lessonReports, setLessonReports] = useState([]);
+    const [loadingLessons, setLoadingLessons] = useState(true);
+
+    useEffect(() => {
+        const fetchLessonReports = async () => {
+            if (!classroom?.name) return;
+            try {
+                setLoadingLessons(true);
+                const data = await apiClient(`/lesson-reports?class=${encodeURIComponent(classroom.name)}`);
+                setLessonReports(Array.isArray(data) ? data : []);
+            } catch (error) {
+                console.error("Error fetching class lesson reports:", error);
+            } finally {
+                setLoadingLessons(false);
+            }
+        };
+        fetchLessonReports();
+    }, [classroom]);
+
+    // Calculate classroom lesson stats
+    let classTotalMinutes = 0;
+    lessonReports.forEach((report) => {
+        const duration = report.duration || "";
+        let minutes = 0;
+        const hrMatch = duration.match(/(\d+)\s*Hr/i);
+        const minMatch = duration.match(/(\d+)\s*Min/i);
+        if (hrMatch) minutes += parseInt(hrMatch[1]) * 60;
+        if (minMatch) minutes += parseInt(minMatch[1]);
+        classTotalMinutes += minutes;
+    });
+    const classTotalHours = Math.round((classTotalMinutes / 60) * 10) / 10;
 
     const getSubmissionScore = (submission) => {
         if (submission?.score !== null && submission?.score !== undefined) {
@@ -914,48 +947,122 @@ const TeacherClassroom = () => {
 
                 </div>
 
-                {/* Students in class */}
-                <aside className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
-                    <div>
-                        <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
-                            <Users className="w-4 h-4 text-cyan-600" />
-                            Students in this class
-                        </h3>
-                        <p className="text-sm text-slate-500 mt-1">
-                            {students.length} students enrolled
-                        </p>
-                    </div>
-
-                    {loadingStudents ? (
-                        <div className="text-center py-5 text-sm text-slate-400">Loading students...</div>
-                    ) : students.length === 0 ? (
-                        <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-                            <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                            <p className="text-sm text-slate-500 font-medium">No students enrolled</p>
+                <div className="space-y-8">
+                    {/* Classroom Lesson Tracking & Progress */}
+                    <aside className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                                <FileSpreadsheet className="w-4 h-4 text-cyan-600" />
+                                Lesson Log & Progress
+                            </h3>
+                            <p className="text-sm text-slate-500 mt-1">
+                                Track classroom coverage and hours
+                            </p>
                         </div>
-                    ) : (
-                        <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
-                            {students.map((s) => (
-                                <div
-                                    key={s._id || s.id}
-                                    className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-colors group"
-                                >
-                                    <div className="w-9 h-9 rounded-full bg-cyan-100 flex items-center justify-center text-sm font-bold text-cyan-700 shadow-sm border border-cyan-200 group-hover:scale-105 transition-transform" title={s.email}>
-                                        {(s.name || "?")[0].toUpperCase()}
+
+                        {loadingLessons ? (
+                            <div className="text-center py-5 text-sm text-slate-400">Loading lesson logs...</div>
+                        ) : (
+                            <div className="space-y-4">
+                                {/* Summary Mini Cards */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                                        <p className="text-lg font-black text-slate-900">{classTotalHours} Hrs</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Taught</p>
                                     </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-bold text-slate-800 truncate">
-                                            {s.name}
-                                        </p>
-                                        <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
-                                            {s.uniqueId || "Student"}
-                                        </p>
+                                    <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                                        <p className="text-lg font-black text-slate-900">{lessonReports.length}</p>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Classes Logged</p>
                                     </div>
                                 </div>
-                            ))}
+
+                                {/* Recent Timeline/Logs */}
+                                <div>
+                                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Recent Lessons</h4>
+                                    {lessonReports.length === 0 ? (
+                                        <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                            <p className="text-xs text-slate-400 font-medium">No lessons logged for this class.</p>
+                                            <button 
+                                                onClick={() => navigate("/teacher/lesson-tracker")}
+                                                className="text-xs text-cyan-600 font-bold hover:underline mt-2 inline-block"
+                                            >
+                                                Log first lesson
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                                            {lessonReports.slice(0, 5).map((rep) => (
+                                                <div 
+                                                    key={rep._id || rep.id} 
+                                                    className="p-3 bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-xl transition-all"
+                                                >
+                                                    <div className="flex justify-between items-start gap-2 mb-1.5">
+                                                        <span className="text-[10px] font-bold text-slate-400">
+                                                            {new Date(rep.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                                        </span>
+                                                        <span className="text-[9px] font-extrabold bg-cyan-50 text-cyan-700 px-1.5 py-0.5 rounded-md border border-cyan-100">
+                                                            {rep.duration}
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-xs font-bold text-slate-800 line-clamp-1">{rep.chapter}</p>
+                                                    <p className="text-[11px] text-slate-500 line-clamp-1">{rep.topic}</p>
+                                                    {rep.remark && (
+                                                        <p className="text-[10px] text-slate-400 italic mt-1 border-t border-slate-200/50 pt-1">
+                                                            "{rep.remark}"
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </aside>
+
+                    {/* Students in class */}
+                    <aside className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
+                        <div>
+                            <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                                <Users className="w-4 h-4 text-cyan-600" />
+                                Students in this class
+                            </h3>
+                            <p className="text-sm text-slate-500 mt-1">
+                                {students.length} students enrolled
+                            </p>
                         </div>
-                    )}
-                </aside>
+
+                        {loadingStudents ? (
+                            <div className="text-center py-5 text-sm text-slate-400">Loading students...</div>
+                        ) : students.length === 0 ? (
+                            <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                                <Users className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                                <p className="text-sm text-slate-500 font-medium">No students enrolled</p>
+                            </div>
+                        ) : (
+                            <div className="space-y-2 max-h-80 overflow-y-auto pr-2">
+                                {students.map((s) => (
+                                    <div
+                                        key={s._id || s.id}
+                                        className="flex items-center justify-between gap-3 p-3 rounded-xl hover:bg-slate-50 border border-transparent hover:border-slate-100 transition-colors group"
+                                    >
+                                        <div className="w-9 h-9 rounded-full bg-cyan-100 flex items-center justify-center text-sm font-bold text-cyan-700 shadow-sm border border-cyan-200 group-hover:scale-105 transition-transform" title={s.email}>
+                                            {(s.name || "?")[0].toUpperCase()}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-sm font-bold text-slate-800 truncate">
+                                                {s.name}
+                                            </p>
+                                            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">
+                                                {s.uniqueId || "Student"}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </aside>
+                </div>
             </div>
         </div>
     );

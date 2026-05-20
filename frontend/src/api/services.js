@@ -236,6 +236,7 @@ export const deleteEvent = (id) => apiClient(`/events/${id}`, { method: "DELETE"
 
 // Lesson Report Services
 export const getLessonStats = () => apiClient("/lesson-reports/stats");
+export const getMyTeacherLessonStats = () => apiClient("/lesson-reports/my-stats");
 
 // Enquiry Form Services
 export const getEnquiryForms = () => apiClient("/enquiry/forms");

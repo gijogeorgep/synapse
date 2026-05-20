@@ -1,9 +1,9 @@
 import { useState, useEffect, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
-import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, Award, Download, Upload, Loader2, CheckCircle2, Calendar, X, TrendingUp, ClipboardCheck, Eye } from "lucide-react";
+import { Video, ExternalLink, BookOpen, ArrowLeft, FileText, Clock, PlayCircle, Award, Download, Upload, Loader2, CheckCircle2, Calendar, X, TrendingUp, ClipboardCheck, Eye, FileSpreadsheet } from "lucide-react";
 import { getExams, getExamsBySpecificClassroom, getMyResults, getMaterials, getAssignments, submitHomework, uploadFile, getClassroomRank } from "../../api/services";
-import { getApiUrl } from "../../api/apiClient";
+import apiClient, { getApiUrl } from "../../api/apiClient";
 import { toast } from "react-hot-toast";
 // import ClassroomAIChat from "../../components/ClassroomAIChat";
 
@@ -32,6 +32,41 @@ const StudentClassroom = () => {
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [classroomRank, setClassroomRank] = useState({ rank: 0, totalStudents: 0 });
   const [viewMode, setViewMode] = useState("recent"); // "recent" or "subject"
+
+  // Class specific lesson reports for student
+  const [lessonReports, setLessonReports] = useState([]);
+  const [loadingLessons, setLoadingLessons] = useState(true);
+
+  useEffect(() => {
+    const fetchLessonReports = async () => {
+      if (!classroom?.name) return;
+      try {
+        setLoadingLessons(true);
+        const data = await apiClient(`/lesson-reports?class=${encodeURIComponent(classroom.name)}`);
+        setLessonReports(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error fetching student classroom lesson reports:", error);
+      } finally {
+        setLoadingLessons(false);
+      }
+    };
+    fetchLessonReports();
+  }, [classroom]);
+
+  // Calculate classroom lesson stats
+  const classTotalHours = useMemo(() => {
+    let classTotalMinutes = 0;
+    lessonReports.forEach((report) => {
+      const duration = report.duration || "";
+      let minutes = 0;
+      const hrMatch = duration.match(/(\d+)\s*Hr/i);
+      const minMatch = duration.match(/(\d+)\s*Min/i);
+      if (hrMatch) minutes += parseInt(hrMatch[1]) * 60;
+      if (minMatch) minutes += parseInt(minMatch[1]);
+      classTotalMinutes += minutes;
+    });
+    return Math.round((classTotalMinutes / 60) * 10) / 10;
+  }, [lessonReports]);
 
   useEffect(() => { if (!classroom) navigate("/student/classrooms"); }, [classroom, navigate]);
 
@@ -438,64 +473,132 @@ const StudentClassroom = () => {
           </div>
         </section>
 
-        <aside className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
-          <div className="space-y-2"><h3 className="text-base font-semibold text-slate-900 flex items-center gap-2"><BookOpen className="w-4 h-4 text-indigo-600" />Class overview</h3><p className="text-sm text-slate-500">One place for all your MCQ tests, assignments, and study materials for this subject.</p><ul className="mt-1 text-sm text-slate-600 space-y-1 list-disc list-inside"><li>Take MCQ tests and download resources</li><li>Access study materials shared by your tutor</li></ul></div>
-          <div className="border-t border-slate-100 pt-4 space-y-5">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-slate-900">Teachers</h4>
-                <span className="text-xs text-slate-400">{teachers.length} {teachers.length === 1 ? "teacher" : "teachers"}</span>
-              </div>
-              <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
-                {teachers.length === 0 ? (
-                  <div className="text-xs text-slate-400 py-2">No teachers assigned</div>
-                ) : (
-                  teachers.map((teacher) => (
-                    <div key={teacher._id || teacher.id || teacher.email || teacher.name} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                      <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 overflow-hidden shrink-0">
-                        {teacher.avatarUrl ? <img src={teacher.avatarUrl} alt={teacher.name} className="w-full h-full object-cover" /> : (teacher.name?.[0] || "?").toUpperCase()}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="text-sm text-slate-800 font-medium truncate">{teacher.name || "Assigned Teacher"}</span>
-                        <span className="text-[11px] text-slate-400 truncate">{teacher.email || "Teacher"}</span>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
+        <div className="space-y-8">
+          {/* Classroom Lesson Tracking & Progress */}
+          <aside className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
+            <div>
+              <h3 className="text-base font-semibold text-slate-900 flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4 text-cyan-600" />
+                Lesson Log & Progress
+              </h3>
+              <p className="text-sm text-slate-500 mt-1">
+                Track classroom coverage and hours
+              </p>
             </div>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-slate-900">Classmates</h4>
-                <span className="text-xs text-slate-400">{classmates.length} students</span>
+
+            {loadingLessons ? (
+              <div className="text-center py-5 text-sm text-slate-400">Loading lesson logs...</div>
+            ) : (
+              <div className="space-y-4">
+                {/* Summary Mini Cards */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                    <p className="text-lg font-black text-slate-900">{classTotalHours} Hrs</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Taught</p>
+                  </div>
+                  <div className="p-3 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                    <p className="text-lg font-black text-slate-900">{lessonReports.length}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Classes Logged</p>
+                  </div>
+                </div>
+
+                {/* Recent Timeline/Logs */}
+                <div>
+                  <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-3">Recent Lessons</h4>
+                  {lessonReports.length === 0 ? (
+                    <div className="text-center py-6 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                      <p className="text-xs text-slate-400 font-medium">No lessons logged for this class.</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3 max-h-60 overflow-y-auto pr-1">
+                      {lessonReports.slice(0, 5).map((rep) => (
+                        <div 
+                          key={rep._id || rep.id} 
+                          className="p-3 bg-slate-50 hover:bg-slate-100/70 border border-slate-100 rounded-xl transition-all"
+                        >
+                          <div className="flex justify-between items-start gap-2 mb-1.5">
+                            <span className="text-[10px] font-bold text-slate-400">
+                              {new Date(rep.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                            </span>
+                            <span className="text-[9px] font-extrabold bg-cyan-50 text-cyan-700 px-1.5 py-0.5 rounded-md border border-cyan-100">
+                              {rep.duration}
+                            </span>
+                          </div>
+                          <p className="text-xs font-bold text-slate-800 line-clamp-1">{rep.chapter}</p>
+                          <p className="text-[11px] text-slate-500 line-clamp-1">{rep.topic}</p>
+                          {rep.remark && (
+                            <p className="text-[10px] text-slate-400 italic mt-1 border-t border-slate-200/50 pt-1">
+                              "{rep.remark}"
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
-                {classmates.length === 0 ? (
-                  <div className="text-xs text-slate-400 py-2">No classmates enrolled yet</div>
-                ) : (
-                  classmates.map((mate) => {
-                    const isMe = user?.email && mate?.email && user.email.toLowerCase() === mate.email.toLowerCase();
-                    return (
-                      <div key={mate._id || mate.id || mate.email || mate.name} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
-                        <div className="w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center text-xs font-bold text-cyan-700 overflow-hidden shrink-0">
-                          {mate.avatarUrl ? <img src={mate.avatarUrl} alt={mate.name} className="w-full h-full object-cover" /> : (mate.initial || mate.name?.[0] || "?").toUpperCase()}
+            )}
+          </aside>
+
+          <aside className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 md:p-8 space-y-6">
+            <div className="space-y-2"><h3 className="text-base font-semibold text-slate-900 flex items-center gap-2"><BookOpen className="w-4 h-4 text-indigo-600" />Class overview</h3><p className="text-sm text-slate-500">One place for all your MCQ tests, assignments, and study materials for this subject.</p><ul className="mt-1 text-sm text-slate-600 space-y-1 list-disc list-inside"><li>Take MCQ tests and download resources</li><li>Access study materials shared by your tutor</li></ul></div>
+            <div className="border-t border-slate-100 pt-4 space-y-5">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-slate-900">Teachers</h4>
+                  <span className="text-xs text-slate-400">{teachers.length} {teachers.length === 1 ? "teacher" : "teachers"}</span>
+                </div>
+                <div className="space-y-2 max-h-36 overflow-y-auto pr-1">
+                  {teachers.length === 0 ? (
+                    <div className="text-xs text-slate-400 py-2">No teachers assigned</div>
+                  ) : (
+                    teachers.map((teacher) => (
+                      <div key={teacher._id || teacher.id || teacher.email || teacher.name} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700 overflow-hidden shrink-0">
+                          {teacher.avatarUrl ? <img src={teacher.avatarUrl} alt={teacher.name} className="w-full h-full object-cover" /> : (teacher.name?.[0] || "?").toUpperCase()}
                         </div>
                         <div className="flex flex-col min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm text-slate-800 font-medium truncate">{mate.name || "Student"}</span>
-                            {isMe && <span className="px-2 py-0.5 rounded-full bg-slate-900 text-[10px] font-bold uppercase tracking-wider text-white">You</span>}
-                          </div>
-                          <span className="text-[11px] text-slate-400 truncate">{mate.email || "Student"}</span>
+                          <span className="text-sm text-slate-800 font-medium truncate">{teacher.name || "Assigned Teacher"}</span>
+                          <span className="text-[11px] text-slate-400 truncate">{teacher.email || "Teacher"}</span>
                         </div>
                       </div>
-                    );
-                  })
-                )}
+                    ))
+                  )}
+                </div>
               </div>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-sm font-semibold text-slate-900">Classmates</h4>
+                  <span className="text-xs text-slate-400">{classmates.length} students</span>
+                </div>
+                <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
+                  {classmates.length === 0 ? (
+                    <div className="text-xs text-slate-400 py-2">No classmates enrolled yet</div>
+                  ) : (
+                    classmates.map((mate) => {
+                      const isMe = user?.email && mate?.email && user.email.toLowerCase() === mate.email.toLowerCase();
+                      return (
+                        <div key={mate._id || mate.id || mate.email || mate.name} className="flex items-center gap-3 p-2 rounded-xl hover:bg-slate-50 transition-colors">
+                          <div className="w-8 h-8 rounded-full bg-cyan-100 flex items-center justify-center text-xs font-bold text-cyan-700 overflow-hidden shrink-0">
+                            {mate.avatarUrl ? <img src={mate.avatarUrl} alt={mate.name} className="w-full h-full object-cover" /> : (mate.initial || mate.name?.[0] || "?").toUpperCase()}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-slate-800 font-medium truncate">{mate.name || "Student"}</span>
+                              {isMe && <span className="px-2 py-0.5 rounded-full bg-slate-900 text-[10px] font-bold uppercase tracking-wider text-white">You</span>}
+                            </div>
+                            <span className="text-[11px] text-slate-400 truncate">{mate.email || "Student"}</span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+              <div className="space-y-3"><div className="flex items-center justify-between"><h4 className="text-sm font-semibold text-slate-900">Exams</h4><span className="text-xs text-slate-400">{exams.length}</span></div><div className="space-y-2 max-h-44 overflow-y-auto pr-1">{loadingExams ? <div className="flex items-center justify-center py-4 text-slate-400"><Loader2 className="w-4 h-4 animate-spin" /></div> : exams.length > 0 ? exams.map((exam) => <div key={exam._id} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition-all hover:border-cyan-200 hover:bg-cyan-50/50"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-900 truncate">{exam.title}</p><p className="mt-1 text-xs text-slate-500">{exam.subject} • {exam.duration} mins</p></div><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 border border-slate-200">{exam.examCategory || "scheduled"}</span></div><p className="mt-2 text-xs text-slate-500">{exam.date ? new Date(exam.date).toLocaleDateString() : "Scheduled soon"}</p></div>) : <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center"><p className="text-sm text-slate-500">No exams scheduled yet.</p></div>}</div></div>
             </div>
-            <div className="space-y-3"><div className="flex items-center justify-between"><h4 className="text-sm font-semibold text-slate-900">Exams</h4><span className="text-xs text-slate-400">{exams.length}</span></div><div className="space-y-2 max-h-44 overflow-y-auto pr-1">{loadingExams ? <div className="flex items-center justify-center py-4 text-slate-400"><Loader2 className="w-4 h-4 animate-spin" /></div> : exams.length > 0 ? exams.map((exam) => <div key={exam._id} className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 transition-all hover:border-cyan-200 hover:bg-cyan-50/50"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium text-slate-900 truncate">{exam.title}</p><p className="mt-1 text-xs text-slate-500">{exam.subject} • {exam.duration} mins</p></div><span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest text-slate-500 border border-slate-200">{exam.examCategory || "scheduled"}</span></div><p className="mt-2 text-xs text-slate-500">{exam.date ? new Date(exam.date).toLocaleDateString() : "Scheduled soon"}</p></div>) : <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-center"><p className="text-sm text-slate-500">No exams scheduled yet.</p></div>}</div></div>
-          </div>
-        </aside>
+          </aside>
+        </div>
       </div>
       {isSubmitModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">

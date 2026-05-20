@@ -233,3 +233,96 @@ export const getLessonStats = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Get lesson report statistics for teacher's own dashboard
+// @route   GET /api/lesson-reports/my-stats
+// @access  Private (Teacher/Admin/SuperAdmin)
+export const getTeacherLessonStats = async (req, res) => {
+  try {
+    const teacherId = req.user._id;
+
+    const stats = await LessonReport.aggregate([
+      { $match: { teacher: teacherId } },
+      {
+        $facet: {
+          bySubject: [
+            { $group: { _id: "$subject", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+          ],
+          byClass: [
+            { $group: { _id: "$class", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+          ],
+          byDate: [
+            {
+              $group: {
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+                count: { $sum: 1 },
+              },
+            },
+            { $sort: { _id: 1 } },
+            { $limit: 30 },
+          ],
+        },
+      },
+    ]);
+
+    const result = stats[0] || { bySubject: [], byClass: [], byDate: [] };
+
+    // Calculate Time-based stats specifically for this teacher
+    const allReports = await LessonReport.find({ teacher: teacherId }, "duration subject class date chapter topic");
+    
+    let totalMinutes = 0;
+    const timeByClass = {};
+    const timeBySubject = {};
+    
+    allReports.forEach((report) => {
+      const duration = report.duration || "";
+      let minutes = 0;
+      const hrMatch = duration.match(/(\d+)\s*Hr/i);
+      const minMatch = duration.match(/(\d+)\s*Min/i);
+      if (hrMatch) minutes += parseInt(hrMatch[1]) * 60;
+      if (minMatch) minutes += parseInt(minMatch[1]);
+
+      totalMinutes += minutes;
+
+      if (report.class) {
+        if (!timeByClass[report.class]) timeByClass[report.class] = 0;
+        timeByClass[report.class] += minutes;
+      }
+
+      if (report.subject) {
+        if (!timeBySubject[report.subject]) timeBySubject[report.subject] = 0;
+        timeBySubject[report.subject] += minutes;
+      }
+    });
+
+    result.totalLessons = allReports.length;
+    result.totalMinutes = totalMinutes;
+    result.totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+    result.timeByClass = Object.keys(timeByClass).map((c) => ({
+      class: c,
+      minutes: timeByClass[c],
+      hours: Math.round((timeByClass[c] / 60) * 10) / 10,
+      count: (result.byClass.find((x) => x._id === c) || {}).count || 0,
+    })).sort((a, b) => b.minutes - a.minutes);
+
+    result.timeBySubject = Object.keys(timeBySubject).map((s) => ({
+      subject: s,
+      minutes: timeBySubject[s],
+      hours: Math.round((timeBySubject[s] / 60) * 10) / 10,
+      count: (result.bySubject.find((x) => x._id === s) || {}).count || 0,
+    })).sort((a, b) => b.minutes - a.minutes);
+
+    // Get recent 5 lesson logs for quick dashboard listing
+    result.recentLessons = allReports
+      .sort((a, b) => new Date(b.date) - new Date(a.date))
+      .slice(0, 5);
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+

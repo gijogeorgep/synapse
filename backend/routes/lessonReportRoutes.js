@@ -6,10 +6,12 @@ import {
   deleteLessonReport,
   updateLessonReport,
   getLessonStats,
+  getTeacherLessonStats,
 } from "../controllers/lessonReportController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
 router.get("/stats", protect, authorize("admin", "superadmin"), getLessonStats);
+router.get("/my-stats", protect, authorize("teacher", "admin", "superadmin"), getTeacherLessonStats);
 
 router
   .route("/")

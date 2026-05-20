@@ -141,10 +141,12 @@ const LessonTracker = () => {
   const isStudent = userInfo.role === 'student';
   const canManage = !isStudent; // Teachers and Admins can manage
 
+  const [teachers, setTeachers] = useState([]);
+
   const [formData, setFormData] = useState({
     date: new Date().toISOString().split('T')[0],
     subject: '',
-    faculty: '',
+    faculty: userInfo.role === 'teacher' ? (userInfo.name || '') : '',
     startTime: '',
     endTime: '',
     time: '',
@@ -157,7 +159,19 @@ const LessonTracker = () => {
 
   useEffect(() => {
     fetchClassrooms();
+    if (isAdmin) {
+      fetchTeachers();
+    }
   }, []);
+
+  const fetchTeachers = async () => {
+    try {
+      const data = await apiClient('/reports/teachers-list');
+      setTeachers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Failed to fetch teachers:', error);
+    }
+  };
 
   useEffect(() => {
     fetchReports();
@@ -249,7 +263,7 @@ const LessonTracker = () => {
       setFormData({
         date: new Date().toISOString().split('T')[0],
         subject: '',
-        faculty: '',
+        faculty: userInfo.role === 'teacher' ? (userInfo.name || '') : '',
         startTime: '',
         endTime: '',
         time: '',
@@ -418,7 +432,26 @@ const LessonTracker = () => {
               EXPORT PDF
             </button>
             <button
-              onClick={() => setShowForm(!showForm)}
+              onClick={() => {
+                if (!showForm) {
+                  setFormData({
+                    date: new Date().toISOString().split('T')[0],
+                    subject: '',
+                    faculty: userInfo.role === 'teacher' ? (userInfo.name || '') : '',
+                    startTime: '',
+                    endTime: '',
+                    time: '',
+                    duration: '',
+                    chapter: '',
+                    topic: '',
+                    remark: '',
+                    class: ''
+                  });
+                  setIsEditing(false);
+                  setCurrentReportId(null);
+                }
+                setShowForm(!showForm);
+              }}
               className="flex items-center gap-2 px-5 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition-all font-bold text-sm shadow-lg shadow-cyan-100"
             >
               {showForm ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
@@ -475,19 +508,43 @@ const LessonTracker = () => {
                       />
                     </div>
 
-                    <div className="space-y-2">
+                     <div className="space-y-2">
                       <label className="text-xs font-bold text-slate-700 flex items-center gap-2">
                         <UserIcon className="w-3.5 h-3.5 text-cyan-500" /> Faculty Name
                       </label>
-                      <input
-                        type="text"
-                        name="faculty"
-                        placeholder="e.g. Prajeesh"
-                        required
-                        value={formData.faculty}
-                        onChange={handleInputChange}
-                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:bg-white outline-none transition-all text-sm"
-                      />
+                      {isAdmin ? (
+                        <div className="relative">
+                          <select
+                            name="faculty"
+                            required
+                            value={formData.faculty}
+                            onChange={handleInputChange}
+                            className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:bg-white outline-none transition-all text-sm appearance-none cursor-pointer pr-10"
+                          >
+                            <option value="">Select Faculty</option>
+                            {teachers.map((teacher) => (
+                              <option key={teacher._id || teacher.name} value={teacher.name}>
+                                {teacher.name}
+                              </option>
+                            ))}
+                          </select>
+                          <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500">
+                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                              <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                            </svg>
+                          </div>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          name="faculty"
+                          required
+                          readOnly
+                          value={formData.faculty}
+                          placeholder="Faculty Name"
+                          className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl outline-none text-sm text-slate-600 font-semibold cursor-not-allowed"
+                        />
+                      )}
                     </div>
 
                     <div className="space-y-2">

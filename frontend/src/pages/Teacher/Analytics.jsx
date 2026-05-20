@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "../../context/AuthContext";
-import { getMyTeacherStats } from "../../api/services";
+import { getMyTeacherStats, getMyTeacherLessonStats } from "../../api/services";
 import {
     BarChart3,
     Users,
@@ -14,6 +14,7 @@ import {
     Loader2,
     ArrowLeft,
     PieChart as PieIcon,
+    FileSpreadsheet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -39,13 +40,18 @@ const TeacherAnalytics = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [stats, setStats] = useState(null);
+    const [lessonStats, setLessonStats] = useState(null);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const load = async () => {
             try {
-                const data = await getMyTeacherStats();
-                setStats(data);
+                const [statsData, lessonStatsData] = await Promise.all([
+                    getMyTeacherStats(),
+                    getMyTeacherLessonStats(),
+                ]);
+                setStats(statsData);
+                setLessonStats(lessonStatsData);
             } catch (err) {
                 console.error("Error loading analytics:", err);
             } finally {
@@ -80,6 +86,14 @@ const TeacherAnalytics = () => {
         subjectPerformance = [],
         recentSubmissions = [],
     } = stats || {};
+
+    const {
+        totalLessons = 0,
+        totalHours = 0,
+        timeByClass = [],
+        timeBySubject = [],
+        byDate: lessonByDate = [],
+    } = lessonStats || {};
 
     const submissionRate = totalSubmissions > 0
         ? Math.round((gradedSubmissions / totalSubmissions) * 100)
@@ -140,24 +154,110 @@ const TeacherAnalytics = () => {
             </header>
 
             {/* Top Row: Mini Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4">
                 {[
                     { label: "Classes", value: totalClassrooms, icon: GraduationCap, color: "text-cyan-600", bg: "bg-cyan-50" },
                     { label: "Students", value: totalStudents, icon: Users, color: "text-indigo-600", bg: "bg-indigo-50" },
-                    { label: "Exams", value: totalExams, sub: `${activeExams} Active`, icon: FileText, color: "text-emerald-600", bg: "bg-emerald-50" },
+                    { label: "Exams", value: totalExams, icon: FileText, color: "text-emerald-600", bg: "bg-emerald-50" },
                     { label: "Files", value: materialsUploaded, icon: BookOpen, color: "text-rose-600", bg: "bg-rose-50" },
                     { label: "Submissions", value: totalSubmissions, icon: FileCheck, color: "text-violet-600", bg: "bg-violet-50" },
                     { label: "Awaiting", value: pendingSubmissions, icon: Clock, color: "text-amber-600", bg: "bg-amber-50" },
+                    { label: "Hours Taught", value: `${totalHours} hrs`, icon: Clock, color: "text-cyan-700", bg: "bg-cyan-100" },
+                    { label: "Lessons Logged", value: totalLessons, icon: FileSpreadsheet, color: "text-emerald-700", bg: "bg-emerald-100" },
                 ].map((s) => (
                     <div key={s.label} className="bg-white rounded-[2rem] border border-slate-100 p-5 shadow-sm hover:shadow-md transition-shadow">
                         <div className={`w-10 h-10 rounded-xl ${s.bg} ${s.color} flex items-center justify-center mb-3`}>
                             <s.icon className="w-5 h-5" />
                         </div>
-                        <p className="text-2xl font-black text-slate-900">{s.value}</p>
+                        <p className="text-xl md:text-2xl font-black text-slate-900">{s.value}</p>
                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{s.label}</p>
                     </div>
                 ))}
             </div>
+
+            {/* Teaching Activity & Time Tracker Section */}
+            <div className="space-y-6">
+                <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center border border-cyan-100">
+                        <Clock className="w-5 h-5 text-cyan-600" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-slate-900">Teaching Activity & Time Tracker</h3>
+                        <p className="text-xs text-slate-500">Analytics compiled from your class lesson logs</p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Time Spent per Classroom */}
+                    <div className="lg:col-span-6 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 md:p-8">
+                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Teaching Hours per Classroom</h4>
+                        <div className="h-[250px] w-full">
+                            {timeByClass.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={timeByClass} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis 
+                                            dataKey="class" 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }}
+                                        />
+                                        <YAxis 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }}
+                                        />
+                                        <Tooltip 
+                                            cursor={{ fill: '#f8fafc' }}
+                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '12px' }}
+                                        />
+                                        <Bar dataKey="hours" name="Hours Taught" fill="#0891b2" radius={[6, 6, 0, 0]} barSize={35} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-full flex items-center justify-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+                                    <p className="text-sm text-slate-400">No lesson logs recorded yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Time Spent per Subject */}
+                    <div className="lg:col-span-6 bg-white rounded-[2.5rem] border border-slate-100 shadow-sm p-6 md:p-8">
+                        <h4 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-6">Teaching Hours per Subject</h4>
+                        <div className="h-[250px] w-full">
+                            {timeBySubject.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <BarChart data={timeBySubject} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                        <XAxis 
+                                            dataKey="subject" 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }}
+                                        />
+                                        <YAxis 
+                                            axisLine={false} 
+                                            tickLine={false} 
+                                            tick={{ fill: '#64748b', fontSize: 10, fontWeight: 600 }}
+                                        />
+                                        <Tooltip 
+                                            cursor={{ fill: '#f8fafc' }}
+                                            contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', padding: '12px' }}
+                                        />
+                                        <Bar dataKey="hours" name="Hours Taught" fill="#4f46e5" radius={[6, 6, 0, 0]} barSize={35} />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                            ) : (
+                                <div className="h-full flex items-center justify-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+                                    <p className="text-sm text-slate-400">No lesson logs recorded yet.</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
 
             {/* Main Charts Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">

@@ -18,7 +18,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { useEffect, useState } from "react";
-import { getTeacherClassrooms, getMyTeacherStats, getSettings } from "../../api/services";
+import { getTeacherClassrooms, getMyTeacherStats, getSettings, getMyTeacherLessonStats } from "../../api/services";
 
 const TeacherDashboard = () => {
     const { user } = useAuth();
@@ -27,6 +27,7 @@ const TeacherDashboard = () => {
     const [classrooms, setClassrooms] = useState([]);
     const [loadingClassrooms, setLoadingClassrooms] = useState(true);
     const [stats, setStats] = useState(null);
+    const [lessonStats, setLessonStats] = useState(null);
     const [loadingStats, setLoadingStats] = useState(true);
     const [settings, setSettings] = useState(null);
 
@@ -49,8 +50,12 @@ const TeacherDashboard = () => {
         const fetchStats = async () => {
             try {
                 setLoadingStats(true);
-                const data = await getMyTeacherStats();
-                setStats(data);
+                const [statsData, lessonStatsData] = await Promise.all([
+                    getMyTeacherStats(),
+                    getMyTeacherLessonStats()
+                ]);
+                setStats(statsData);
+                setLessonStats(lessonStatsData);
             } catch (error) {
                 console.error("Error fetching teacher stats:", error);
             } finally {
@@ -81,6 +86,8 @@ const TeacherDashboard = () => {
     const classroomBreakdown = stats?.classroomBreakdown ?? [];
     const subjectPerformance = stats?.subjectPerformance ?? [];
     const recentSubmissions = stats?.recentSubmissions ?? [];
+
+    const { totalHours = 0, totalLessons = 0 } = lessonStats || {};
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -125,7 +132,7 @@ const TeacherDashboard = () => {
                 </div>
             ) : (
                 <>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
                         {[
                             {
                                 label: "My classes",
@@ -138,6 +145,13 @@ const TeacherDashboard = () => {
                                 value: String(totalStudents),
                                 icon: Users,
                                 tone: "bg-indigo-50 text-indigo-700 border-indigo-100",
+                            },
+                            {
+                                label: "Hours Taught",
+                                value: `${totalHours} Hrs`,
+                                sub: `${totalLessons} classes logged`,
+                                icon: Clock,
+                                tone: "bg-violet-50 text-violet-700 border-violet-100",
                             },
                             {
                                 label: "Pending submissions",
