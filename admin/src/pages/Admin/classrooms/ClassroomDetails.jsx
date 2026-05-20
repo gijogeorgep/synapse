@@ -29,6 +29,7 @@ const AdminClassroomDetails = () => {
     const [error, setError] = useState('');
     const [activeTab, setActiveTab] = useState('students');
     const [status, setStatus] = useState({ type: '', message: '' });
+    const [hideCompleted, setHideCompleted] = useState(false);
 
     // Exam builder state
     const [examMeta, setExamMeta] = useState({ title: '', description: '', duration: 60, subject: '', marksPerQuestion: 1, negativeMarks: 0, examType: 'subject-wise' });
@@ -379,37 +380,72 @@ const AdminClassroomDetails = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Enrolled Students */}
                     <div className={`bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col ring-1 ring-slate-900/5 ${isPublicBatch ? 'lg:col-span-2' : ''}`}>
-                        <div className="p-5 border-b border-slate-100 bg-blue-50/30 flex items-center space-x-3">
-                            <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl"><GraduationCap className="w-5 h-5" /></div>
-                            <h2 className="text-lg font-bold text-slate-800">Enrolled Students</h2>
-                            <span className="ml-auto text-xs font-bold text-slate-400">{classroom.students?.length || 0} total</span>
-                        </div>
-                        <div className="flex-1 overflow-y-auto max-h-[460px]">
-                            {!classroom.students?.length ? (
-                                <div className="flex flex-col items-center justify-center py-14 text-center px-4">
-                                    <GraduationCap className="w-10 h-10 text-slate-200 mb-2" />
-                                    <p className="text-slate-400 text-sm font-medium">No students enrolled yet.</p>
-                                </div>
-                            ) : (
-                                <ul className="divide-y divide-slate-100">
-                                    {classroom.students.map((s, i) => (
-                                        <li key={s._id || i} className="p-5 hover:bg-slate-50/50 transition-colors flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0">
-                                                {s.name?.[0]?.toUpperCase() || 'S'}
+                        {(() => {
+                            const enrolledStudents = classroom.students || [];
+                            const visibleStudents = hideCompleted 
+                                ? enrolledStudents.filter(s => !s.isCourseCompleted)
+                                : enrolledStudents;
+
+                            return (
+                                <>
+                                    <div className="p-5 border-b border-slate-100 bg-blue-50/30 flex items-center justify-between gap-4 flex-wrap sm:flex-nowrap">
+                                        <div className="flex items-center space-x-3">
+                                            <div className="p-2.5 bg-blue-100 text-blue-700 rounded-xl"><GraduationCap className="w-5 h-5" /></div>
+                                            <h2 className="text-lg font-bold text-slate-800">Enrolled Students</h2>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-xl shadow-sm hover:bg-slate-50 select-none">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={hideCompleted}
+                                                    onChange={(e) => setHideCompleted(e.target.checked)}
+                                                    className="w-3.5 h-3.5 text-cyan-600 border-slate-300 rounded focus:ring-cyan-500 cursor-pointer"
+                                                />
+                                                <span>Hide Completed</span>
+                                            </label>
+                                            <span className="text-xs font-bold text-slate-400">
+                                                {hideCompleted ? `${visibleStudents.length} / ${enrolledStudents.length} active` : `${enrolledStudents.length} total`}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 overflow-y-auto max-h-[460px]">
+                                        {!visibleStudents.length ? (
+                                            <div className="flex flex-col items-center justify-center py-14 text-center px-4">
+                                                <GraduationCap className="w-10 h-10 text-slate-200 mb-2" />
+                                                <p className="text-slate-400 text-sm font-medium">
+                                                    {hideCompleted && enrolledStudents.some(s => s.isCourseCompleted) 
+                                                        ? 'All enrolled students have completed this course.' 
+                                                        : 'No students enrolled yet.'}
+                                                </p>
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="text-sm font-bold text-slate-800 truncate">{s.name || 'Unknown'}</h4>
-                                                <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
-                                                    <Mail className="w-3 h-3 shrink-0" />
-                                                    <span className="truncate">{s.email || '—'}</span>
-                                                </div>
-                                            </div>
-                                            {s.uniqueId && <span className="font-mono text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">{s.uniqueId}</span>}
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </div>
+                                        ) : (
+                                            <ul className="divide-y divide-slate-100">
+                                                {visibleStudents.map((s, i) => (
+                                                    <li key={s._id || i} className="p-5 hover:bg-slate-50/50 transition-colors flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-cyan-500 flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0">
+                                                            {s.name?.[0]?.toUpperCase() || 'S'}
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <h4 className="text-sm font-bold text-slate-800 truncate">{s.name || 'Unknown'}</h4>
+                                                            <div className="flex items-center gap-1 text-xs text-slate-500 mt-0.5">
+                                                                <Mail className="w-3 h-3 shrink-0" />
+                                                                <span className="truncate">{s.email || '—'}</span>
+                                                            </div>
+                                                        </div>
+                                                        {s.isCourseCompleted && (
+                                                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 border border-indigo-100 text-[10px] font-bold rounded-lg uppercase">
+                                                                Completed
+                                                            </span>
+                                                        )}
+                                                        {s.uniqueId && <span className="font-mono text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">{s.uniqueId}</span>}
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                </>
+                            );
+                        })()}
                     </div>
 
                     {/* Teachers (Hidden for NEET/JEE/PSC) */}

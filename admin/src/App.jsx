@@ -23,6 +23,7 @@ import AdminBlogManagement from "./pages/Admin/content/BlogManagement";
 import AdminProgramManagement from "./pages/Admin/content/ProgramManagement";
 import AdminBannerManagement from "./pages/Admin/content/BannerManagement";
 import AdminProfile from "./pages/Admin/profile/AdminProfile";
+import AdminPayments from "./pages/Admin/payments/PaymentsManagement";
 import EventManagement from "./pages/Admin/EventManagement";
 import EnquiryFormList from "./pages/Admin/enquiry/EnquiryFormList";
 import EnquiryFormBuilder from "./pages/Admin/enquiry/EnquiryFormBuilder";
@@ -87,7 +88,7 @@ function AppContent() {
               <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
                 <Route index element={<AdminAuditLogs />} />
               </Route>
-              <Route path="/admin/payments" element={<div className="p-8"><h1>Payment Settings</h1></div>} />
+              <Route path="/admin/payments" element={<AdminPayments />} />
               <Route path="/admin/lesson-tracker" element={<LessonTracker />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/profile" element={<AdminProfile />} />

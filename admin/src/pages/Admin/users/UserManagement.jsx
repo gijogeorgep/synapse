@@ -59,6 +59,7 @@ const UserManagement = () => {
   const [roleFilter, setRoleFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
   const [programFilter, setProgramFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
 
@@ -88,6 +89,7 @@ const UserManagement = () => {
     email: "",
     phoneNumber: "",
     class: "",
+    isCourseCompleted: false,
   });
   const [blockReason, setBlockReason] = useState("");
 
@@ -98,6 +100,7 @@ const UserManagement = () => {
       email: user.email,
       phoneNumber: user.phoneNumber || "",
       class: user.class || "",
+      isCourseCompleted: user.isCourseCompleted || false,
     });
     setIsEditModalOpen(true);
   };
@@ -191,9 +194,19 @@ const UserManagement = () => {
         );
       }
 
-      return matchesSearch && matchesRole && matchesClass && matchesProgram;
+      // Status Match
+      let matchesStatus = true;
+      if (statusFilter === "active_student") {
+        matchesStatus = user.role === "student" && !user.isBlocked && !user.isCourseCompleted;
+      } else if (statusFilter === "completed_student") {
+        matchesStatus = user.role === "student" && user.isCourseCompleted;
+      } else if (statusFilter === "blocked") {
+        matchesStatus = user.isBlocked;
+      }
+
+      return matchesSearch && matchesRole && matchesClass && matchesProgram && matchesStatus;
     });
-  }, [users, searchTerm, roleFilter, classFilter, programFilter]);
+  }, [users, searchTerm, roleFilter, classFilter, programFilter, statusFilter]);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto p-4 md:p-8">
@@ -261,27 +274,49 @@ const UserManagement = () => {
                 />
               </div>
               {selectedUser.role === "student" && (
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Class
-                  </label>
-                  <select
-                    value={editFormData.class}
-                    onChange={(e) =>
-                      setEditFormData({
-                        ...editFormData,
-                        class: e.target.value,
-                      })
-                    }
-                    className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-cyan-500"
-                  >
-                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((c) => (
-                      <option key={c} value={c.toString()}>
-                        Class {c}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">
+                      Class
+                    </label>
+                    <select
+                      value={editFormData.class}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          class: e.target.value,
+                        })
+                      }
+                      className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-cyan-500"
+                    >
+                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((c) => (
+                        <option key={c} value={c.toString()}>
+                          Class {c}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-3 pt-2">
+                    <input
+                      type="checkbox"
+                      id="editIsCourseCompleted"
+                      checked={editFormData.isCourseCompleted}
+                      onChange={(e) =>
+                        setEditFormData({
+                          ...editFormData,
+                          isCourseCompleted: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 text-cyan-600 border-slate-200 rounded focus:ring-cyan-500 cursor-pointer"
+                    />
+                    <label
+                      htmlFor="editIsCourseCompleted"
+                      className="text-sm font-semibold text-slate-700 cursor-pointer select-none"
+                    >
+                      Course Completed
+                    </label>
+                  </div>
+                </>
               )}
               <div className="flex gap-3 pt-4">
                 <button
@@ -557,17 +592,42 @@ const UserManagement = () => {
               </div>
             </div>
 
+            <div className="relative min-w-[150px]">
+              <Filter className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all outline-none text-slate-700 appearance-none shadow-sm font-medium"
+              >
+                <option value="all">All Statuses</option>
+                <option value="active_student">Active Students</option>
+                <option value="completed_student">Completed Students</option>
+                <option value="blocked">Blocked Users</option>
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
+                <svg
+                  className="fill-current h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                >
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
+                </svg>
+              </div>
+            </div>
+
             <div className="flex items-center gap-3">
               {(searchTerm ||
                 roleFilter !== "all" ||
                 classFilter !== "all" ||
-                programFilter !== "all") && (
+                programFilter !== "all" ||
+                statusFilter !== "all") && (
                 <button
                   onClick={() => {
                     setSearchTerm("");
                     setRoleFilter("all");
                     setClassFilter("all");
                     setProgramFilter("all");
+                    setStatusFilter("all");
                   }}
                   className="flex items-center justify-center p-2.5 text-slate-500 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-100"
                   title="Clear filters"
@@ -679,6 +739,11 @@ const UserManagement = () => {
                       {user.isBlocked ? (
                         <span className="px-2.5 py-1 text-[10px] font-bold bg-rose-50 text-rose-600 border border-rose-100 rounded-full flex items-center gap-1 w-fit">
                           <Ban className="w-3 h-3" /> Blocked
+                        </span>
+                      ) : user.isCourseCompleted ? (
+                        <span className="px-2.5 py-1 text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 rounded-full flex items-center gap-1 w-fit">
+                          <div className="w-1.5 h-1.5 bg-indigo-500 rounded-full" />{" "}
+                          Completed
                         </span>
                       ) : (
                         <span className="px-2.5 py-1 text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-full flex items-center gap-1 w-fit">

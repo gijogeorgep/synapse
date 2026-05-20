@@ -254,3 +254,18 @@ export const submitEnquiryResponse = (slug, responseData) =>
     method: "POST",
     body: { responses: responseData },
   });
+
+// Admin Payment & Subscription Services
+export const getAdminPayments = (params) => {
+  const query = new URLSearchParams(params).toString();
+  return apiClient(`/admin/payments?${query}`);
+};
+export const getAdminPaymentStats = () => apiClient("/admin/payments/stats");
+export const getAdminSubscriptions = (params) => {
+  const query = new URLSearchParams(params).toString();
+  return apiClient(`/admin/subscriptions?${query}`);
+};
+export const createAdminSubscription = (subscriptionData) =>
+  apiClient("/admin/subscriptions", { method: "POST", body: subscriptionData });
+export const cancelAdminSubscription = (id) =>
+  apiClient(`/admin/subscriptions/${id}`, { method: "DELETE" });

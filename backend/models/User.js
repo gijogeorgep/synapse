@@ -69,6 +69,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    isCourseCompleted: {
+      type: Boolean,
+      default: false,
+    },
     enrolledClassrooms: [
       {
         type: mongoose.Schema.Types.ObjectId,

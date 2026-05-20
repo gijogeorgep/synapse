@@ -94,7 +94,7 @@ export const getExams = async (req, res) => {
         }
 
         let exams = await Exam.find(query)
-            .populate("teacher", "name")
+            .populate("teacher", "name role")
             .populate("classroom", "name className board");
 
         if (req.user.role === 'student') {
@@ -607,7 +607,7 @@ export const updateExam = async (req, res) => {
 export const getExamDetails = async (req, res) => {
     try {
         const exam = await Exam.findById(req.params.id)
-            .populate("teacher", "name")
+            .populate("teacher", "name role")
             .populate("classroom", "name students");
             
         if (!exam) {

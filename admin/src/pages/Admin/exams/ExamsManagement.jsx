@@ -507,6 +507,13 @@ const ExamsManagement = () => {
                                      <BookOpen className="w-4 h-4" />
                                      <span>{exam.classroom?.name || 'No Classroom'} • {exam.totalMarks} Marks</span>
                                  </div>
+                                 <div className="flex items-start text-sm text-slate-500 gap-2">
+                                     <User className="w-4 h-4 text-indigo-500 mt-0.5" />
+                                     <div>
+                                         <span>Created by: {exam.teacher?.name || 'Admin'}</span>
+                                         <p className="text-xs text-slate-400 capitalize">Role: {exam.teacher?.role || 'admin'}</p>
+                                     </div>
+                                 </div>
                              </div>
                              <div className="flex gap-2">
                                  {exam.status === 'draft' ? (
@@ -560,6 +567,7 @@ const ExamsManagement = () => {
                                             <div className="flex items-center gap-2 mb-1">
                                                 <span className="px-2 py-0.5 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-full uppercase tracking-wider">{examDetails.subject}</span>
                                                 <span className="text-xs text-slate-400 font-bold">• Class {examDetails.classLevel}</span>
+                                                 <span className="text-xs text-slate-400 font-bold">• Created by: {examDetails.teacher?.name || 'Admin'} ({examDetails.teacher?.role || 'admin'})</span>
                                             </div>
                                             <h2 className="text-2xl md:text-3xl font-black text-slate-900">{examDetails.title}</h2>
                                         </div>

@@ -28,6 +28,13 @@ import {
 } from "../controllers/examController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 import { logAdminAction } from "../middleware/auditMiddleware.js";
+import {
+    getAdminPayments,
+    getAdminPaymentStats,
+    getAdminSubscriptions,
+    createAdminSubscription,
+    cancelAdminSubscription
+} from "../controllers/paymentController.js";
 
 const router = express.Router();
 
@@ -180,5 +187,25 @@ router.delete(
 
 // Audit Logs - Restricted to Super Admin
 router.get("/audit-logs", authorize("superadmin"), getAuditLogs);
+
+// Payment & Subscription Management
+router.get("/payments", getAdminPayments);
+router.get("/payments/stats", getAdminPaymentStats);
+router.route("/subscriptions")
+    .get(getAdminSubscriptions)
+    .post(
+        logAdminAction("Create Subscription", (req) => {
+            const student = req?.body?.student ? ` student=${req.body.student}` : "";
+            const type = req?.body?.type ? ` type=${req.body.type}` : "";
+            return `Manually granted subscription.${student}${type}`.trim();
+        }),
+        createAdminSubscription
+    );
+
+router.delete(
+    "/subscriptions/:id",
+    logAdminAction("Cancel Subscription", (req) => `Manually cancelled subscription ${req.params.id}`),
+    cancelAdminSubscription
+);
 
 export default router;

@@ -492,6 +492,10 @@ export const updateAdminUser = async (req, res) => {
     user.phoneNumber = req.body.phoneNumber || user.phoneNumber;
     user.class = req.body.class || user.class;
 
+    if (req.body.isCourseCompleted !== undefined) {
+      user.isCourseCompleted = req.body.isCourseCompleted;
+    }
+
     const updatedUser = await user.save();
 
     res.status(200).json({
@@ -502,6 +506,7 @@ export const updateAdminUser = async (req, res) => {
       uniqueId: updatedUser.uniqueId,
       phoneNumber: updatedUser.phoneNumber,
       class: updatedUser.class,
+      isCourseCompleted: updatedUser.isCourseCompleted,
     });
   } catch (error) {
     res.status(500).json({ message: "Server error", error: error.message });

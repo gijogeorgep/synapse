@@ -70,18 +70,16 @@ const StudentExams = () => {
 
     const filteredExams = upcomingExams.filter(e => {
         if (activeTab === "all") return true;
-        if (isIndependent) {
-            // Independent (NEET/JEE/PSC) students: toggle between subject-wise and full mock
-            if (activeTab === "subject-wise") {
-                return e.examType === "subject-wise" || e.examType === "official";
-            }
-            return e.examType === "mock";
-        }
-        // Institutional students: toggle between subject-wise and official
+        
+        const isOfficial = !e.teacher || e.teacher.role === 'admin' || e.teacher.role === 'superadmin' || e.examType === 'official';
+        
         if (activeTab === "official") {
-            return e.examType === "official";
+            return isOfficial;
         }
-        return e.examType === "subject-wise" || !e.examType;
+        if (activeTab === "subject-wise") {
+            return !isOfficial;
+        }
+        return true;
     });
 
     const enterFullscreen = () => {
@@ -354,13 +352,13 @@ const StudentExams = () => {
                                 Subject-wise
                             </button>
                             <button
-                                onClick={() => setActiveTab(isIndependent ? "mock" : "official")}
-                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${activeTab === (isIndependent ? "mock" : "official")
+                                onClick={() => setActiveTab("official")}
+                                className={`px-4 py-1.5 rounded-xl text-xs font-black transition-all ${activeTab === "official"
                                     ? 'bg-white text-cyan-600 shadow-sm'
                                     : 'text-slate-500 hover:text-slate-700'
                                     }`}
                             >
-                                {isIndependent ? "Full Mock" : "Official"}
+                                Official
                             </button>
                         </div>
                     </div>

@@ -1,6 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import { Payment } from "../models/Financial.js";
+import { Payment, Subscription } from "../models/Financial.js";
 import Classroom from "../models/Classroom.js";
 import User from "../models/User.js";
 import dotenv from "dotenv";
@@ -128,6 +128,159 @@ export const verifyPayment = async (req, res) => {
         }
     } catch (error) {
         console.error("Error verifying Razorpay payment:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get all payments (Admin)
+// @route   GET /api/admin/payments
+// @access  Private/Admin
+export const getAdminPayments = async (req, res) => {
+    try {
+        const { status, search } = req.query;
+        let query = {};
+        
+        if (status) {
+            query.status = status;
+        }
+
+        let payments = await Payment.find(query)
+            .populate("student", "name email phoneNumber")
+            .sort({ createdAt: -1 });
+
+        if (search) {
+            const searchLower = search.toLowerCase();
+            payments = payments.filter(p => 
+                (p.student && (p.student.name.toLowerCase().includes(searchLower) || p.student.email.toLowerCase().includes(searchLower))) ||
+                (p.paymentId && p.paymentId.toLowerCase().includes(searchLower)) ||
+                (p.orderId && p.orderId.toLowerCase().includes(searchLower))
+            );
+        }
+
+        res.status(200).json(payments);
+    } catch (error) {
+        console.error("Error fetching admin payments:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get payment and subscription dashboard stats (Admin)
+// @route   GET /api/admin/payments/stats
+// @access  Private/Admin
+export const getAdminPaymentStats = async (req, res) => {
+    try {
+        const payments = await Payment.find({});
+        const activeSubsCount = await Subscription.countDocuments({
+            status: "active",
+            expiryDate: { $gt: new Date() }
+        });
+
+        let totalRevenue = 0;
+        let successCount = 0;
+        let pendingCount = 0;
+        let failedCount = 0;
+
+        payments.forEach(p => {
+            if (p.status === "completed") {
+                totalRevenue += p.amount;
+                successCount++;
+            } else if (p.status === "pending") {
+                pendingCount++;
+            } else if (p.status === "failed") {
+                failedCount++;
+            }
+        });
+
+        res.status(200).json({
+            totalRevenue,
+            successCount,
+            pendingCount,
+            failedCount,
+            activeSubscriptionsCount: activeSubsCount
+        });
+    } catch (error) {
+        console.error("Error fetching payment stats:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get all subscriptions (Admin)
+// @route   GET /api/admin/subscriptions
+// @access  Private/Admin
+export const getAdminSubscriptions = async (req, res) => {
+    try {
+        const { search } = req.query;
+        let subscriptions = await Subscription.find({})
+            .populate("student", "name email")
+            .populate("material", "title")
+            .sort({ createdAt: -1 });
+
+        if (search) {
+            const searchLower = search.toLowerCase();
+            subscriptions = subscriptions.filter(s => 
+                (s.student && (s.student.name.toLowerCase().includes(searchLower) || s.student.email.toLowerCase().includes(searchLower))) ||
+                (s.material && s.material.title.toLowerCase().includes(searchLower)) ||
+                s.type.toLowerCase().includes(searchLower)
+            );
+        }
+
+        res.status(200).json(subscriptions);
+    } catch (error) {
+        console.error("Error fetching admin subscriptions:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Create manual subscription (Admin)
+// @route   POST /api/admin/subscriptions
+// @access  Private/Admin
+export const createAdminSubscription = async (req, res) => {
+    try {
+        const { student, type, material, expiryDate } = req.body;
+
+        if (!student || !type) {
+            return res.status(400).json({ message: "Student and subscription type are required." });
+        }
+
+        const subscriptionData = {
+            student,
+            type,
+            status: "active",
+            expiryDate: expiryDate ? new Date(expiryDate) : undefined
+        };
+
+        if (type === "material") {
+            if (!material) {
+                return res.status(400).json({ message: "Material is required for material type subscription." });
+            }
+            subscriptionData.material = material;
+        }
+
+        const newSubscription = await Subscription.create(subscriptionData);
+        const populated = await Subscription.findById(newSubscription._id)
+            .populate("student", "name email")
+            .populate("material", "title");
+
+        res.status(201).json(populated);
+    } catch (error) {
+        console.error("Error creating admin subscription:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Cancel/delete subscription (Admin)
+// @route   DELETE /api/admin/subscriptions/:id
+// @access  Private/Admin
+export const cancelAdminSubscription = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const subscription = await Subscription.findByIdAndDelete(id);
+        if (!subscription) {
+            return res.status(404).json({ message: "Subscription not found." });
+        }
+        res.status(200).json({ message: "Subscription cancelled successfully." });
+    } catch (error) {
+        console.error("Error cancelling admin subscription:", error);
         res.status(500).json({ message: error.message });
     }
 };

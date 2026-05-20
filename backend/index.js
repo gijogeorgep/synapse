@@ -1,4 +1,4 @@
-import express from "express"; // Restart triggered
+import express from "express"; // Reload backend
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
