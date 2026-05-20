@@ -9,7 +9,7 @@ import Notification from "../models/Notification.js";
 // @route   POST /api/exams
 // @access  Private (Teacher/Admin)
 export const createExam = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom } = req.body;
+    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, status } = req.body;
 
     try {
         const exam = await Exam.create({
@@ -23,6 +23,7 @@ export const createExam = async (req, res) => {
             examCategory: examCategory || "scheduled",
             examType: examType || "subject-wise",
             teacher: req.user._id,
+            status: status || "published",
         });
 
         if (classroom) {
@@ -207,7 +208,7 @@ export const createExamWithQuestions = async (req, res) => {
             marksPerQuestion: parseFloat(marksPerQuestion) || 0,
             negativeMarks: parseFloat(negativeMarks) || 0,
             teacher: req.user._id,
-            status: status || "draft",
+            status: status || "published",
             sections: sections || [],
         });
 

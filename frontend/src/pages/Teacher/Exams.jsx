@@ -128,6 +128,7 @@ const Exams = () => {
         try {
             await createBulkExam({
                 ...formData,
+                status: "published",
                 subject: selectedClassroom?.subjects?.[0] || "General",
                 classLevel: selectedClassroom?.className || "10",
                 classroom: selectedClassroom?._id,
