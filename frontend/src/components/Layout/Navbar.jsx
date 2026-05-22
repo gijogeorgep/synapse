@@ -73,7 +73,8 @@ const Navbar = () => {
         { name: "Programs", sectionId: "programs" },
 
         { name: "Contact", sectionId: "contact" },
-        { name: "Blog", href: "/blogs" }
+        { name: "Blog", href: "/blogs" },
+        { name: "Careers", href: "/careers" }
     ];
 
     const isDashboard = location.pathname.includes("/dashboard") ||

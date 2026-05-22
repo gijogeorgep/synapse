@@ -31,6 +31,7 @@ import EnquiryResponses from "./pages/Admin/enquiry/EnquiryResponses";
 import PublicForm from "./pages/Public/EnquiryForm/PublicForm";
 import LessonTracker from "./pages/Teacher/LessonTracker"; // Shared component
 import Notifications from "./pages/Notifications/Notifications";
+import CareersManagement from "./pages/Admin/careers/CareersManagement";
 import { useAuth } from "./context/AuthContext";
 
 function RouteSeo() {
@@ -90,6 +91,7 @@ function AppContent() {
               </Route>
               <Route path="/admin/payments" element={<AdminPayments />} />
               <Route path="/admin/lesson-tracker" element={<LessonTracker />} />
+              <Route path="/admin/careers" element={<CareersManagement />} />
               <Route path="/admin/settings" element={<AdminSettings />} />
               <Route path="/admin/profile" element={<AdminProfile />} />
               <Route path="/notifications" element={<Notifications />} />

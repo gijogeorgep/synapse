@@ -24,6 +24,7 @@ import {
     Image as ImageIcon,
     FileSpreadsheet,
     Calendar,
+    Briefcase,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
@@ -59,6 +60,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             { name: "Settings", icon: Settings, path: "/admin/settings" },
             { name: "Enquiry Forms", icon: FileText, path: "/admin/enquiry" },
             { name: "Lesson Tracker", icon: FileSpreadsheet, path: "/admin/lesson-tracker" },
+            { name: "Careers", icon: Briefcase, path: "/admin/careers" },
         ],
         superadmin: [
             { name: "Dashboard", icon: LayoutDashboard, path: "/admin/dashboard" },
@@ -78,6 +80,7 @@ const Sidebar = ({ role, collapsed = false, onToggleCollapse, isMobileOpen, setI
             { name: "Settings", icon: Settings, path: "/admin/settings" },
             { name: "Enquiry Forms", icon: FileText, path: "/admin/enquiry" },
             { name: "Lesson Tracker", icon: FileSpreadsheet, path: "/admin/lesson-tracker" },
+            { name: "Careers", icon: Briefcase, path: "/admin/careers" },
         ],
     };
 

@@ -27,6 +27,9 @@ import MaintenancePage from "./pages/MaintenancePage";
 import NotFound from "./pages/NotFound";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
+import Careers from "./pages/Careers";
+import JobDetail from "./pages/JobDetail";
+import SpontaneousApply from "./pages/SpontaneousApply";
 
 // Portal Pages
 import StudentDashboard from "./pages/Student/Dashboard";
@@ -163,7 +166,12 @@ function RouteSeo() {
     return <SEO title=" Notifications" description="View your secure notifications." noindex />;
   }
 
-  if (pathname.startsWith("/blogs/") || pathname.startsWith("/programs/")) {
+  if (
+    pathname.startsWith("/blogs/") ||
+    pathname.startsWith("/programs/") ||
+    pathname.startsWith("/careers/job/") ||
+    pathname.startsWith("/careers/apply")
+  ) {
     return null;
   }
 
@@ -243,6 +251,11 @@ function RouteSeo() {
       description: "Review the terms and conditions for using Synapse Edu Hub services and platforms.",
       keywords: "terms and conditions, Synapse Edu Hub terms",
     },
+    "/careers": {
+      title: "Join Our Team | Careers at Synapse Edu Hub",
+      description: "Explore career opportunities at Synapse Edu Hub. Apply for active job openings or submit your spontaneous application and CV to join our team.",
+      keywords: "synapse careers, education jobs, teaching vacancies, mentor openings, work at synapse",
+    },
     "/maintenance": {
       title: "Maintenance Update | Synapse Edu Hub",
       description: "Synapse Edu Hub is temporarily under maintenance. Please check back shortly.",
@@ -317,6 +330,9 @@ function AppContent() {
             <Route path="/blogs/:idOrSlug" element={<BlogPost />} />
             <Route path="/programs/:id" element={<ProgramDetail />} />
             <Route path="/form/:slug" element={<PublicForm />} />
+            <Route path="/careers" element={<Careers />} />
+            <Route path="/careers/job/:id" element={<JobDetail />} />
+            <Route path="/careers/apply" element={<SpontaneousApply />} />
 
             {/* General Protected Routes */}
             <Route element={<ProtectedRoute />}>

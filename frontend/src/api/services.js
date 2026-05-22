@@ -261,3 +261,14 @@ export const createRazorpayOrder = (classroomId) =>
   apiClient("/payments/create-order", { method: "POST", body: { classroomId } });
 export const verifyRazorpayPayment = (paymentData) =>
   apiClient("/payments/verify", { method: "POST", body: paymentData });
+
+// Careers Services
+export const getPublicVacancies = () => apiClient("/careers/vacancies");
+export const getPublicVacancyDetail = (id) => apiClient(`/careers/vacancies/${id}`);
+export const submitCareerApplication = (formData) =>
+  apiClient("/careers/apply", {
+    method: "POST",
+    body: formData,
+    headers: null,
+  });
+

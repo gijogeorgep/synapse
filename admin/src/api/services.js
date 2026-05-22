@@ -269,3 +269,19 @@ export const createAdminSubscription = (subscriptionData) =>
   apiClient("/admin/subscriptions", { method: "POST", body: subscriptionData });
 export const cancelAdminSubscription = (id) =>
   apiClient(`/admin/subscriptions/${id}`, { method: "DELETE" });
+
+// Careers Services
+export const getAdminVacancies = () => apiClient("/careers/admin/vacancies");
+export const createVacancy = (vacancyData) =>
+  apiClient("/careers/admin/vacancies", { method: "POST", body: vacancyData });
+export const updateVacancy = (id, vacancyData) =>
+  apiClient(`/careers/admin/vacancies/${id}`, { method: "PATCH", body: vacancyData });
+export const deleteVacancy = (id) =>
+  apiClient(`/careers/admin/vacancies/${id}`, { method: "DELETE" });
+
+export const getApplications = () => apiClient("/careers/admin/applications");
+export const updateApplicationStatus = (id, statusData) =>
+  apiClient(`/careers/admin/applications/${id}`, { method: "PATCH", body: statusData });
+export const deleteApplication = (id) =>
+  apiClient(`/careers/admin/applications/${id}`, { method: "DELETE" });
+
