@@ -30,11 +30,37 @@ const careerApplicationSchema = new mongoose.Schema(
             type: String,
             trim: true,
         },
+        subjects: [
+            {
+                type: String,
+                trim: true,
+            },
+        ],
         classLevel: {
             type: String,
             trim: true,
         },
+        classLevels: [
+            {
+                type: String,
+                trim: true,
+            },
+        ],
+        languages: [
+            {
+                type: String,
+                trim: true,
+            },
+        ],
         experience: {
+            type: String,
+            trim: true,
+        },
+        onlineExperience: {
+            type: String,
+            trim: true,
+        },
+        offlineExperience: {
             type: String,
             trim: true,
         },

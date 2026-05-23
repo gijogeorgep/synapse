@@ -10,7 +10,8 @@ import {
     uploadImage, 
     uploadFile, 
     createBulkExam, 
-    updateClassroomResources 
+    updateClassroomResources,
+    unassignUsersFromClassroom,
 } from '../../../api/services';
 
 const EMPTY_QUESTION = () => ({
@@ -30,6 +31,11 @@ const AdminClassroomDetails = () => {
     const [activeTab, setActiveTab] = useState('students');
     const [status, setStatus] = useState({ type: '', message: '' });
     const [hideCompleted, setHideCompleted] = useState(false);
+
+    // Unassign modal (superadmin only)
+    const [isUnassignModalOpen, setIsUnassignModalOpen] = useState(false);
+    const [pendingUnassign, setPendingUnassign] = useState(null); // { userId, role, name }
+    const [isUnassigning, setIsUnassigning] = useState(false);
 
     // Exam builder state
     const [examMeta, setExamMeta] = useState({ title: '', description: '', duration: 60, subject: '', marksPerQuestion: 1, negativeMarks: 0, examType: 'subject-wise' });
@@ -77,6 +83,35 @@ const AdminClassroomDetails = () => {
     const showStatus = (type, message) => {
         setStatus({ type, message });
         setTimeout(() => setStatus({ type: '', message: '' }), 4000);
+    };
+
+    const openUnassignModal = (user, role) => {
+        if (userInfo?.role !== 'superadmin') return;
+        if (!user?._id) return;
+        setPendingUnassign({ userId: user._id, role, name: user.name || user.email || 'this user' });
+        setIsUnassignModalOpen(true);
+    };
+
+    const confirmUnassign = async () => {
+        if (userInfo?.role !== 'superadmin') return;
+        if (!pendingUnassign?.userId || !pendingUnassign?.role) return;
+
+        const label = pendingUnassign.role === 'teacher' ? 'teacher' : 'student';
+        setIsUnassigning(true);
+        try {
+            const updated = await unassignUsersFromClassroom(id, {
+                userIds: [pendingUnassign.userId],
+                role: pendingUnassign.role,
+            });
+            setClassroom(updated);
+            showStatus('success', `${label} removed successfully.`);
+            setIsUnassignModalOpen(false);
+            setPendingUnassign(null);
+        } catch (err) {
+            showStatus('error', err || 'Failed to remove user.');
+        } finally {
+            setIsUnassigning(false);
+        }
     };
 
     const validateExamBuilder = () => {
@@ -340,6 +375,39 @@ const AdminClassroomDetails = () => {
                 </div>
             )}
 
+            {/* Unassign Confirmation Modal */}
+            {isUnassignModalOpen && pendingUnassign && (
+                <div className="fixed inset-0 z-[150] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-3xl p-8 w-full max-w-md shadow-2xl animate-in zoom-in-95 duration-200 text-center">
+                        <div className="w-16 h-16 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Trash2 className="w-8 h-8" />
+                        </div>
+                        <h2 className="text-xl font-bold text-slate-800">Remove From Classroom</h2>
+                        <p className="text-slate-500 mt-2">
+                            Remove <span className="font-bold text-slate-700">{pendingUnassign.name}</span> from this classroom?
+                        </p>
+                        <div className="flex gap-3 mt-8">
+                            <button
+                                type="button"
+                                onClick={() => { setIsUnassignModalOpen(false); setPendingUnassign(null); }}
+                                disabled={isUnassigning}
+                                className="flex-1 py-3 border border-slate-200 text-slate-600 rounded-xl font-medium hover:bg-slate-50 transition-colors disabled:opacity-60"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                onClick={confirmUnassign}
+                                disabled={isUnassigning}
+                                className="flex-1 py-3 bg-rose-600 text-white rounded-xl font-medium hover:bg-rose-700 transition-colors disabled:opacity-60"
+                            >
+                                {isUnassigning ? 'Removing...' : 'Confirm Remove'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Stats */}
             <div className="grid grid-cols-3 gap-5">
                 {[
@@ -438,6 +506,16 @@ const AdminClassroomDetails = () => {
                                                             </span>
                                                         )}
                                                         {s.uniqueId && <span className="font-mono text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded">{s.uniqueId}</span>}
+                                                        {userInfo?.role === 'superadmin' && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => openUnassignModal(s, 'student')}
+                                                                className="ml-1 inline-flex items-center justify-center w-9 h-9 rounded-xl border border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                                                                title="Remove student"
+                                                            >
+                                                                <Trash2 className="w-4 h-4" />
+                                                            </button>
+                                                        )}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -476,6 +554,16 @@ const AdminClassroomDetails = () => {
                                                     </div>
                                                 </div>
                                                 <span className="px-2 py-1 bg-indigo-50 text-indigo-600 text-[10px] font-bold rounded-lg border border-indigo-100">Teacher</span>
+                                                {userInfo?.role === 'superadmin' && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => openUnassignModal(t, 'teacher')}
+                                                        className="ml-1 inline-flex items-center justify-center w-9 h-9 rounded-xl border border-rose-100 bg-rose-50 text-rose-600 hover:bg-rose-100"
+                                                        title="Remove teacher"
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </button>
+                                                )}
                                             </li>
                                         ))}
                                     </ul>

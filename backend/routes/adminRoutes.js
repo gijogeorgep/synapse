@@ -11,6 +11,7 @@ import {
     updateClassroom,
     deleteClassroom,
     assignUsersToClassroom,
+    unassignUsersFromClassroom,
     createAnnouncement,
     getAnnouncements,
     deleteAnnouncement,
@@ -108,6 +109,17 @@ router.route("/classrooms/:id/assign")
             return `Assigned users to classroom ${req.params.id}${suffix}`;
         }),
         assignUsersToClassroom,
+    );
+
+router.route("/classrooms/:id/unassign")
+    .post(
+        logAdminAction("Unassign Users From Classroom", (req) => {
+            const count = Array.isArray(req?.body?.userIds) ? req.body.userIds.length : undefined;
+            const role = req?.body?.role ? ` role=${req.body.role}` : "";
+            const suffix = typeof count === "number" ? ` (${count} users)` : "";
+            return `Unassigned users from classroom ${req.params.id}${suffix}${role}`.trim();
+        }),
+        unassignUsersFromClassroom,
     );
 
 // --- Advanced Admin Routes ---

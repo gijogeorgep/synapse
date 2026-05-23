@@ -11,6 +11,7 @@ import {
   Eye,
   ExternalLink,
   FileText,
+  Download,
   MapPin,
   Clock,
   User,
@@ -33,6 +34,7 @@ import {
   updateApplicationStatus,
   deleteApplication
 } from "../../../api/services";
+import { getApiUrl } from "../../../api/apiClient";
 
 const CareersManagement = () => {
   const [activeTab, setActiveTab] = useState("vacancies"); // "vacancies" or "applications"
@@ -61,6 +63,86 @@ const CareersManagement = () => {
   // Application Detail Modal State
   const [selectedApplication, setSelectedApplication] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all");
+  const [preview, setPreview] = useState({ open: false, url: "", title: "", isPdf: true });
+
+  const toArray = (value) => {
+    if (!value) return [];
+    if (Array.isArray(value)) return value.filter(Boolean);
+    return [value].filter(Boolean);
+  };
+
+  const formatList = (values) => {
+    const cleaned = toArray(values).map((v) => String(v).trim()).filter(Boolean);
+    return cleaned.length ? cleaned.join(", ") : "";
+  };
+
+  const formatExperience = (app) => {
+    const online = app?.onlineExperience ?? "";
+    const offline = app?.offlineExperience ?? "";
+    if (online !== "" || offline !== "") {
+      const parts = [];
+      if (online !== "") parts.push(`Online: ${online}y`);
+      if (offline !== "") parts.push(`Offline: ${offline}y`);
+      return parts.join(" • ");
+    }
+    return app?.experience ? `${app.experience} Years` : "";
+  };
+
+  const buildResumeTitle = (app) => {
+    const candidate = app?.name ? String(app.name).trim() : "candidate";
+    const stamp = app?.createdAt ? new Date(app.createdAt).toISOString().slice(0, 10) : "";
+    return `${candidate}${stamp ? `-${stamp}` : ""}-CV`;
+  };
+
+  const getToken = () => {
+    try {
+      const raw = localStorage.getItem("userInfo");
+      if (!raw) return "";
+      const parsed = JSON.parse(raw);
+      return parsed?.token || "";
+    } catch {
+      return "";
+    }
+  };
+
+  const buildResumeProxyUrl = (app, { download = false } = {}) => {
+    const token = getToken();
+    const base = getApiUrl();
+    const id = app?._id;
+    if (!id) return "";
+    const params = new URLSearchParams();
+    if (token) params.set("token", token);
+    if (download) params.set("download", "1");
+    return `${base}/careers/admin/applications/${id}/resume?${params.toString()}`;
+  };
+
+  const openResumePreview = (app) => {
+    const url = buildResumeProxyUrl(app, { download: false });
+    if (!url) {
+      toast.error("CV URL not found for this application.");
+      return;
+    }
+    const rawUrl = String(app?.resumeUrl || "").toLowerCase();
+    const isPdf = rawUrl.includes(".pdf") || rawUrl.includes("/pdf") || rawUrl.includes("format=pdf");
+    setPreview({ open: true, url, title: buildResumeTitle(app), isPdf });
+  };
+
+  const closeResumePreview = () => setPreview({ open: false, url: "", title: "", isPdf: true });
+
+  const downloadResume = async (app) => {
+    const url = buildResumeProxyUrl(app, { download: true });
+    if (!url) {
+      toast.error("CV URL not found for this application.");
+      return;
+    }
+
+    const a = document.createElement("a");
+    a.href = url;
+    // Same-origin (backend) URL, so download should be handled by Content-Disposition
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  };
 
   useEffect(() => {
     fetchData();
@@ -492,7 +574,7 @@ const CareersManagement = () => {
                           )}
                         </td>
                         <td className="p-5 text-center font-bold text-slate-700 text-sm">
-                          {app.experience} Years
+                          {formatExperience(app) || "-"}
                         </td>
                         <td className="p-5">
                           <span
@@ -843,14 +925,26 @@ const CareersManagement = () => {
                         ? selectedApplication.appliedVacancy.title
                         : selectedApplication.generalRole || "Spontaneous"}
                     </span>
-                    {selectedApplication.subject && (
+                    {(selectedApplication.subject || (selectedApplication.subjects && selectedApplication.subjects.length > 0)) && (
                       <span className="block text-xs text-slate-500 font-semibold mt-0.5">
-                        Subject: <strong className="text-slate-700">{selectedApplication.subject}</strong>
+                        Subjects:{" "}
+                        <strong className="text-slate-700">
+                          {formatList(selectedApplication.subjects) || selectedApplication.subject}
+                        </strong>
                       </span>
                     )}
-                    {selectedApplication.classLevel && (
+                    {(selectedApplication.classLevel || (selectedApplication.classLevels && selectedApplication.classLevels.length > 0)) && (
                       <span className="block text-xs text-slate-500 font-semibold mt-0.5">
-                        Class: <strong className="text-slate-700">{selectedApplication.classLevel}</strong>
+                        Classes:{" "}
+                        <strong className="text-slate-700">
+                          {formatList(selectedApplication.classLevels) || selectedApplication.classLevel}
+                        </strong>
+                      </span>
+                    )}
+                    {selectedApplication.languages && selectedApplication.languages.length > 0 && (
+                      <span className="block text-xs text-slate-500 font-semibold mt-0.5">
+                        Languages:{" "}
+                        <strong className="text-slate-700">{formatList(selectedApplication.languages)}</strong>
                       </span>
                     )}
                   </div>
@@ -865,7 +959,7 @@ const CareersManagement = () => {
                       Experience
                     </span>
                     <span className="font-bold text-slate-700">
-                      {selectedApplication.experience} Years
+                      {formatExperience(selectedApplication) || "-"}
                     </span>
                   </div>
                 </div>
@@ -921,7 +1015,7 @@ const CareersManagement = () => {
 
               <div className="flex items-center gap-3">
                 <a
-                  href={selectedApplication.resumeUrl}
+                  href={buildResumeProxyUrl(selectedApplication, { download: false }) || selectedApplication.resumeUrl}
                   target="_blank"
                   rel="noreferrer"
                   className="flex items-center justify-center gap-2 px-6 py-3.5 bg-cyan-600 hover:bg-cyan-700 text-white font-bold rounded-xl shadow-lg transition-all text-xs uppercase tracking-wider"
@@ -932,6 +1026,24 @@ const CareersManagement = () => {
                 </a>
 
                 <button
+                  onClick={() => openResumePreview(selectedApplication)}
+                  className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all text-xs uppercase tracking-wider border border-slate-200"
+                  title="Preview CV"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Preview</span>
+                </button>
+
+                <button
+                  onClick={() => downloadResume(selectedApplication)}
+                  className="flex items-center justify-center gap-2 px-6 py-3.5 bg-white hover:bg-slate-50 text-slate-700 font-bold rounded-xl transition-all text-xs uppercase tracking-wider border border-slate-200"
+                  title="Download CV"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Download</span>
+                </button>
+
+                <button
                   onClick={() => handleDeleteApplication(selectedApplication._id)}
                   className="p-3.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all border border-transparent hover:border-rose-100"
                   title="Purge Candidate Records"
@@ -939,6 +1051,75 @@ const CareersManagement = () => {
                   <Trash2 className="w-5 h-5" />
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* CV Preview Modal */}
+      {preview.open && (
+        <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center px-4 py-10">
+          <div className="bg-white rounded-3xl w-full max-w-5xl shadow-2xl border border-slate-100 overflow-hidden relative">
+            <div className="flex items-center justify-between gap-3 px-5 py-4 border-b border-slate-100">
+              <div className="min-w-0">
+                <div className="text-[10px] font-black uppercase tracking-widest text-slate-400">CV Preview</div>
+                <div className="text-sm font-black text-slate-900 truncate">{preview.title}</div>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={preview.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider hover:bg-slate-800 transition-all"
+                >
+                  Open in new tab
+                </a>
+                <button
+                  onClick={closeResumePreview}
+                  className="p-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-900 transition-all"
+                  title="Close"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+            <div className="bg-slate-50">
+              {preview.isPdf ? (
+                <iframe
+                  title="CV Preview"
+                  src={preview.url}
+                  className="w-full h-[75vh]"
+                />
+              ) : (
+                <div className="p-10 text-center space-y-4">
+                  <div className="mx-auto w-14 h-14 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-400">
+                    <FileText className="w-7 h-7" />
+                  </div>
+                  <div className="space-y-1">
+                    <div className="text-lg font-black text-slate-900">Preview not supported</div>
+                    <div className="text-sm font-semibold text-slate-500">
+                      This CV is not a PDF (likely DOC/DOCX). Use “Open in new tab” or “Download”.
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-center gap-2 pt-2">
+                    <a
+                      href={preview.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="px-5 py-2.5 rounded-xl bg-slate-900 text-white text-xs font-black uppercase tracking-wider hover:bg-slate-800 transition-all"
+                    >
+                      Open in new tab
+                    </a>
+                    <button
+                      type="button"
+                      onClick={closeResumePreview}
+                      className="px-5 py-2.5 rounded-xl bg-white border border-slate-200 text-slate-700 text-xs font-black uppercase tracking-wider hover:bg-slate-50 transition-all"
+                    >
+                      Close
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

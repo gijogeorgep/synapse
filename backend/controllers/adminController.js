@@ -436,6 +436,76 @@ export const assignUsersToClassroom = async (req, res) => {
   }
 };
 
+// @desc    Unassign users from a Classroom (remove students/teachers)
+// @route   POST /api/admin/classrooms/:id/unassign
+// @access  Private/Superadmin
+export const unassignUsersFromClassroom = async (req, res) => {
+  try {
+    if (req.user?.role !== "superadmin") {
+      return res.status(403).json({ message: "Only superadmin can unassign users" });
+    }
+
+    const { id } = req.params;
+    const { userIds, role } = req.body;
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Please provide an array of userIds" });
+    }
+
+    const classroom = await Classroom.findById(id);
+    if (!classroom) {
+      return res.status(404).json({ message: "Classroom not found" });
+    }
+
+    const userIdStrings = userIds.map((u) => u.toString());
+
+    if (role === "student") {
+      classroom.students = (classroom.students || []).filter(
+        (s) => !userIdStrings.includes(s.toString()),
+      );
+    } else if (role === "teacher") {
+      classroom.teachers = (classroom.teachers || []).filter(
+        (t) => !userIdStrings.includes(t.toString()),
+      );
+    } else {
+      return res.status(400).json({
+        message:
+          "Invalid role specified for unassignment (must be 'student' or 'teacher')",
+      });
+    }
+
+    await classroom.save();
+
+    // Keep user.enrolledClassrooms in sync (safe no-op if absent)
+    await User.updateMany(
+      { _id: { $in: userIds } },
+      { $pull: { enrolledClassrooms: classroom._id } },
+    );
+
+    // Notify users about removal (optional, mirrors assignment notifications)
+    const notificationPayloads = userIds.map((uid) => ({
+      recipient: uid,
+      title: "Classroom Updated",
+      message: `You have been removed from classroom: ${classroom.name}`,
+      type: "classroom",
+    }));
+    if (notificationPayloads.length > 0) {
+      await Notification.insertMany(notificationPayloads);
+    }
+
+    const updatedClassroom = await Classroom.findById(id)
+      .populate("students", "name email role uniqueId phoneNumber")
+      .populate("teachers", "name email role uniqueId phoneNumber");
+
+    res.status(200).json(updatedClassroom);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
 // @desc    Update a user
 // @route   PATCH /api/admin/users/:id
 // @access  Private/Admin

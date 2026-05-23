@@ -1,6 +1,7 @@
 import Vacancy from "../models/Vacancy.js";
 import CareerApplication from "../models/CareerApplication.js";
 import cloudinary from "../config/cloudinary.js";
+import { Readable } from "stream";
 
 // ==========================================
 // PUBLIC CONTROLLERS
@@ -41,7 +42,22 @@ export const getPublicVacancyById = async (req, res) => {
 // @access  Public
 export const submitApplication = async (req, res) => {
     try {
-        const { name, email, phoneNumber, appliedVacancy, generalRole, experience, coverLetter, subject, classLevel } = req.body;
+        const {
+            name,
+            email,
+            phoneNumber,
+            appliedVacancy,
+            generalRole,
+            experience,
+            onlineExperience,
+            offlineExperience,
+            coverLetter,
+            subject,
+            classLevel,
+            subjects,
+            classLevels,
+            languages,
+        } = req.body;
 
         if (!name || !email || !phoneNumber) {
             return res.status(400).json({ message: "Please provide name, email, and phone number." });
@@ -79,15 +95,60 @@ export const submitApplication = async (req, res) => {
             }
         }
 
+        const parseStringArray = (value) => {
+            if (!value) return [];
+            if (Array.isArray(value)) return value.map((v) => String(v).trim()).filter(Boolean);
+            if (typeof value === "string") {
+                const trimmed = value.trim();
+                if (!trimmed) return [];
+                // Allow JSON-encoded arrays from multipart form submissions
+                if (trimmed.startsWith("[") || trimmed.startsWith("{")) {
+                    try {
+                        const parsed = JSON.parse(trimmed);
+                        if (Array.isArray(parsed)) return parsed.map((v) => String(v).trim()).filter(Boolean);
+                    } catch {
+                        // fall through
+                    }
+                }
+                // Fallback: comma-separated values
+                return trimmed
+                    .split(",")
+                    .map((v) => v.trim())
+                    .filter(Boolean);
+            }
+            return [];
+        };
+
+        const normalizedSubjects = parseStringArray(subjects);
+        const normalizedClassLevels = parseStringArray(classLevels);
+        const normalizedLanguages = parseStringArray(languages);
+
+        const onlineExpStr = onlineExperience !== undefined && onlineExperience !== null ? String(onlineExperience).trim() : "";
+        const offlineExpStr = offlineExperience !== undefined && offlineExperience !== null ? String(offlineExperience).trim() : "";
+
+        // Keep legacy experience populated when possible (used in some UIs)
+        let legacyExperience = experience !== undefined && experience !== null ? String(experience).trim() : "";
+        if (!legacyExperience && (onlineExpStr || offlineExpStr)) {
+            const onlineNum = Number(onlineExpStr || 0);
+            const offlineNum = Number(offlineExpStr || 0);
+            const total = Number.isFinite(onlineNum) && Number.isFinite(offlineNum) ? onlineNum + offlineNum : NaN;
+            legacyExperience = Number.isFinite(total) ? String(total) : "";
+        }
+
         const application = await CareerApplication.create({
             name,
             email,
             phoneNumber: cleanPhone,
             appliedVacancy: vacancyId,
             generalRole: vacancyId ? undefined : generalRole,
-            subject: vacancyId ? undefined : subject,
-            classLevel: vacancyId ? undefined : classLevel,
-            experience,
+            subject: vacancyId ? undefined : (normalizedSubjects[0] || subject),
+            subjects: vacancyId ? undefined : (normalizedSubjects.length ? normalizedSubjects : undefined),
+            classLevel: vacancyId ? undefined : (normalizedClassLevels[0] || classLevel),
+            classLevels: vacancyId ? undefined : (normalizedClassLevels.length ? normalizedClassLevels : undefined),
+            languages: vacancyId ? undefined : (normalizedLanguages.length ? normalizedLanguages : undefined),
+            experience: legacyExperience,
+            onlineExperience: onlineExpStr || undefined,
+            offlineExperience: offlineExpStr || undefined,
             resumeUrl,
             resumePublicId,
             coverLetter,
@@ -265,5 +326,62 @@ export const deleteApplication = async (req, res) => {
         res.status(200).json({ message: "Application deleted successfully." });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
+    }
+};
+
+// @desc    Stream/preview a candidate resume (admin only)
+// @route   GET /api/careers/admin/applications/:id/resume?download=1
+// @access  Private/Admin (token allowed via query param)
+export const streamApplicationResume = async (req, res) => {
+    try {
+        const application = await CareerApplication.findById(req.params.id);
+        if (!application) {
+            return res.status(404).json({ message: "Application not found." });
+        }
+        if (!application.resumeUrl) {
+            return res.status(404).json({ message: "Resume not found for this application." });
+        }
+
+        const upstream = await fetch(application.resumeUrl);
+        if (!upstream.ok) {
+            return res.status(502).json({ message: "Unable to fetch resume from storage." });
+        }
+
+        const contentType = upstream.headers.get("content-type") || "application/octet-stream";
+        const isDownload = String(req.query.download || "").toLowerCase() === "1" || String(req.query.download || "").toLowerCase() === "true";
+
+        const safeBaseName = (String(application.name || "candidate").trim().replace(/[^\w\-]+/g, "_") || "candidate").slice(0, 60);
+        const urlLower = String(application.resumeUrl || "").toLowerCase();
+        const extFromUrl =
+            urlLower.includes(".docx") ? "docx" :
+            urlLower.includes(".doc") ? "doc" :
+            urlLower.includes(".pdf") ? "pdf" :
+            "";
+        const ext =
+            contentType.includes("pdf") ? "pdf" :
+            contentType.includes("msword") ? "doc" :
+            contentType.includes("wordprocessingml") ? "docx" :
+            extFromUrl || "pdf";
+        const fileName = `${safeBaseName}_CV.${ext}`;
+
+        res.setHeader("Content-Type", contentType);
+        res.setHeader("Content-Disposition", `${isDownload ? "attachment" : "inline"}; filename="${fileName}"`);
+        res.setHeader("Cache-Control", "private, max-age=0, no-cache");
+
+        // Stream response body (Node fetch returns a Web ReadableStream)
+        if (upstream.body) {
+            try {
+                Readable.fromWeb(upstream.body).pipe(res);
+                return;
+            } catch {
+                // fall back to buffering below
+            }
+        }
+
+        const arrayBuffer = await upstream.arrayBuffer();
+        return res.status(200).send(Buffer.from(arrayBuffer));
+    } catch (error) {
+        console.error("Stream resume error:", error);
+        return res.status(500).json({ message: "Server error", error: error.message });
     }
 };

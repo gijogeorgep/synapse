@@ -124,6 +124,11 @@ export const assignUserToClassroom = (id, assignData) =>
     method: "POST",
     body: assignData,
   });
+export const unassignUsersFromClassroom = (id, unassignData) =>
+  apiClient(`/admin/classrooms/${id}/unassign`, {
+    method: "POST",
+    body: unassignData,
+  });
 
 export const getAdminAnnouncements = () => apiClient("/admin/announcements");
 export const createAdminAnnouncement = (announcementData) =>
@@ -284,4 +289,3 @@ export const updateApplicationStatus = (id, statusData) =>
   apiClient(`/careers/admin/applications/${id}`, { method: "PATCH", body: statusData });
 export const deleteApplication = (id) =>
   apiClient(`/careers/admin/applications/${id}`, { method: "DELETE" });
-

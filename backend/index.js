@@ -96,6 +96,13 @@ app.get("/", (req, res) => {
     res.send("API is running...");
 });
 
+// API 404 handler (return JSON instead of Express default HTML)
+app.use("/api", (req, res) => {
+    res.status(404).json({
+        message: `Route not found: ${req.method} ${req.originalUrl}`,
+    });
+});
+
 // Global error handler — must have 4 arguments for Express to treat it as error middleware
 app.use((err, req, res, next) => {
     // body-parser JSON parse failure (malformed request body)

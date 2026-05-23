@@ -8,6 +8,7 @@ import {
     updateVacancy,
     deleteVacancy,
     getApplications,
+    streamApplicationResume,
     updateApplicationStatus,
     deleteApplication
 } from "../controllers/careerController.js";
@@ -60,6 +61,13 @@ router.route("/admin/vacancies/:id")
 // Applications review routes
 router.route("/admin/applications")
     .get(getApplications);
+
+// Resume preview/download (streamed via backend; token allowed via query param)
+router.get(
+    "/admin/applications/:id/resume",
+    logAdminAction("View/Download Career Application Resume", (req) => `Accessed resume for application ${req.params.id}`),
+    streamApplicationResume
+);
 
 router.route("/admin/applications/:id")
     .patch(

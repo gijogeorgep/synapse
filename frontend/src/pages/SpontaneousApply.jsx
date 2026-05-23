@@ -26,10 +26,12 @@ const SpontaneousApply = () => {
     name: "",
     email: "",
     phoneNumber: "",
-    experience: "",
+    onlineExperience: "",
+    offlineExperience: "",
     generalRole: "Tutor",
-    subject: "",
-    classLevel: "",
+    subjects: [],
+    languages: [],
+    classLevels: [],
     coverLetter: "",
   });
   const [resumeFile, setResumeFile] = useState(null);
@@ -40,15 +42,18 @@ const SpontaneousApply = () => {
   }, []);
 
   const validateField = (name, value) => {
+    const raw = typeof value === "string" ? value : String(value ?? "");
+    const trimmed = raw.trim();
     if (name === "email") {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!value) return "Email address is required.";
-      if (!emailRegex.test(value)) return "Please enter a valid email address.";
+      const normalized = trimmed.toLowerCase();
+      if (!normalized) return "Email address is required.";
+      if (!emailRegex.test(normalized)) return "Please enter a valid email address.";
     }
     if (name === "phoneNumber") {
-      const clean = value.replace(/[\s\-\(\)]/g, "");
+      const clean = trimmed.replace(/[\s\-\(\)]/g, "");
       const phoneRegex = /^\+?\d{10,15}$/;
-      if (!value) return "Phone number is required.";
+      if (!trimmed) return "Phone number is required.";
       if (!phoneRegex.test(clean)) return "Enter a valid phone number (10–15 digits, e.g. +91 XXXXX XXXXX).";
     }
     return "";
@@ -61,6 +66,23 @@ const SpontaneousApply = () => {
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
     }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    if (!["email", "phoneNumber"].includes(name)) return;
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+  };
+
+  const toggleMultiValue = (key, value) => {
+    setFormData((prev) => {
+      const current = Array.isArray(prev[key]) ? prev[key] : [];
+      const exists = current.includes(value);
+      return {
+        ...prev,
+        [key]: exists ? current.filter((v) => v !== value) : [...current, value],
+      };
+    });
   };
 
   const handleFileChange = (e) => {
@@ -92,6 +114,16 @@ const SpontaneousApply = () => {
       return;
     }
 
+    if (formData.generalRole === "Tutor") {
+      const hasSubjects = Array.isArray(formData.subjects) && formData.subjects.length > 0;
+      const hasLanguages = Array.isArray(formData.languages) && formData.languages.length > 0;
+      const hasClassLevels = Array.isArray(formData.classLevels) && formData.classLevels.length > 0;
+      if (!hasSubjects || !hasLanguages || !hasClassLevels) {
+        toast.error("Please select at least 1 subject, 1 language, and 1 class level.");
+        return;
+      }
+    }
+
     if (!resumeFile) {
       toast.error("Please upload your CV/Resume");
       return;
@@ -100,17 +132,22 @@ const SpontaneousApply = () => {
     try {
       setSubmitting(true);
       const data = new FormData();
-      data.append("name", formData.name);
-      data.append("email", formData.email);
-      data.append("phoneNumber", formData.phoneNumber);
-      data.append("experience", formData.experience);
+      const normalizedEmail = String(formData.email || "").trim().toLowerCase();
+      const normalizedPhone = String(formData.phoneNumber || "").trim();
+
+      data.append("name", String(formData.name || "").trim());
+      data.append("email", normalizedEmail);
+      data.append("phoneNumber", normalizedPhone);
+      data.append("onlineExperience", formData.onlineExperience);
+      data.append("offlineExperience", formData.offlineExperience);
       data.append("coverLetter", formData.coverLetter);
       data.append("resume", resumeFile);
       data.append("generalRole", formData.generalRole);
 
       if (formData.generalRole === "Tutor") {
-        data.append("subject", formData.subject);
-        data.append("classLevel", formData.classLevel);
+        data.append("subjects", JSON.stringify(formData.subjects || []));
+        data.append("languages", JSON.stringify(formData.languages || []));
+        data.append("classLevels", JSON.stringify(formData.classLevels || []));
       }
 
       await submitCareerApplication(data);
@@ -129,10 +166,12 @@ const SpontaneousApply = () => {
       name: "",
       email: "",
       phoneNumber: "",
-      experience: "",
+      onlineExperience: "",
+      offlineExperience: "",
       generalRole: "Tutor",
-      subject: "",
-      classLevel: "",
+      subjects: [],
+      languages: [],
+      classLevels: [],
       coverLetter: "",
     });
     setResumeFile(null);
@@ -149,6 +188,70 @@ const SpontaneousApply = () => {
     "Counselor",
     "Other"
   ];
+
+  const subjectOptions = [
+    "Mathematics",
+    "Physics",
+    "Chemistry",
+    "Biology",
+    "Science (General)",
+    "English",
+    "Malayalam",
+    "Social Science",
+    "Hindi",
+    "Other",
+  ];
+
+  const languageOptions = [
+    "English",
+    "Malayalam",
+    "Tamil",
+    "Kannada",
+    "Hindi",
+    "Other",
+  ];
+
+  const classLevelOptions = [
+    { value: "Class 1-5", label: "Class 1-5 (Primary)" },
+    { value: "Class 6-8", label: "Class 6-8 (Middle School)" },
+    { value: "Class 9-10", label: "Class 9-10 (High School)" },
+    { value: "Plus One", label: "Plus One (+1)" },
+    { value: "Plus Two", label: "Plus Two (+2)" },
+    { value: "NEET", label: "NEET Coaching" },
+    { value: "JEE", label: "JEE Coaching" },
+    { value: "Degree", label: "Degree / UG" },
+    { value: "All Levels", label: "All Levels" },
+  ];
+
+  const CheckboxPills = ({ label, hint, values, selectedValues, onToggle }) => (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between gap-3">
+        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">{label}</label>
+        {hint ? <span className="text-[11px] text-slate-400 font-semibold">{hint}</span> : null}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {values.map((v) => {
+          const value = typeof v === "string" ? v : v.value;
+          const display = typeof v === "string" ? v : v.label;
+          const isActive = Array.isArray(selectedValues) && selectedValues.includes(value);
+          return (
+            <button
+              key={value}
+              type="button"
+              onClick={() => onToggle(value)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-extrabold border transition-all ${
+                isActive
+                  ? "bg-cyan-600 text-white border-transparent shadow-sm"
+                  : "bg-white text-slate-700 border-slate-200 hover:border-cyan-300 hover:bg-cyan-50"
+              }`}
+            >
+              {display}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
 
   return (
     <div className="bg-slate-50 min-h-screen font-['Plus_Jakarta_Sans',sans-serif] pb-24">
@@ -268,7 +371,9 @@ const SpontaneousApply = () => {
                         required
                         value={formData.email}
                         onChange={handleInputChange}
-                        onBlur={(e) => setErrors((prev) => ({ ...prev, email: validateField("email", e.target.value) }))}
+                        onBlur={handleBlur}
+                        autoComplete="email"
+                        inputMode="email"
                         placeholder="john@example.com"
                         className={`w-full px-4 py-3 rounded-xl border font-semibold text-sm transition-all outline-none text-slate-800 placeholder-slate-400 ${
                           errors.email
@@ -292,7 +397,10 @@ const SpontaneousApply = () => {
                         required
                         value={formData.phoneNumber}
                         onChange={handleInputChange}
-                        onBlur={(e) => setErrors((prev) => ({ ...prev, phoneNumber: validateField("phoneNumber", e.target.value) }))}
+                        onBlur={handleBlur}
+                        autoComplete="tel"
+                        inputMode="tel"
+                        pattern="^\\+?\\d[\\d\\s\\-\\(\\)]{9,20}$"
                         placeholder="+91 XXXXX XXXXX"
                         className={`w-full px-4 py-3 rounded-xl border font-semibold text-sm transition-all outline-none text-slate-800 placeholder-slate-400 ${
                           errors.phoneNumber
@@ -311,15 +419,15 @@ const SpontaneousApply = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Experience (Years)
+                        Online Experience (Years)
                       </label>
                       <input
                         type="number"
-                        name="experience"
+                        name="onlineExperience"
                         required
                         min="0"
                         max="50"
-                        value={formData.experience}
+                        value={formData.onlineExperience}
                         onChange={handleInputChange}
                         placeholder="e.g. 3"
                         className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-800 placeholder-slate-400 font-semibold text-sm transition-all outline-none"
@@ -328,21 +436,38 @@ const SpontaneousApply = () => {
 
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Preferred Role
+                        Offline Experience (Years)
                       </label>
-                      <select
-                        name="generalRole"
-                        value={formData.generalRole}
+                      <input
+                        type="number"
+                        name="offlineExperience"
+                        required
+                        min="0"
+                        max="50"
+                        value={formData.offlineExperience}
                         onChange={handleInputChange}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-800 font-semibold text-sm transition-all outline-none bg-white"
-                      >
-                        {generalRolesList.map((role) => (
-                          <option key={role} value={role}>
-                            {role}
-                          </option>
-                        ))}
-                      </select>
+                        placeholder="e.g. 2"
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-800 placeholder-slate-400 font-semibold text-sm transition-all outline-none"
+                      />
                     </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Preferred Role
+                    </label>
+                    <select
+                      name="generalRole"
+                      value={formData.generalRole}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-800 font-semibold text-sm transition-all outline-none bg-white"
+                    >
+                      {generalRolesList.map((role) => (
+                        <option key={role} value={role}>
+                          {role}
+                        </option>
+                      ))}
+                    </select>
                   </div>
 
                   {formData.generalRole === "Tutor" && (
@@ -350,56 +475,31 @@ const SpontaneousApply = () => {
                       initial={{ opacity: 0, y: -10 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -10 }}
-                      className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                      className="grid grid-cols-1 gap-5"
                     >
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Preferred Subject
-                        </label>
-                        <select
-                          name="subject"
-                          required
-                          value={formData.subject}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-800 font-semibold text-sm transition-all outline-none bg-white"
-                        >
-                          <option value="">Select Subject</option>
-                          <option value="Mathematics">Mathematics</option>
-                          <option value="Physics">Physics</option>
-                          <option value="Chemistry">Chemistry</option>
-                          <option value="Biology">Biology</option>
-                          <option value="Science">Science (General)</option>
-                          <option value="English">English</option>
-                          <option value="Malayalam">Malayalam</option>
-                          <option value="Social Science">Social Science</option>
-                          <option value="Hindi">Hindi</option>
-                          <option value="Other">Other</option>
-                        </select>
-                      </div>
+                      <CheckboxPills
+                        label="Subjects"
+                        hint={formData.subjects?.length ? `${formData.subjects.length} selected` : "Select 1 or more"}
+                        values={subjectOptions}
+                        selectedValues={formData.subjects}
+                        onToggle={(value) => toggleMultiValue("subjects", value)}
+                      />
 
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Preferred Class Level
-                        </label>
-                        <select
-                          name="classLevel"
-                          required
-                          value={formData.classLevel}
-                          onChange={handleInputChange}
-                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-800 font-semibold text-sm transition-all outline-none bg-white"
-                        >
-                          <option value="">Select Class / Level</option>
-                          <option value="Class 1-5">Class 1-5 (Primary)</option>
-                          <option value="Class 6-8">Class 6-8 (Middle School)</option>
-                          <option value="Class 9-10">Class 9-10 (High School)</option>
-                          <option value="Plus One">Plus One (+1)</option>
-                          <option value="Plus Two">Plus Two (+2)</option>
-                          <option value="NEET">NEET Coaching</option>
-                          <option value="JEE">JEE Coaching</option>
-                          <option value="Degree">Degree / UG</option>
-                          <option value="All Levels">All Levels</option>
-                        </select>
-                      </div>
+                      <CheckboxPills
+                        label="Languages"
+                        hint={formData.languages?.length ? `${formData.languages.length} selected` : "Select 1 or more"}
+                        values={languageOptions}
+                        selectedValues={formData.languages}
+                        onToggle={(value) => toggleMultiValue("languages", value)}
+                      />
+
+                      <CheckboxPills
+                        label="Class Levels"
+                        hint={formData.classLevels?.length ? `${formData.classLevels.length} selected` : "Select 1 or more"}
+                        values={classLevelOptions}
+                        selectedValues={formData.classLevels}
+                        onToggle={(value) => toggleMultiValue("classLevels", value)}
+                      />
                     </motion.div>
                   )}
 
