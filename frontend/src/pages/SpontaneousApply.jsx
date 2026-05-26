@@ -26,12 +26,13 @@ const SpontaneousApply = () => {
     name: "",
     email: "",
     phoneNumber: "",
+    qualification: "",
+    qualificationOther: "",
     onlineExperience: "",
     offlineExperience: "",
     generalRole: "Tutor",
-    subjects: [],
-    languages: [],
     classLevels: [],
+    classLevelPreferences: {},
     coverLetter: "",
   });
   const [resumeFile, setResumeFile] = useState(null);
@@ -61,7 +62,11 @@ const SpontaneousApply = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+      ...(name === "qualification" && value !== "Other" ? { qualificationOther: "" } : null),
+    }));
     // Clear error live as user corrects the field
     if (errors[name]) {
       setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
@@ -81,6 +86,58 @@ const SpontaneousApply = () => {
       return {
         ...prev,
         [key]: exists ? current.filter((v) => v !== value) : [...current, value],
+      };
+    });
+  };
+
+  const autoSubjectsByClassLevel = {
+    NEET: ["Physics", "Chemistry", "Biology"],
+    JEE: ["Physics", "Chemistry", "Mathematics"],
+  };
+
+  const isAutoSubjectLevel = (level) =>
+    Object.prototype.hasOwnProperty.call(autoSubjectsByClassLevel, level);
+
+  const toggleClassLevel = (value) => {
+    setFormData((prev) => {
+      const current = Array.isArray(prev.classLevels) ? prev.classLevels : [];
+      const exists = current.includes(value);
+      const nextClassLevels = exists ? current.filter((v) => v !== value) : [...current, value];
+
+      const nextPreferences = { ...(prev.classLevelPreferences || {}) };
+      if (exists) {
+        delete nextPreferences[value];
+      } else if (!nextPreferences[value]) {
+        nextPreferences[value] = {
+          subjects: isAutoSubjectLevel(value) ? autoSubjectsByClassLevel[value] : [],
+          languages: [],
+        };
+      }
+
+      return {
+        ...prev,
+        classLevels: nextClassLevels,
+        classLevelPreferences: nextPreferences,
+      };
+    });
+  };
+
+  const togglePreferencePill = (classLevel, key, value) => {
+    setFormData((prev) => {
+      if (key === "subjects" && isAutoSubjectLevel(classLevel)) return prev;
+      const currentPreferences = prev.classLevelPreferences || {};
+      const levelPrefs = currentPreferences[classLevel] || { subjects: [], languages: [] };
+      const list = Array.isArray(levelPrefs[key]) ? levelPrefs[key] : [];
+      const exists = list.includes(value);
+      return {
+        ...prev,
+        classLevelPreferences: {
+          ...currentPreferences,
+          [classLevel]: {
+            ...levelPrefs,
+            [key]: exists ? list.filter((v) => v !== value) : [...list, value],
+          },
+        },
       };
     });
   };
@@ -115,11 +172,21 @@ const SpontaneousApply = () => {
     }
 
     if (formData.generalRole === "Tutor") {
-      const hasSubjects = Array.isArray(formData.subjects) && formData.subjects.length > 0;
-      const hasLanguages = Array.isArray(formData.languages) && formData.languages.length > 0;
       const hasClassLevels = Array.isArray(formData.classLevels) && formData.classLevels.length > 0;
-      if (!hasSubjects || !hasLanguages || !hasClassLevels) {
-        toast.error("Please select at least 1 subject, 1 language, and 1 class level.");
+      if (!hasClassLevels) {
+        toast.error("Please select at least 1 class level.");
+        return;
+      }
+
+      const prefs = formData.classLevelPreferences || {};
+      const missingFor = (formData.classLevels || []).filter((lvl) => {
+        const p = prefs[lvl];
+        const hasSubjects = isAutoSubjectLevel(lvl) || (Array.isArray(p?.subjects) && p.subjects.length > 0);
+        const hasLanguages = Array.isArray(p?.languages) && p.languages.length > 0;
+        return !hasSubjects || !hasLanguages;
+      });
+      if (missingFor.length > 0) {
+        toast.error("Please choose subjects and languages for each selected class level.");
         return;
       }
     }
@@ -134,10 +201,15 @@ const SpontaneousApply = () => {
       const data = new FormData();
       const normalizedEmail = String(formData.email || "").trim().toLowerCase();
       const normalizedPhone = String(formData.phoneNumber || "").trim();
+      const normalizedQualification =
+        formData.qualification === "Other"
+          ? String(formData.qualificationOther || "").trim()
+          : String(formData.qualification || "").trim();
 
       data.append("name", String(formData.name || "").trim());
       data.append("email", normalizedEmail);
       data.append("phoneNumber", normalizedPhone);
+      data.append("qualification", normalizedQualification);
       data.append("onlineExperience", formData.onlineExperience);
       data.append("offlineExperience", formData.offlineExperience);
       data.append("coverLetter", formData.coverLetter);
@@ -145,9 +217,25 @@ const SpontaneousApply = () => {
       data.append("generalRole", formData.generalRole);
 
       if (formData.generalRole === "Tutor") {
-        data.append("subjects", JSON.stringify(formData.subjects || []));
-        data.append("languages", JSON.stringify(formData.languages || []));
         data.append("classLevels", JSON.stringify(formData.classLevels || []));
+
+        const preferencesObj = formData.classLevelPreferences || {};
+        const preferences = (formData.classLevels || []).map((classLevel) => ({
+          classLevel,
+          subjects: preferencesObj[classLevel]?.subjects || [],
+          languages: preferencesObj[classLevel]?.languages || [],
+        }));
+        data.append("teachingPreferences", JSON.stringify(preferences));
+
+        // Legacy fields for existing admin/UI lists
+        const allSubjects = Array.from(
+          new Set(preferences.flatMap((p) => (Array.isArray(p.subjects) ? p.subjects : [])))
+        );
+        const allLanguages = Array.from(
+          new Set(preferences.flatMap((p) => (Array.isArray(p.languages) ? p.languages : [])))
+        );
+        data.append("subjects", JSON.stringify(allSubjects));
+        data.append("languages", JSON.stringify(allLanguages));
       }
 
       await submitCareerApplication(data);
@@ -166,12 +254,13 @@ const SpontaneousApply = () => {
       name: "",
       email: "",
       phoneNumber: "",
+      qualification: "",
+      qualificationOther: "",
       onlineExperience: "",
       offlineExperience: "",
       generalRole: "Tutor",
-      subjects: [],
-      languages: [],
       classLevels: [],
+      classLevelPreferences: {},
       coverLetter: "",
     });
     setResumeFile(null);
@@ -208,6 +297,17 @@ const SpontaneousApply = () => {
     "Tamil",
     "Kannada",
     "Hindi",
+    "Other",
+  ];
+
+  const qualificationOptions = [
+    "Plus Two (+2)",
+    "Diploma",
+    "Bachelor's Degree",
+    "Master's Degree",
+    "B.Ed",
+    "M.Ed",
+    "PhD",
     "Other",
   ];
 
@@ -478,28 +578,96 @@ const SpontaneousApply = () => {
                       className="grid grid-cols-1 gap-5"
                     >
                       <CheckboxPills
-                        label="Subjects"
-                        hint={formData.subjects?.length ? `${formData.subjects.length} selected` : "Select 1 or more"}
-                        values={subjectOptions}
-                        selectedValues={formData.subjects}
-                        onToggle={(value) => toggleMultiValue("subjects", value)}
-                      />
-
-                      <CheckboxPills
-                        label="Languages"
-                        hint={formData.languages?.length ? `${formData.languages.length} selected` : "Select 1 or more"}
-                        values={languageOptions}
-                        selectedValues={formData.languages}
-                        onToggle={(value) => toggleMultiValue("languages", value)}
-                      />
-
-                      <CheckboxPills
                         label="Class Levels"
                         hint={formData.classLevels?.length ? `${formData.classLevels.length} selected` : "Select 1 or more"}
                         values={classLevelOptions}
                         selectedValues={formData.classLevels}
-                        onToggle={(value) => toggleMultiValue("classLevels", value)}
+                        onToggle={toggleClassLevel}
                       />
+
+                      <div className="space-y-3">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Qualification (Optional)
+                        </label>
+                        <select
+                          name="qualification"
+                          value={formData.qualification}
+                          onChange={handleInputChange}
+                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-800 font-semibold text-sm transition-all outline-none bg-white"
+                        >
+                          <option value="">Select qualification</option>
+                          {qualificationOptions.map((q) => (
+                            <option key={q} value={q}>
+                              {q}
+                            </option>
+                          ))}
+                        </select>
+                        {formData.qualification === "Other" ? (
+                          <input
+                            type="text"
+                            name="qualificationOther"
+                            value={formData.qualificationOther || ""}
+                            onChange={handleInputChange}
+                            placeholder="Type your qualification"
+                            className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 text-slate-800 placeholder-slate-400 font-semibold text-sm transition-all outline-none"
+                          />
+                        ) : null}
+                      </div>
+
+                      {(formData.classLevels || []).map((level) => {
+                        const prefs = formData.classLevelPreferences?.[level] || { subjects: [], languages: [] };
+                        const autoSubjects = isAutoSubjectLevel(level) ? autoSubjectsByClassLevel[level] : null;
+                        return (
+                          <div key={level} className="rounded-2xl border border-slate-100 bg-slate-50/40 p-4 space-y-4">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-2">
+                                <Layers className="w-4 h-4 text-cyan-600" />
+                                <span className="text-sm font-black text-slate-900">{level}</span>
+                              </div>
+                              <span className="text-[11px] text-slate-400 font-semibold">
+                                Choose subjects & languages
+                              </span>
+                            </div>
+
+                            {autoSubjects ? (
+                              <div className="space-y-2">
+                                <div className="flex items-center justify-between gap-3">
+                                  <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                                    Subjects
+                                  </label>
+                                  <span className="text-[11px] text-slate-400 font-semibold">Auto-selected</span>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                  {autoSubjects.map((s) => (
+                                    <span
+                                      key={s}
+                                      className="px-3.5 py-2 rounded-xl text-xs font-extrabold border bg-white text-slate-700 border-slate-200"
+                                    >
+                                      {s}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <CheckboxPills
+                                label="Subjects"
+                                hint={prefs.subjects?.length ? `${prefs.subjects.length} selected` : "Select 1 or more"}
+                                values={subjectOptions}
+                                selectedValues={prefs.subjects}
+                                onToggle={(value) => togglePreferencePill(level, "subjects", value)}
+                              />
+                            )}
+
+                            <CheckboxPills
+                              label="Languages"
+                              hint={prefs.languages?.length ? `${prefs.languages.length} selected` : "Select 1 or more"}
+                              values={languageOptions}
+                              selectedValues={prefs.languages}
+                              onToggle={(value) => togglePreferencePill(level, "languages", value)}
+                            />
+                          </div>
+                        );
+                      })}
                     </motion.div>
                   )}
 

@@ -570,6 +570,29 @@ const CareersManagement = () => {
                               <span className="block text-indigo-500 text-[9px] font-black uppercase tracking-widest">
                                 General Spontaneous
                               </span>
+                              {app.qualification ? (
+                                <span className="block text-slate-500 text-[11px] font-semibold mt-1">
+                                  Qualification:{" "}
+                                  <span className="text-slate-700 font-bold">{app.qualification}</span>
+                                </span>
+                              ) : null}
+                              {app.classLevels && app.classLevels.length > 0 ? (
+                                <span className="block text-slate-500 text-[11px] font-semibold mt-0.5">
+                                  Classes:{" "}
+                                  <span className="text-slate-700 font-bold">{formatList(app.classLevels)}</span>
+                                </span>
+                              ) : null}
+                              {app.teachingPreferences && app.teachingPreferences.length > 0 ? (
+                                <span className="block text-slate-500 text-[11px] font-semibold mt-0.5">
+                                  Prefs:{" "}
+                                  <span className="text-slate-700 font-bold">
+                                    {app.teachingPreferences
+                                      .map((p) => p?.classLevel)
+                                      .filter(Boolean)
+                                      .join(", ")}
+                                  </span>
+                                </span>
+                              ) : null}
                             </div>
                           )}
                         </td>
@@ -946,6 +969,30 @@ const CareersManagement = () => {
                         Languages:{" "}
                         <strong className="text-slate-700">{formatList(selectedApplication.languages)}</strong>
                       </span>
+                    )}
+                    {selectedApplication.qualification && (
+                      <span className="block text-xs text-slate-500 font-semibold mt-0.5">
+                        Qualification:{" "}
+                        <strong className="text-slate-700">{selectedApplication.qualification}</strong>
+                      </span>
+                    )}
+                    {selectedApplication.teachingPreferences && selectedApplication.teachingPreferences.length > 0 && (
+                      <div className="mt-3 space-y-1">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">
+                          Teaching Preferences
+                        </span>
+                        <div className="space-y-1 text-xs text-slate-600 font-semibold">
+                          {selectedApplication.teachingPreferences.map((p, idx) => (
+                            <div key={`${p.classLevel || "level"}-${idx}`} className="leading-relaxed">
+                              <strong className="text-slate-700">{p.classLevel || "Level"}:</strong>{" "}
+                              Subjects:{" "}
+                              <span className="text-slate-700">{formatList(p.subjects) || "-"}</span>{" "}
+                              | Languages:{" "}
+                              <span className="text-slate-700">{formatList(p.languages) || "-"}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>

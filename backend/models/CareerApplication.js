@@ -17,6 +17,10 @@ const careerApplicationSchema = new mongoose.Schema(
             required: true,
             trim: true,
         },
+        qualification: {
+            type: String,
+            trim: true,
+        },
         appliedVacancy: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "Vacancy",
@@ -50,6 +54,13 @@ const careerApplicationSchema = new mongoose.Schema(
             {
                 type: String,
                 trim: true,
+            },
+        ],
+        teachingPreferences: [
+            {
+                classLevel: { type: String, trim: true },
+                subjects: [{ type: String, trim: true }],
+                languages: [{ type: String, trim: true }],
             },
         ],
         experience: {

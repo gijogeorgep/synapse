@@ -46,6 +46,7 @@ export const submitApplication = async (req, res) => {
             name,
             email,
             phoneNumber,
+            qualification,
             appliedVacancy,
             generalRole,
             experience,
@@ -57,6 +58,7 @@ export const submitApplication = async (req, res) => {
             subjects,
             classLevels,
             languages,
+            teachingPreferences,
         } = req.body;
 
         if (!name || !email || !phoneNumber) {
@@ -123,6 +125,36 @@ export const submitApplication = async (req, res) => {
         const normalizedClassLevels = parseStringArray(classLevels);
         const normalizedLanguages = parseStringArray(languages);
 
+        const parsePreferences = (value) => {
+            if (!value) return [];
+            if (Array.isArray(value)) return value;
+            if (typeof value === "string") {
+                const trimmed = value.trim();
+                if (!trimmed) return [];
+                try {
+                    const parsed = JSON.parse(trimmed);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch {
+                    return [];
+                }
+            }
+            return [];
+        };
+
+        const normalizedTeachingPreferences = parsePreferences(teachingPreferences)
+            .map((p) => {
+                const classLevelValue = p?.classLevel !== undefined && p?.classLevel !== null ? String(p.classLevel).trim() : "";
+                if (!classLevelValue) return null;
+                const prefSubjects = parseStringArray(p?.subjects);
+                const prefLanguages = parseStringArray(p?.languages);
+                return {
+                    classLevel: classLevelValue,
+                    subjects: Array.from(new Set(prefSubjects)),
+                    languages: Array.from(new Set(prefLanguages)),
+                };
+            })
+            .filter(Boolean);
+
         const onlineExpStr = onlineExperience !== undefined && onlineExperience !== null ? String(onlineExperience).trim() : "";
         const offlineExpStr = offlineExperience !== undefined && offlineExperience !== null ? String(offlineExperience).trim() : "";
 
@@ -139,6 +171,7 @@ export const submitApplication = async (req, res) => {
             name,
             email,
             phoneNumber: cleanPhone,
+            qualification: qualification ? String(qualification).trim() : undefined,
             appliedVacancy: vacancyId,
             generalRole: vacancyId ? undefined : generalRole,
             subject: vacancyId ? undefined : (normalizedSubjects[0] || subject),
@@ -146,6 +179,9 @@ export const submitApplication = async (req, res) => {
             classLevel: vacancyId ? undefined : (normalizedClassLevels[0] || classLevel),
             classLevels: vacancyId ? undefined : (normalizedClassLevels.length ? normalizedClassLevels : undefined),
             languages: vacancyId ? undefined : (normalizedLanguages.length ? normalizedLanguages : undefined),
+            teachingPreferences: vacancyId
+                ? undefined
+                : (normalizedTeachingPreferences.length ? normalizedTeachingPreferences : undefined),
             experience: legacyExperience,
             onlineExperience: onlineExpStr || undefined,
             offlineExperience: offlineExpStr || undefined,
