@@ -31,6 +31,7 @@ const Exams = () => {
     // Form State
     const [formData, setFormData] = useState({
         title: "",
+        subject: "",
         description: "",
         duration: 30,
         date: "",
@@ -44,6 +45,15 @@ const Exams = () => {
             { questionText: "", options: ["", "", "", ""], correctAnswer: 0 },
         ],
     });
+
+    const openCreateModal = () => {
+        const firstSubject = selectedClassroom?.subjects?.[0] || "";
+        setFormData((prev) => ({
+            ...prev,
+            subject: prev.subject || firstSubject,
+        }));
+        setShowCreateModal(true);
+    };
 
     useEffect(() => {
         const fetchClassrooms = async () => {
@@ -129,7 +139,7 @@ const Exams = () => {
             await createBulkExam({
                 ...formData,
                 status: "published",
-                subject: selectedClassroom?.subjects?.[0] || "General",
+                subject: formData.subject || selectedClassroom?.subjects?.[0] || "General",
                 classLevel: selectedClassroom?.className || "10",
                 classroom: selectedClassroom?._id,
                 negativeMarks: formData.hasNegativeMarking ? formData.negativeMarks : 0,
@@ -137,6 +147,7 @@ const Exams = () => {
             setShowCreateModal(false);
             setFormData({
                 title: "",
+                subject: "",
                 description: "",
                 duration: 30,
                 date: "",
@@ -243,7 +254,7 @@ const Exams = () => {
                 </div>
 
                 <button
-                    onClick={() => setShowCreateModal(true)}
+                    onClick={openCreateModal}
                     className="flex items-center space-x-2 px-6 py-3 rounded-full bg-cyan-600 text-white font-bold shadow-lg hover:bg-cyan-700 hover:scale-105 transition-all"
                 >
                     <PlusCircle className="w-5 h-5" />
@@ -291,6 +302,9 @@ const Exams = () => {
                             <h3 className="text-xl font-bold text-slate-900 mb-2 truncate">
                                 {exam.title}
                             </h3>
+                            <p className="text-xs text-slate-500 font-bold mb-2">
+                                {exam.subject || "General"}
+                            </p>
                             <p className="text-slate-500 text-sm line-clamp-2 mb-6 h-10">
                                 {exam.description}
                             </p>
@@ -361,6 +375,31 @@ const Exams = () => {
                                         value={formData.duration}
                                         onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
                                     />
+                                </div>
+                                <div className="space-y-2 col-span-1 md:col-span-1">
+                                    <label className="text-sm font-bold text-slate-700">Subject</label>
+                                    {Array.isArray(selectedClassroom?.subjects) && selectedClassroom.subjects.length > 0 ? (
+                                        <select
+                                            required
+                                            className="w-full px-5 py-3 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-cyan-50 focus:border-cyan-200 outline-none transition-all"
+                                            value={formData.subject}
+                                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                        >
+                                            <option value="" disabled>Select subject</option>
+                                            {selectedClassroom.subjects.map((s) => (
+                                                <option key={s} value={s}>{s}</option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full px-5 py-3 rounded-2xl border border-slate-100 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-cyan-50 focus:border-cyan-200 outline-none transition-all"
+                                            placeholder="e.g. Mathematics"
+                                            value={formData.subject}
+                                            onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
+                                        />
+                                    )}
                                 </div>
                                 <div className="col-span-1 md:col-span-3 space-y-2">
                                     <label className="text-sm font-bold text-slate-700">Description</label>

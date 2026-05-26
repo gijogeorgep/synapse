@@ -11,7 +11,14 @@ import {
   CheckCircle2,
   AlertCircle,
   Layers,
+  ChevronLeft,
+  ChevronRight,
+  FileText,
+  FileSpreadsheet,
 } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx";
 import {
   getAdminUsers,
   updateAdminUser,
@@ -25,6 +32,8 @@ const UserManagement = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState({ type: "", message: "" });
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const showToast = (type, message) => {
     const errorMsg =
@@ -46,6 +55,10 @@ const UserManagement = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, classFilter, programFilter]);
 
   const fetchUsers = async () => {
     try {
@@ -167,14 +180,87 @@ const UserManagement = () => {
       // Program Match
       let matchesProgram = true;
       if (programFilter !== "all") {
-        matchesProgram = user.enrolledClassrooms?.some(
-          (c) => c.programType === programFilter,
-        );
+        const uProg = (user.programType === "NEET" || user.programType === "JEE" || user.programType === "PSC") ? "E-Zone" : user.programType;
+        matchesProgram = uProg === programFilter || user.enrolledClassrooms?.some((c) => {
+          const cProg = (c.programType === "NEET" || c.programType === "JEE" || c.programType === "PSC") ? "E-Zone" : c.programType;
+          return cProg === programFilter;
+        });
       }
 
       return matchesSearch && matchesRole && matchesClass && matchesProgram;
     });
   }, [users, searchTerm, roleFilter, classFilter, programFilter]);
+
+  // Pagination Logic
+  const paginatedUsers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredUsers, currentPage]);
+
+  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.text("User Management Report", 14, 15);
+    
+    const tableColumn = ["User ID", "Name", "Email", "Role", "Status", "Program", "Class", "Joined"];
+    const tableRows = [];
+
+    filteredUsers.forEach(user => {
+      const status = user.isBlocked ? "Blocked" : user.isCourseCompleted ? "Completed" : "Active";
+      const joined = new Date(user.createdAt).toLocaleDateString();
+      const uProg = (user.programType === "NEET" || user.programType === "JEE" || user.programType === "PSC") ? "E-Zone" : user.programType || "N/A";
+      
+      const userData = [
+        user.uniqueId || "N/A",
+        user.name || "Unknown",
+        user.email || "",
+        user.role,
+        status,
+        uProg,
+        user.class || "N/A",
+        joined
+      ];
+      tableRows.push(userData);
+    });
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 20,
+      styles: { fontSize: 8 },
+    });
+
+    doc.save("users_report.pdf");
+  };
+
+  const exportCSV = () => {
+    const tableData = filteredUsers.map(user => {
+      const status = user.isBlocked ? "Blocked" : user.isCourseCompleted ? "Completed" : "Active";
+      const uProg = (user.programType === "NEET" || user.programType === "JEE" || user.programType === "PSC") ? "E-Zone" : user.programType || "N/A";
+      return {
+        "User ID": user.uniqueId || "N/A",
+        "Name": user.name || "Unknown",
+        "Email": user.email || "",
+        "Role": user.role,
+        "Status": status,
+        "Program": uProg,
+        "Class": user.class || "N/A",
+        "Joined": new Date(user.createdAt).toLocaleDateString()
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(tableData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Users");
+    XLSX.writeFile(wb, "users_report.csv");
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500 max-w-7xl mx-auto p-4 md:p-8">
@@ -401,13 +487,29 @@ const UserManagement = () => {
             Manage Students and Teachers in the platform.
           </p>
         </div>
-        <button
-          onClick={() => navigate("/admin/users/create")}
-          className="flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
-        >
-          <UserPlus className="w-5 h-5" />
-          <span>Create User</span>
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={exportCSV}
+            className="flex items-center space-x-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
+          >
+            <FileSpreadsheet className="w-5 h-5" />
+            <span className="hidden sm:inline">Export CSV</span>
+          </button>
+          <button
+            onClick={exportPDF}
+            className="flex items-center space-x-2 bg-rose-600 hover:bg-rose-700 text-white px-4 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
+          >
+            <FileText className="w-5 h-5" />
+            <span className="hidden sm:inline">Export PDF</span>
+          </button>
+          <button
+            onClick={() => navigate("/admin/users/create")}
+            className="flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white px-5 py-2.5 rounded-xl font-medium transition-colors shadow-sm"
+          >
+            <UserPlus className="w-5 h-5" />
+            <span>Create User</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-3xl p-6 shadow-sm border border-slate-100">
@@ -617,7 +719,7 @@ const UserManagement = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filteredUsers.map((user) => (
+                {paginatedUsers.map((user) => (
                   <tr
                     key={user._id}
                     className="hover:bg-slate-50/80 transition-colors group"
@@ -805,6 +907,63 @@ const UserManagement = () => {
                 ))}
               </tbody>
             </table>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-6 py-4 bg-slate-50 border-t border-slate-100">
+                <div className="text-sm text-slate-500">
+                  Showing <span className="font-medium">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
+                  <span className="font-medium">
+                    {Math.min(currentPage * itemsPerPage, filteredUsers.length)}
+                  </span>{" "}
+                  of <span className="font-medium">{filteredUsers.length}</span> users
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <div className="flex items-center gap-1">
+                    {[...Array(Math.min(5, totalPages))].map((_, idx) => {
+                      // Logic for showing a sliding window of max 5 pages
+                      let pageNum = idx + 1;
+                      if (totalPages > 5) {
+                        if (currentPage > 3) {
+                          pageNum = currentPage - 3 + idx + 1;
+                        }
+                        if (currentPage + 2 > totalPages) {
+                          pageNum = totalPages - 5 + idx + 1;
+                        }
+                      }
+                      
+                      return (
+                        <button
+                          key={pageNum}
+                          onClick={() => handlePageChange(pageNum)}
+                          className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
+                            currentPage === pageNum
+                              ? "bg-cyan-600 text-white border-cyan-600 shadow-sm"
+                              : "border border-slate-200 text-slate-600 hover:bg-slate-100"
+                          }`}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <button
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className="p-1.5 rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

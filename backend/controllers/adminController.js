@@ -776,7 +776,7 @@ export const createResource = async (req, res) => {
         classroomData.students &&
         classroomData.students.length > 0
       ) {
-        studentEmails = classroomData.students.map((s) => s.email);
+        studentEmails = classroomData.students.filter(s => s != null).map((s) => s.email);
         classroomName = classroomData.name;
       }
     } else {
@@ -822,6 +822,7 @@ export const getResources = async (req, res) => {
   try {
     const resources = await StudyMaterial.find({})
       .populate("classroom", "name className")
+      .populate("uploadedBy", "name email role")
       .sort({ createdAt: -1 });
     res.json(resources);
   } catch (error) {

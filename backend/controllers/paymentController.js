@@ -1,6 +1,6 @@
 import Razorpay from "razorpay";
 import crypto from "crypto";
-import { Payment, Subscription } from "../models/Financial.js";
+import { Payment, Subscription, Expense } from "../models/Financial.js";
 import Classroom from "../models/Classroom.js";
 import User from "../models/User.js";
 import dotenv from "dotenv";
@@ -146,12 +146,13 @@ export const getAdminPayments = async (req, res) => {
 
         let payments = await Payment.find(query)
             .populate("student", "name email phoneNumber")
-            .sort({ createdAt: -1 });
+            .sort({ paymentDate: -1, createdAt: -1 });
 
         if (search) {
             const searchLower = search.toLowerCase();
             payments = payments.filter(p => 
                 (p.student && (p.student.name.toLowerCase().includes(searchLower) || p.student.email.toLowerCase().includes(searchLower))) ||
+                (p.studentName && p.studentName.toLowerCase().includes(searchLower)) ||
                 (p.paymentId && p.paymentId.toLowerCase().includes(searchLower)) ||
                 (p.orderId && p.orderId.toLowerCase().includes(searchLower))
             );
@@ -191,8 +192,17 @@ export const getAdminPaymentStats = async (req, res) => {
             }
         });
 
+        // Calculate total expenses
+        const expenseAgg = await Expense.aggregate([
+            { $group: { _id: null, total: { $sum: "$amount" } } }
+        ]);
+        const totalExpense = expenseAgg.length > 0 ? expenseAgg[0].total : 0;
+        const profit = totalRevenue - totalExpense;
+
         res.status(200).json({
             totalRevenue,
+            totalExpense,
+            profit,
             successCount,
             pendingCount,
             failedCount,
@@ -284,3 +294,172 @@ export const cancelAdminSubscription = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Create manual offline payment (Admin)
+// @route   POST /api/admin/payments/manual
+// @access  Private/Admin
+export const createManualPayment = async (req, res) => {
+    try {
+        const { studentId, studentName, classLevel, amount, paymentMethod, paymentDate, remarks } = req.body;
+
+        if (!amount || isNaN(amount) || Number(amount) <= 0) {
+            return res.status(400).json({ message: "A valid amount is required." });
+        }
+
+        const paymentData = {
+            amount: Number(amount),
+            status: "completed",
+            paymentMethod: paymentMethod || "offline",
+            paymentDate: paymentDate ? new Date(paymentDate) : new Date(),
+            remarks,
+            createdBy: req.user._id,
+        };
+
+        if (studentId) {
+            paymentData.student = studentId;
+            const studentUser = await User.findById(studentId);
+            if (studentUser) {
+                paymentData.studentName = studentUser.name;
+                paymentData.classLevel = classLevel || "";
+            }
+        } else {
+            if (!studentName) {
+                return res.status(400).json({ message: "Student Name is required for offline unregistered students." });
+            }
+            paymentData.studentName = studentName;
+            paymentData.classLevel = classLevel || "";
+        }
+
+        // Generate unique IDs for admin manual tracking
+        const timestamp = Date.now();
+        paymentData.paymentId = `MANUAL-${timestamp}`;
+        paymentData.orderId = `MANUAL-ORD-${timestamp}`;
+
+        const newPayment = await Payment.create(paymentData);
+        
+        let populated = newPayment;
+        if (newPayment.student) {
+            populated = await Payment.findById(newPayment._id).populate("student", "name email phoneNumber");
+        }
+
+        res.status(201).json(populated);
+    } catch (error) {
+        console.error("Error creating manual payment:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete payment record (Admin)
+// @route   DELETE /api/admin/payments/:id
+// @access  Private/Admin
+export const deleteAdminPayment = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const payment = await Payment.findByIdAndDelete(id);
+        if (!payment) {
+            return res.status(404).json({ message: "Payment record not found." });
+        }
+        res.status(200).json({ message: "Payment record deleted successfully." });
+    } catch (error) {
+        console.error("Error deleting payment record:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Create expense record (Admin)
+// @route   POST /api/admin/expenses
+// @access  Private/Admin
+export const createExpense = async (req, res) => {
+    try {
+        const { title, category, amount, description, expenseDate } = req.body;
+
+        if (!title || !amount || isNaN(amount) || Number(amount) <= 0) {
+            return res.status(400).json({ message: "Title and a valid amount are required." });
+        }
+
+        const expense = await Expense.create({
+            title,
+            category: category || "other",
+            amount: Number(amount),
+            description,
+            expenseDate: expenseDate ? new Date(expenseDate) : new Date(),
+            createdBy: req.user._id,
+        });
+
+        res.status(201).json(expense);
+    } catch (error) {
+        console.error("Error creating expense:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Get all expenses (Admin)
+// @route   GET /api/admin/expenses
+// @access  Private/Admin
+export const getExpenses = async (req, res) => {
+    try {
+        const { search } = req.query;
+        let expenses = await Expense.find({})
+            .populate("createdBy", "name email")
+            .sort({ expenseDate: -1, createdAt: -1 });
+
+        if (search) {
+            const searchLower = search.toLowerCase();
+            expenses = expenses.filter(e =>
+                e.title.toLowerCase().includes(searchLower) ||
+                (e.description && e.description.toLowerCase().includes(searchLower)) ||
+                e.category.toLowerCase().includes(searchLower)
+            );
+        }
+
+        res.status(200).json(expenses);
+    } catch (error) {
+        console.error("Error fetching expenses:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Delete expense record (Admin)
+// @route   DELETE /api/admin/expenses/:id
+// @access  Private/Admin
+export const deleteExpense = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const expense = await Expense.findByIdAndDelete(id);
+        if (!expense) {
+            return res.status(404).json({ message: "Expense record not found." });
+        }
+        res.status(200).json({ message: "Expense record deleted successfully." });
+    } catch (error) {
+        console.error("Error deleting expense:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Update expense record (Admin)
+// @route   PUT /api/admin/expenses/:id
+// @access  Private/Admin
+export const updateExpense = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, category, amount, description, expenseDate } = req.body;
+
+        const expense = await Expense.findById(id);
+        if (!expense) {
+            return res.status(404).json({ message: "Expense record not found." });
+        }
+
+        if (title) expense.title = title;
+        if (category) expense.category = category;
+        if (amount !== undefined) expense.amount = amount;
+        if (description !== undefined) expense.description = description;
+        if (expenseDate) expense.expenseDate = new Date(expenseDate);
+
+        await expense.save();
+        res.status(200).json(expense);
+    } catch (error) {
+        console.error("Error updating expense:", error);
+        res.status(500).json({ message: error.message });
+    }
+};
+

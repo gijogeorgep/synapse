@@ -31,7 +31,7 @@ export const uploadMaterial = async (req, res) => {
         if (classroom) {
             const classroomData = await Classroom.findById(classroom).populate("students", "email");
             if (classroomData && classroomData.students && classroomData.students.length > 0) {
-                studentEmails = classroomData.students.map(s => s.email);
+                studentEmails = classroomData.students.filter(s => s != null).map(s => s.email);
                 classroomName = classroomData.name;
             }
         } else {

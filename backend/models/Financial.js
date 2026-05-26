@@ -37,8 +37,10 @@ const paymentSchema = new mongoose.Schema(
         student: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
+            required: false,
         },
+        studentName: String,
+        classLevel: String,
         amount: {
             type: Number,
             required: true,
@@ -50,6 +52,20 @@ const paymentSchema = new mongoose.Schema(
         },
         paymentId: String, // Razorpay or Stripe ID
         orderId: String,
+        paymentMethod: {
+            type: String,
+            enum: ["online", "offline"],
+            default: "online",
+        },
+        paymentDate: {
+            type: Date,
+            default: Date.now,
+        },
+        remarks: String,
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
     },
     {
         timestamps: true,
@@ -58,4 +74,36 @@ const paymentSchema = new mongoose.Schema(
 
 const Payment = mongoose.model("Payment", paymentSchema);
 
-export { Subscription, Payment };
+const expenseSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: true,
+        },
+        category: {
+            type: String,
+            enum: ["salary", "rent", "utilities", "materials", "marketing", "software", "equipment", "travel", "maintenance", "other"],
+            default: "other",
+        },
+        amount: {
+            type: Number,
+            required: true,
+        },
+        description: String,
+        expenseDate: {
+            type: Date,
+            default: Date.now,
+        },
+        createdBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+        },
+    },
+    {
+        timestamps: true,
+    }
+);
+
+const Expense = mongoose.model("Expense", expenseSchema);
+
+export { Subscription, Payment, Expense };

@@ -265,6 +265,10 @@ export const getAdminPayments = (params) => {
   const query = new URLSearchParams(params).toString();
   return apiClient(`/admin/payments?${query}`);
 };
+export const createManualPayment = (paymentData) =>
+  apiClient("/admin/payments/manual", { method: "POST", body: paymentData });
+export const deleteAdminPayment = (id) =>
+  apiClient(`/admin/payments/${id}`, { method: "DELETE" });
 export const getAdminPaymentStats = () => apiClient("/admin/payments/stats");
 export const getAdminSubscriptions = (params) => {
   const query = new URLSearchParams(params).toString();
@@ -274,6 +278,19 @@ export const createAdminSubscription = (subscriptionData) =>
   apiClient("/admin/subscriptions", { method: "POST", body: subscriptionData });
 export const cancelAdminSubscription = (id) =>
   apiClient(`/admin/subscriptions/${id}`, { method: "DELETE" });
+
+// Admin Expense Services
+export const getAdminExpenses = (params) => {
+  const query = new URLSearchParams(params).toString();
+  return apiClient(`/admin/expenses?${query}`);
+};
+export const createAdminExpense = (expenseData) =>
+  apiClient("/admin/expenses", { method: "POST", body: expenseData });
+export const deleteAdminExpense = (id) =>
+  apiClient(`/admin/expenses/${id}`, { method: "DELETE" });
+export const updateAdminExpense = (id, expenseData) =>
+  apiClient(`/admin/expenses/${id}`, { method: "PUT", body: expenseData });
+
 
 // Careers Services
 export const getAdminVacancies = () => apiClient("/careers/admin/vacancies");

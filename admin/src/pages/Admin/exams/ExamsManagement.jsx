@@ -10,9 +10,14 @@ const ExamsManagement = () => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isAnswersModalOpen, setIsAnswersModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [selectedExam, setSelectedExam] = useState(null);
     const [selectedClassroom, setSelectedClassroom] = useState(null);
     const [examDetails, setExamDetails] = useState(null);
+    const [selectedResult, setSelectedResult] = useState(null);
+    const [examToDelete, setExamToDelete] = useState(null);
+    const [isDeletingExam, setIsDeletingExam] = useState(false);
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [resultSearchQuery, setResultSearchQuery] = useState('');
     
@@ -52,6 +57,28 @@ const ExamsManagement = () => {
     const [isSavingDraft, setIsSavingDraft] = useState(false);
 
     const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+
+    const getObtainedMarks = (result) => {
+        const value = result?.marksObtained ?? result?.score;
+        return Number.isFinite(Number(value)) ? Number(value) : 0;
+    };
+
+    const getPercentage = (result) => {
+        const total = Number(examDetails?.totalMarks) || 0;
+        if (!total) return 0;
+        return Math.round((getObtainedMarks(result) / total) * 100);
+    };
+
+    const openAnswersModal = (result) => {
+        setSelectedResult(result);
+        setIsAnswersModalOpen(true);
+    };
+
+    const openDeleteModal = (exam) => {
+        setExamToDelete(exam);
+        setIsDeleteModalOpen(true);
+        setActiveMenu(null);
+    };
 
     useEffect(() => {
         fetchData();
@@ -319,14 +346,18 @@ const ExamsManagement = () => {
     };
 
     const handleDeleteExam = async (examId) => {
-        if (!window.confirm("Are you sure you want to delete this exam? This action cannot be undone.")) return;
         try {
+            setIsDeletingExam(true);
             await deleteExam(examId);
             setStatus({ type: 'success', message: 'Exam deleted successfully.' });
             fetchData();
             setActiveMenu(null);
+            setIsDeleteModalOpen(false);
+            setExamToDelete(null);
         } catch (error) {
             setStatus({ type: 'error', message: 'Failed to delete exam.' });
+        } finally {
+            setIsDeletingExam(false);
         }
     };
 
@@ -472,7 +503,7 @@ const ExamsManagement = () => {
                                                     Edit Exam
                                                 </button>
                                                 <button 
-                                                    onClick={() => handleDeleteExam(exam._id)}
+                                                    onClick={() => openDeleteModal(exam)}
                                                     className="w-full px-4 py-2.5 text-left text-sm font-bold text-rose-500 hover:bg-rose-50 flex items-center gap-3"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -590,14 +621,14 @@ const ExamsManagement = () => {
                                             <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl"><CheckCircle2 className="w-6 h-6" /></div>
                                             <div>
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pass Rate</p>
-                                                <p className="text-xl font-black text-slate-900">{Math.round((examDetails.results.filter(r => (r.marksObtained/examDetails.totalMarks) >= 0.4).length / (examDetails.results.length || 1)) * 100)}%</p>
+                                                <p className="text-xl font-black text-slate-900">{Math.round((examDetails.results.filter(r => (getObtainedMarks(r) / examDetails.totalMarks) >= 0.4).length / (examDetails.results.length || 1)) * 100)}%</p>
                                             </div>
                                         </div>
                                         <div className="bg-white p-5 rounded-3xl border border-white shadow-sm flex items-center gap-4">
                                             <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><Award className="w-6 h-6" /></div>
                                             <div>
                                                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Avg. Score</p>
-                                                <p className="text-xl font-black text-slate-900">{Math.round(examDetails.results.reduce((acc, r) => acc + (r.marksObtained || 0), 0) / (examDetails.results.length || 1))}</p>
+                                                <p className="text-xl font-black text-slate-900">{Math.round(examDetails.results.reduce((acc, r) => acc + getObtainedMarks(r), 0) / (examDetails.results.length || 1))}</p>
                                             </div>
                                         </div>
                                         <div className="bg-white p-5 rounded-3xl border border-white shadow-sm flex items-center gap-4">
@@ -640,13 +671,15 @@ const ExamsManagement = () => {
                                                         <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-center">Percentage</th>
                                                         <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Time Taken</th>
                                                         <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                                                        <th className="px-6 py-4 text-[10px] font-bold text-slate-400 uppercase tracking-wider text-right">Answers</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-slate-50 text-sm">
                                                     {examDetails.results
                                                         .filter(r => r.student?.name?.toLowerCase().includes(resultSearchQuery.toLowerCase()))
                                                         .map((result, idx) => {
-                                                        const percentage = Math.round((result.marksObtained / examDetails.totalMarks) * 100);
+                                                        const obtained = getObtainedMarks(result);
+                                                        const percentage = getPercentage(result);
                                                         return (
                                                             <tr key={result._id} className="hover:bg-slate-50/50 transition-colors">
                                                                 <td className="px-6 py-4 font-black text-slate-900">
@@ -656,7 +689,7 @@ const ExamsManagement = () => {
                                                                      `#${idx + 1}`}
                                                                 </td>
                                                                 <td className="px-6 py-4 text-slate-900 font-bold">{result.student?.name}</td>
-                                                                <td className="px-6 py-4 text-center font-black text-indigo-600">{result.marksObtained} / {examDetails.totalMarks}</td>
+                                                                <td className="px-6 py-4 text-center font-black text-indigo-600">{obtained} / {examDetails.totalMarks}</td>
                                                                 <td className="px-6 py-4 text-center font-bold text-slate-600">{percentage}%</td>
                                                                 <td className="px-6 py-4 text-slate-500">{result.timeTaken ? `${Math.floor(result.timeTaken / 60)}m ${result.timeTaken % 60}s` : 'N/A'}</td>
                                                                 <td className="px-6 py-4">
@@ -664,12 +697,21 @@ const ExamsManagement = () => {
                                                                         {percentage >= 40 ? 'Passed' : 'Failed'}
                                                                     </span>
                                                                 </td>
+                                                                <td className="px-6 py-4 text-right">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={() => openAnswersModal(result)}
+                                                                        className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 text-xs font-black hover:bg-indigo-100 transition-all"
+                                                                    >
+                                                                        View <ChevronRight className="w-4 h-4" />
+                                                                    </button>
+                                                                </td>
                                                             </tr>
                                                         );
                                                     })}
                                                     {examDetails.results.length === 0 && (
                                                         <tr>
-                                                            <td colSpan="6" className="px-6 py-12 text-center text-slate-400 font-medium">No results submitted yet for this exam.</td>
+                                                            <td colSpan="7" className="px-6 py-12 text-center text-slate-400 font-medium">No results submitted yet for this exam.</td>
                                                         </tr>
                                                     )}
                                                 </tbody>
@@ -1164,6 +1206,141 @@ const ExamsManagement = () => {
                                 <button type="submit" className="flex-1 py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100">Submit Marks</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Student Answers Modal */}
+            {isAnswersModalOpen && examDetails && selectedResult && (
+                <div className="fixed inset-0 z-[120] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 overflow-y-auto">
+                    <div className="bg-white rounded-[2.5rem] w-full max-w-4xl shadow-2xl my-8 overflow-hidden border border-white/20">
+                        <div className="bg-white p-6 md:p-7 border-b border-slate-100 flex justify-between items-start">
+                            <div className="space-y-1">
+                                <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Student Answers</p>
+                                <h3 className="text-xl md:text-2xl font-black text-slate-900">{selectedResult.student?.name || "Student"}</h3>
+                                <p className="text-sm text-slate-500 font-bold">
+                                    Score: {getObtainedMarks(selectedResult)} / {examDetails.totalMarks} ({getPercentage(selectedResult)}%)
+                                    {selectedResult.timeTaken ? ` • Time: ${Math.floor(selectedResult.timeTaken / 60)}m ${selectedResult.timeTaken % 60}s` : ""}
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setIsAnswersModalOpen(false)}
+                                className="p-2 hover:bg-slate-100 rounded-2xl transition-all"
+                            >
+                                <X className="w-6 h-6 text-slate-400" />
+                            </button>
+                        </div>
+
+                        <div className="p-6 md:p-7 overflow-y-auto max-h-[75vh] space-y-5 custom-scrollbar bg-slate-50">
+                            {examDetails.questions.map((q, qidx) => {
+                                const ans = (selectedResult.answers || []).find((a) => {
+                                    const aId = a?.questionId?._id || a?.questionId;
+                                    return aId?.toString?.() === q._id?.toString?.();
+                                });
+                                const selected = ans?.selectedOption;
+                                const isAttempted = selected !== null && selected !== undefined;
+                                const isCorrect = ans?.isCorrect === true;
+                                return (
+                                    <div key={q._id} className="bg-white rounded-[1.75rem] border border-white shadow-sm p-5 space-y-4">
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-black text-slate-400 uppercase tracking-wider">Question {qidx + 1}</p>
+                                                <p className="text-sm md:text-base font-black text-slate-900 leading-relaxed">{q.questionText}</p>
+                                            </div>
+                                            <span className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${!isAttempted ? 'bg-slate-100 text-slate-600' : (isCorrect ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700')}`}>
+                                                {!isAttempted ? 'Not Attempted' : (isCorrect ? 'Correct' : 'Wrong')}
+                                            </span>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                            {q.options.map((opt, oidx) => {
+                                                const isSelected = isAttempted && selected === oidx;
+                                                const isRight = q.correctAnswer === oidx;
+                                                const base = "rounded-2xl border px-4 py-3 text-sm font-bold flex items-start gap-3";
+                                                const style = isRight
+                                                    ? "bg-emerald-50 border-emerald-200 text-emerald-900"
+                                                    : isSelected
+                                                        ? "bg-indigo-50 border-indigo-200 text-indigo-900"
+                                                        : "bg-slate-50 border-slate-200 text-slate-700";
+                                                return (
+                                                    <div key={oidx} className={`${base} ${style}`}>
+                                                        <span className="mt-0.5 inline-flex items-center justify-center w-7 h-7 rounded-xl bg-white/80 border border-white/60 text-xs font-black">
+                                                            {String.fromCharCode(65 + oidx)}
+                                                        </span>
+                                                        <div className="flex-1">
+                                                            <p className="leading-relaxed">{opt}</p>
+                                                            <div className="flex flex-wrap gap-2 mt-2">
+                                                                {isRight && <span className="text-[10px] font-black px-2 py-0.5 bg-white/70 rounded-full">Correct</span>}
+                                                                {isSelected && <span className="text-[10px] font-black px-2 py-0.5 bg-white/70 rounded-full">Selected</span>}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
+                                            <span className="px-2 py-0.5 bg-emerald-50 text-emerald-700 rounded-full">
+                                                Correct: {String.fromCharCode(65 + q.correctAnswer)}
+                                            </span>
+                                            <span className="px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded-full">
+                                                Student: {isAttempted ? String.fromCharCode(65 + selected) : '—'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Delete Exam Confirmation Modal */}
+            {isDeleteModalOpen && examToDelete && (
+                <div className="fixed inset-0 z-[130] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4">
+                    <div className="bg-white rounded-3xl p-7 w-full max-w-lg shadow-2xl animate-in zoom-in-95 duration-200 border border-white/20">
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                            <div className="flex items-start gap-4">
+                                <div className="p-3 rounded-2xl bg-rose-50 text-rose-600">
+                                    <AlertCircle className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h2 className="text-xl font-black text-slate-900">Delete this exam?</h2>
+                                    <p className="text-sm text-slate-500 font-medium mt-1">
+                                        This will permanently delete <span className="font-black text-slate-700">{examToDelete.title}</span>{examToDelete.subject ? ` (${examToDelete.subject})` : ""}.
+                                    </p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                disabled={isDeletingExam}
+                                onClick={() => { setIsDeleteModalOpen(false); setExamToDelete(null); }}
+                                className="p-2 hover:bg-slate-100 rounded-2xl transition-all disabled:opacity-60"
+                            >
+                                <X className="w-6 h-6 text-slate-400" />
+                            </button>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button
+                                type="button"
+                                disabled={isDeletingExam}
+                                onClick={() => { setIsDeleteModalOpen(false); setExamToDelete(null); }}
+                                className="flex-1 py-3.5 text-slate-600 font-black border border-slate-200 rounded-2xl hover:bg-slate-50 transition-all disabled:opacity-60"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                type="button"
+                                disabled={isDeletingExam}
+                                onClick={() => handleDeleteExam(examToDelete._id)}
+                                className="flex-1 py-3.5 bg-rose-600 text-white font-black rounded-2xl hover:bg-rose-700 transition-all shadow-lg shadow-rose-100 disabled:opacity-60 flex items-center justify-center gap-2"
+                            >
+                                {isDeletingExam ? <Loader2 className="w-5 h-5 animate-spin" /> : <Trash2 className="w-5 h-5" />}
+                                Delete
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}

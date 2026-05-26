@@ -248,7 +248,11 @@ const Reports = () => {
             ['Total Students', teacherData.totalStudents],
             ['Avg Student Performance', `${teacherData.avgStudentPerformance}%`],
             ['Total Exams Conducted', teacherData.totalExams],
-            ['Teaching Rating', teacherData.performanceLevel]
+            ['Teaching Rating', teacherData.performanceLevel],
+            ['Teaching Time (Hours)', `${teacherData.totalTeachingHours} hrs`],
+            ['Total Lessons', teacherData.totalLessons],
+            ['Assignments Created', teacherData.totalAssignments],
+            ['Materials Uploaded', teacherData.totalMaterials]
         ];
 
         doc.autoTable({
@@ -963,20 +967,48 @@ const Reports = () => {
                                     </div>
 
                                     <div className="lg:col-span-2 space-y-8">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                             <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                                                 <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl w-fit mb-4">
                                                     <Award size={24} />
                                                 </div>
                                                 <h3 className="text-slate-500 text-sm font-bold mb-1 uppercase tracking-wider">Teaching Rating</h3>
                                                 <p className="text-3xl font-black text-slate-900">{teacherData.performanceLevel}</p>
                                             </div>
-                                            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
                                                 <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl w-fit mb-4">
                                                     <FileText size={24} />
                                                 </div>
                                                 <h3 className="text-slate-500 text-sm font-bold mb-1 uppercase tracking-wider">Total Exams</h3>
                                                 <p className="text-3xl font-black text-slate-900">{teacherData.totalExams}</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                                <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl w-fit mb-4">
+                                                    <Clock size={24} />
+                                                </div>
+                                                <h3 className="text-slate-500 text-sm font-bold mb-1 uppercase tracking-wider">Teaching Time</h3>
+                                                <p className="text-3xl font-black text-slate-900">{teacherData.totalTeachingHours} <span className="text-lg text-slate-500">hrs</span></p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                                <div className="p-3 bg-cyan-50 text-cyan-600 rounded-2xl w-fit mb-4">
+                                                    <BookOpen size={24} />
+                                                </div>
+                                                <h3 className="text-slate-500 text-sm font-bold mb-1 uppercase tracking-wider">Total Lessons</h3>
+                                                <p className="text-3xl font-black text-slate-900">{teacherData.totalLessons}</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                                <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl w-fit mb-4">
+                                                    <Target size={24} />
+                                                </div>
+                                                <h3 className="text-slate-500 text-sm font-bold mb-1 uppercase tracking-wider">Assignments</h3>
+                                                <p className="text-3xl font-black text-slate-900">{teacherData.totalAssignments}</p>
+                                            </div>
+                                            <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                                                <div className="p-3 bg-pink-50 text-pink-600 rounded-2xl w-fit mb-4">
+                                                    <Download size={24} />
+                                                </div>
+                                                <h3 className="text-slate-500 text-sm font-bold mb-1 uppercase tracking-wider">Study Materials</h3>
+                                                <p className="text-3xl font-black text-slate-900">{teacherData.totalMaterials}</p>
                                             </div>
                                         </div>
 

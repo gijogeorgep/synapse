@@ -34,7 +34,13 @@ import {
     getAdminPaymentStats,
     getAdminSubscriptions,
     createAdminSubscription,
-    cancelAdminSubscription
+    cancelAdminSubscription,
+    createManualPayment,
+    deleteAdminPayment,
+    createExpense,
+    getExpenses,
+    deleteExpense,
+    updateExpense
 } from "../controllers/paymentController.js";
 
 const router = express.Router();
@@ -202,6 +208,21 @@ router.get("/audit-logs", authorize("superadmin"), getAuditLogs);
 
 // Payment & Subscription Management
 router.get("/payments", getAdminPayments);
+router.post(
+    "/payments/manual",
+    logAdminAction("Record Offline Payment", (req) => {
+        const name = req?.body?.studentName ? ` studentName=${req.body.studentName}` : "";
+        const id = req?.body?.studentId ? ` studentId=${req.body.studentId}` : "";
+        const amount = req?.body?.amount ? ` amount=${req.body.amount}` : "";
+        return `Recorded manual offline payment.${name}${id}${amount}`.trim();
+    }),
+    createManualPayment
+);
+router.delete(
+    "/payments/:id",
+    logAdminAction("Delete Payment Record", (req) => `Deleted payment record ${req.params.id}`),
+    deleteAdminPayment
+);
 router.get("/payments/stats", getAdminPaymentStats);
 router.route("/subscriptions")
     .get(getAdminSubscriptions)
@@ -219,5 +240,30 @@ router.delete(
     logAdminAction("Cancel Subscription", (req) => `Manually cancelled subscription ${req.params.id}`),
     cancelAdminSubscription
 );
+
+// Expense Management
+router.route("/expenses")
+    .get(getExpenses)
+    .post(
+        logAdminAction("Create Expense", (req) => {
+            const title = req?.body?.title ? ` title=${req.body.title}` : "";
+            const amount = req?.body?.amount ? ` amount=${req.body.amount}` : "";
+            return `Recorded expense.${title}${amount}`.trim();
+        }),
+        createExpense
+    );
+router.route("/expenses/:id")
+    .delete(
+        logAdminAction("Delete Expense", (req) => `Deleted expense record ${req.params.id}`),
+        deleteExpense
+    )
+    .put(
+        logAdminAction("Update Expense", (req) => {
+            const title = req?.body?.title ? ` title=${req.body.title}` : "";
+            const amount = req?.body?.amount ? ` amount=${req.body.amount}` : "";
+            return `Updated expense record ${req.params.id}.${title}${amount}`.trim();
+        }),
+        updateExpense
+    );
 
 export default router;

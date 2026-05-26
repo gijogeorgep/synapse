@@ -29,7 +29,7 @@ export const createExam = async (req, res) => {
         if (classroom) {
             const classroomData = await Classroom.findById(classroom).populate("students", "email name");
             if (classroomData && classroomData.students && classroomData.students.length > 0) {
-                const studentEmails = classroomData.students.map(s => s.email);
+                const studentEmails = classroomData.students.filter(s => s != null).map(s => s.email);
                 sendExamScheduledEmail(studentEmails, title, exam.date, classroomData.name);
             }
 
@@ -224,7 +224,7 @@ export const createExamWithQuestions = async (req, res) => {
         if (classroom) {
             const classroomData = await Classroom.findById(classroom).populate("students", "email name");
             if (classroomData && classroomData.students && classroomData.students.length > 0) {
-                const studentEmails = classroomData.students.map(s => s.email);
+                const studentEmails = classroomData.students.filter(s => s != null).map(s => s.email);
                 sendExamScheduledEmail(studentEmails, title, exam.date, classroomData.name);
             }
 
@@ -622,7 +622,7 @@ export const getExamDetails = async (req, res) => {
             .sort({ marksObtained: -1, score: -1 });
 
         // Calculate metadata
-        const totalStudents = exam.classroom?.students?.length || 0;
+        const totalStudents = exam.classroom?.students ? exam.classroom.students.filter(s => s != null).length : 0;
         const attendedCount = results.length;
 
         res.json({ 

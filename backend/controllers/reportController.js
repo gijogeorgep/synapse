@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import Classroom from "../models/Classroom.js";
 import User from "../models/User.js";
 import Exam from "../models/Exam.js";
@@ -6,6 +7,7 @@ import Assignment from "../models/Assignment.js";
 import Submission from "../models/Submission.js";
 import StudyMaterial from "../models/StudyMaterial.js";
 import { Payment } from "../models/Financial.js";
+import LessonReport from "../models/LessonReport.js";
 
 // @desc    Get overall stats for the reports dashboard
 // @route   GET /api/reports/overall
@@ -30,9 +32,10 @@ export const getOverallStats = async (req, res) => {
         ]);
 
         const totalResults = await Result.find({ exam: { $in: exams.map(e => e._id) } });
+        const getMarks = (r) => (typeof r?.marksObtained === "number" ? r.marksObtained : (typeof r?.score === "number" ? r.score : 0));
         
         const avgScore = totalResults.length > 0 
-            ? totalResults.reduce((acc, r) => acc + (r.marksObtained || 0), 0) / totalResults.length 
+            ? totalResults.reduce((acc, r) => acc + getMarks(r), 0) / totalResults.length 
             : 0;
 
         // 1. Revenue Trends (Last 6 Months)
@@ -42,11 +45,22 @@ export const getOverallStats = async (req, res) => {
         const revenueTrends = await Payment.aggregate([
             { $match: { 
                 status: 'completed', 
-                createdAt: { $gte: sixMonthsAgo },
-                ...(isSuperAdmin ? {} : { student: { $in: students.map(s => s._id) } })
+                ...(isSuperAdmin ? {} : {
+                    $or: [
+                        { student: { $in: students.map(s => s._id) } },
+                        { createdBy: req.user._id }
+                    ]
+                })
+            }},
+            { $project: {
+                amount: 1,
+                refDate: { $ifNull: ["$paymentDate", "$createdAt"] }
+            }},
+            { $match: {
+                refDate: { $gte: sixMonthsAgo }
             }},
             { $group: {
-                _id: { $dateToString: { format: "%Y-%m", date: "$createdAt" } },
+                _id: { $dateToString: { format: "%Y-%m", date: "$refDate" } },
                 amount: { $sum: "$amount" }
             }},
             { $sort: { "_id": 1 } }
@@ -87,7 +101,7 @@ export const getOverallStats = async (req, res) => {
             const clsExams = await Exam.find({ classroom: cls._id });
             const clsResults = await Result.find({ exam: { $in: clsExams.map(e => e._id) } });
             const clsAvg = clsResults.length > 0 
-                ? clsResults.reduce((acc, r) => acc + (r.marksObtained || 0), 0) / clsResults.length 
+                ? clsResults.reduce((acc, r) => acc + getMarks(r), 0) / clsResults.length 
                 : 0;
             return { name: cls.name, average: Math.round(clsAvg) };
         }));
@@ -99,7 +113,7 @@ export const getOverallStats = async (req, res) => {
             { $unwind: '$examInfo' },
             { $group: {
                 _id: '$examInfo.subject',
-                average: { $avg: '$marksObtained' }
+                average: { $avg: { $ifNull: ['$marksObtained', '$score'] } }
             }},
             { $project: { subject: '$_id', average: { $round: ['$average', 0] }, _id: 0 } }
         ]);
@@ -108,7 +122,7 @@ export const getOverallStats = async (req, res) => {
         const activeStudents = await Result.distinct('student', { exam: { $in: exams.map(e => e._id) } });
         const passedStudents = await Result.aggregate([
             { $match: { exam: { $in: exams.map(e => e._id) } } },
-            { $group: { _id: '$student', avg: { $avg: '$marksObtained' } } },
+            { $group: { _id: '$student', avg: { $avg: { $ifNull: ['$marksObtained', '$score'] } } } },
             { $match: { avg: { $gte: 40 } } }
         ]);
 
@@ -148,24 +162,27 @@ export const getClassroomReports = async (req, res) => {
         const isSuperAdmin = req.user.role === 'superadmin';
         const classroomOwnershipQuery = isSuperAdmin ? {} : { createdBy: req.user._id };
 
-        const classrooms = await Classroom.find(classroomOwnershipQuery)
-            .populate('students', 'name')
-            .populate('teachers', 'name');
+        const classrooms = await Classroom.find(classroomOwnershipQuery);
 
         const reports = await Promise.all(classrooms.map(async (cls) => {
             const exams = await Exam.find({ classroom: cls._id });
             const results = await Result.find({ exam: { $in: exams.map(e => e._id) } });
             
+            // Count only students that actually exist in the DB (filters out deleted users)
+            const actualStudentCount = await User.countDocuments({ _id: { $in: cls.students }, role: 'student' });
+            const actualTeacherCount = await User.countDocuments({ _id: { $in: cls.teachers }, role: 'teacher' });
+
+            const getMarks = (r) => (typeof r?.marksObtained === "number" ? r.marksObtained : (typeof r?.score === "number" ? r.score : 0));
             const avgScore = results.length > 0 
-                ? results.reduce((acc, r) => acc + (r.marksObtained || 0), 0) / results.length 
+                ? results.reduce((acc, r) => acc + getMarks(r), 0) / results.length 
                 : 0;
 
             return {
                 _id: cls._id,
                 name: cls.name,
                 className: cls.className,
-                studentCount: cls.students.length,
-                teacherCount: cls.teachers.length,
+                studentCount: actualStudentCount,
+                teacherCount: actualTeacherCount,
                 examCount: exams.length,
                 avgScore: Math.round(avgScore),
                 performanceLevel: avgScore >= 80 ? 'Excellent' : avgScore >= 60 ? 'Good' : 'Average'
@@ -192,20 +209,39 @@ export const getStudentDeepDive = async (req, res) => {
             .populate('exam', 'title subject totalMarks date')
             .sort({ createdAt: 1 });
 
-        const performanceHistory = results.map(r => ({
-            date: r.exam.date,
-            examTitle: r.exam.title,
-            score: r.marksObtained,
-            total: r.exam.totalMarks,
-            percentage: Math.round((r.marksObtained / r.exam.totalMarks) * 100)
-        }));
+        const getMarks = (r) => {
+            if (typeof r?.marksObtained === "number") return r.marksObtained;
+            if (typeof r?.score === "number") return r.score;
+            return 0;
+        };
+
+        const performanceHistory = results
+            .filter((r) => r.exam) // exam may be null if deleted
+            .map((r) => {
+                const total = typeof r.exam?.totalMarks === "number" ? r.exam.totalMarks : 0;
+                const obtained = getMarks(r);
+                const percentage = total > 0 ? Math.round((obtained / total) * 100) : 0;
+                return {
+                    examId: r.exam._id,
+                    date: r.exam.date,
+                    examTitle: r.exam.title,
+                    subject: r.exam.subject,
+                    score: obtained,
+                    total,
+                    percentage,
+                };
+            });
 
         const subjectStats = {};
-        results.forEach(r => {
+        results.forEach((r) => {
+            if (!r.exam?.subject) return;
+            const total = typeof r.exam?.totalMarks === "number" ? r.exam.totalMarks : 0;
+            if (total <= 0) return;
+            const obtained = getMarks(r);
             if (!subjectStats[r.exam.subject]) {
                 subjectStats[r.exam.subject] = { total: 0, count: 0 };
             }
-            subjectStats[r.exam.subject].total += (r.marksObtained / r.exam.totalMarks) * 100;
+            subjectStats[r.exam.subject].total += (obtained / total) * 100;
             subjectStats[r.exam.subject].count += 1;
         });
 
@@ -241,10 +277,13 @@ export const getSubjectMastery = async (req, res) => {
         const results = await Result.find({ exam: { $in: exams.map(e => e._id) } }).populate('exam', 'subject totalMarks');
 
         const mastery = {};
+        const getMarks = (r) => (typeof r?.marksObtained === "number" ? r.marksObtained : (typeof r?.score === "number" ? r.score : 0));
         results.forEach(r => {
             if (!r.exam || !r.exam.subject) return;
+            const total = typeof r.exam?.totalMarks === "number" ? r.exam.totalMarks : 0;
+            if (total <= 0) return;
             if (!mastery[r.exam.subject]) mastery[r.exam.subject] = { total: 0, count: 0 };
-            mastery[r.exam.subject].total += (r.marksObtained / r.exam.totalMarks) * 100;
+            mastery[r.exam.subject].total += (getMarks(r) / total) * 100;
             mastery[r.exam.subject].count += 1;
         });
 
@@ -285,10 +324,16 @@ export const getTeachersList = async (req, res) => {
 
         const teachersWithStats = await Promise.all(teachers.map(async (t) => {
             const classrooms = await Classroom.find({ teachers: t._id });
+            // Collect all unique student IDs across all classrooms for this teacher
+            const allStudentIds = [...new Set(classrooms.flatMap(c => c.students.map(id => id.toString())))];
+            // Count only students that actually exist in the DB
+            const actualStudentCount = allStudentIds.length > 0
+                ? await User.countDocuments({ _id: { $in: allStudentIds }, role: 'student' })
+                : 0;
             return {
                 ...t,
                 classroomCount: classrooms.length,
-                studentCount: classrooms.reduce((acc, c) => acc + c.students.length, 0)
+                studentCount: actualStudentCount
             };
         }));
 
@@ -313,19 +358,58 @@ export const getTeacherStats = async (req, res) => {
         const exams = await Exam.find({ classroom: { $in: classroomIds } });
         const examIds = exams.map(e => e._id);
         
-        const results = await Result.find({ exam: { $in: examIds } });
+        const results = await Result.find({ exam: { $in: examIds } }).populate('exam', 'totalMarks');
+        const getMarks = (r) => (typeof r?.marksObtained === "number" ? r.marksObtained : (typeof r?.score === "number" ? r.score : 0));
         
         const avgScore = results.length > 0 
-            ? results.reduce((acc, r) => acc + (r.marksObtained / (r.totalMarks || 100)) * 100, 0) / results.length 
+            ? results.reduce((acc, r) => {
+                const total = typeof r.exam?.totalMarks === "number" ? r.exam.totalMarks : 0;
+                if (total <= 0) return acc;
+                return acc + (getMarks(r) / total) * 100;
+            }, 0) / results.length 
+            : 0;
+
+        const totalAssignments = await Assignment.countDocuments({ teacher: teacherId });
+        const totalMaterials = await StudyMaterial.countDocuments({ uploadedBy: teacherId });
+
+        const lessonReports = await LessonReport.find({ teacher: teacherId });
+        let totalMinutes = 0;
+        lessonReports.forEach((report) => {
+            const duration = report.duration || "";
+            let minutes = 0;
+            const hrMatch = duration.match(/(\d+)\s*Hr/i);
+            const minMatch = duration.match(/(\d+)\s*Min/i);
+            if (hrMatch) minutes += parseInt(hrMatch[1]) * 60;
+            if (minMatch) minutes += parseInt(minMatch[1]);
+            totalMinutes += minutes;
+        });
+        const totalHoursTeaching = Math.round((totalMinutes / 60) * 10) / 10;
+        const totalLessons = lessonReports.length;
+
+        // For each classroom, get the actual count of existing students
+        const classroomsWithAccurateCount = await Promise.all(classrooms.map(async (c) => {
+            const count = await User.countDocuments({ _id: { $in: c.students }, role: 'student' });
+            return { name: c.name, studentCount: count };
+        }));
+
+        // Collect all unique student IDs across classrooms and count existing ones
+        const allStudentIds = [...new Set(classrooms.flatMap(c => c.students.map(id => id.toString())))];
+        const totalStudents = allStudentIds.length > 0
+            ? await User.countDocuments({ _id: { $in: allStudentIds }, role: 'student' })
             : 0;
 
         res.json({
             teacher,
-            classrooms: classrooms.map(c => ({ name: c.name, studentCount: c.students.length })),
+            classrooms: classroomsWithAccurateCount,
             totalExams: exams.length,
-            totalStudents: classrooms.reduce((acc, c) => acc + c.students.length, 0),
+            totalStudents,
             avgStudentPerformance: Math.round(avgScore),
-            performanceLevel: avgScore >= 80 ? 'Excellent' : avgScore >= 60 ? 'Good' : 'Average'
+            performanceLevel: avgScore >= 80 ? 'Excellent' : avgScore >= 60 ? 'Good' : 'Average',
+            totalAssignments,
+            totalMaterials,
+            totalLessons,
+            totalTeachingMinutes: totalMinutes,
+            totalTeachingHours: totalHoursTeaching
         });
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -365,15 +449,26 @@ export const getAdminStats = async (req, res) => {
         const students = await User.find({ createdBy: adminId, role: 'student' });
         
         const revenue = await Payment.aggregate([
-            { $match: { status: 'completed', student: { $in: students.map(s => s._id) } } },
+            { $match: { 
+                status: 'completed', 
+                $or: [
+                    { student: { $in: students.map(s => s._id) } },
+                    { createdBy: new mongoose.Types.ObjectId(adminId) }
+                ]
+            }},
             { $group: { _id: null, total: { $sum: '$amount' } } }
         ]);
 
         const exams = await Exam.find({ classroom: { $in: classrooms.map(c => c._id) } });
-        const results = await Result.find({ exam: { $in: exams.map(e => e._id) } });
+        const results = await Result.find({ exam: { $in: exams.map(e => e._id) } }).populate('exam', 'totalMarks');
+        const getMarks = (r) => (typeof r?.marksObtained === "number" ? r.marksObtained : (typeof r?.score === "number" ? r.score : 0));
         
         const avgScore = results.length > 0 
-            ? results.reduce((acc, r) => acc + (r.marksObtained / (r.totalMarks || 100)) * 100, 0) / results.length 
+            ? results.reduce((acc, r) => {
+                const total = typeof r.exam?.totalMarks === "number" ? r.exam.totalMarks : 0;
+                if (total <= 0) return acc;
+                return acc + (getMarks(r) / total) * 100;
+            }, 0) / results.length 
             : 0;
 
         res.json({
@@ -403,9 +498,9 @@ export const getMyTeacherStats = async (req, res) => {
 
         const classroomIds = classrooms.map(c => c._id);
 
-        // 2. Unique students across all classrooms
+        // 2. Unique students across all classrooms (filter nulls = deleted users)
         const studentIdSet = new Set();
-        classrooms.forEach(c => (c.students || []).forEach(s => studentIdSet.add(s._id.toString())));
+        classrooms.forEach(c => (c.students || []).filter(s => s != null).forEach(s => studentIdSet.add(s._id.toString())));
         const totalStudents = studentIdSet.size;
 
         // 3. Assignments created by this teacher
@@ -435,10 +530,11 @@ export const getMyTeacherStats = async (req, res) => {
             .populate('exam', 'title subject totalMarks date')
             .lean();
 
+        const getMarks = (r) => (typeof r?.marksObtained === "number" ? r.marksObtained : (typeof r?.score === "number" ? r.score : 0));
         const avgPerformance = results.length > 0
             ? Math.round(results.reduce((acc, r) => {
                 const total = r.exam?.totalMarks || 100;
-                return acc + ((r.marksObtained || 0) / total) * 100;
+                return acc + (getMarks(r) / total) * 100;
             }, 0) / results.length)
             : 0;
 
@@ -451,7 +547,7 @@ export const getMyTeacherStats = async (req, res) => {
             const clsSubmissions = submissions.filter(s => clsAssignments.some(a => a._id.toString() === s.assignment?._id?.toString()));
             const clsPending = clsSubmissions.filter(s => s.status === 'Submitted').length;
             const clsAvg = clsResults.length > 0
-                ? Math.round(clsResults.reduce((acc, r) => acc + ((r.marksObtained || 0) / (r.exam?.totalMarks || 100)) * 100, 0) / clsResults.length)
+                ? Math.round(clsResults.reduce((acc, r) => acc + (getMarks(r) / (r.exam?.totalMarks || 100)) * 100, 0) / clsResults.length)
                 : 0;
 
             return {
@@ -459,7 +555,7 @@ export const getMyTeacherStats = async (req, res) => {
                 name: cls.name,
                 className: cls.className,
                 board: cls.board,
-                studentCount: cls.students?.length || 0,
+                studentCount: (cls.students || []).filter(s => s != null).length,
                 examCount: clsExams.length,
                 assignmentCount: clsAssignments.length,
                 pendingCount: clsPending,
@@ -473,7 +569,7 @@ export const getMyTeacherStats = async (req, res) => {
             const sub = r.exam?.subject;
             if (!sub) return;
             if (!subjectMap[sub]) subjectMap[sub] = { total: 0, count: 0 };
-            subjectMap[sub].total += ((r.marksObtained || 0) / (r.exam?.totalMarks || 100)) * 100;
+            subjectMap[sub].total += (getMarks(r) / (r.exam?.totalMarks || 100)) * 100;
             subjectMap[sub].count += 1;
         });
         const subjectPerformance = Object.entries(subjectMap).map(([subject, data]) => ({
@@ -534,9 +630,9 @@ export const getMyStudentStats = async (req, res) => {
             date: r.exam?.date || r.createdAt,
             examTitle: r.exam.title,
             subject: r.exam?.subject || 'General',
-            score: r.marksObtained || 0,
+            score: (typeof r.marksObtained === "number" ? r.marksObtained : (typeof r.score === "number" ? r.score : 0)),
             totalMarks: r.exam?.totalMarks || 100,
-            percentage: Math.round(((r.marksObtained || 0) / (r.exam?.totalMarks || 100)) * 100)
+            percentage: Math.round((((typeof r.marksObtained === "number" ? r.marksObtained : (typeof r.score === "number" ? r.score : 0))) / (r.exam?.totalMarks || 100)) * 100)
         }));
 
         // 3. Subject-wise Performance
@@ -546,7 +642,8 @@ export const getMyStudentStats = async (req, res) => {
             if (!subjectStats[subject]) {
                 subjectStats[subject] = { totalPercentage: 0, count: 0 };
             }
-            subjectStats[subject].totalPercentage += ((r.marksObtained || 0) / (r.exam?.totalMarks || 100)) * 100;
+            const obtained = (typeof r.marksObtained === "number" ? r.marksObtained : (typeof r.score === "number" ? r.score : 0));
+            subjectStats[subject].totalPercentage += (obtained / (r.exam?.totalMarks || 100)) * 100;
             subjectStats[subject].count += 1;
         });
 

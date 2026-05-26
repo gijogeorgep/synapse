@@ -139,7 +139,14 @@ const LibraryManagement = () => {
                                 </div>
                             </div>
                             <h3 className="text-lg font-bold text-slate-800 mb-2 truncate">{res.title}</h3>
-                            <p className="text-slate-500 text-sm mb-4 line-clamp-2">{res.description}</p>
+                            <p className="text-slate-500 text-sm mb-2 line-clamp-2">{res.description}</p>
+                            
+                            {res.uploadedBy && (
+                                <div className="flex items-center gap-1.5 mb-4">
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">By:</span>
+                                    <span className="text-xs font-bold text-slate-600 truncate max-w-[150px]">{res.uploadedBy.name}</span>
+                                </div>
+                            )}
 
                             <div className="mt-auto flex items-center justify-between pt-4 border-t border-slate-50">
                                 <div className="flex items-center gap-2">
