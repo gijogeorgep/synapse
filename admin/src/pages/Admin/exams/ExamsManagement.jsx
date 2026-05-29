@@ -1428,7 +1428,7 @@ const ExamsManagement = () => {
                       )}
                       Save Draft
                     </button>
-                      <div className="w-full max-w-xs">
+                    <div className="w-full max-w-xs">
                       <button
                         type="button"
                         onClick={() => {
