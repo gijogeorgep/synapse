@@ -314,8 +314,8 @@ const Exams = () => {
             {/* Create Exam Modal */}
             {showCreateModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[2rem] shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
-                        <div className="p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+                    <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
+                        <div className="p-4 md:p-8 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
                             <div>
                                 <h2 className="text-2xl font-bold text-slate-900">Create New Exam</h2>
                                 <p className="text-slate-500 text-sm">{selectedClassroom?.name} - Class {selectedClassroom?.className}</p>
@@ -328,7 +328,7 @@ const Exams = () => {
                             </button>
                         </div>
 
-                        <form onSubmit={handleCreateExam} className="overflow-y-auto p-8 flex-1 space-y-8">
+                        <form onSubmit={handleCreateExam} className="overflow-y-auto p-4 md:p-8 flex-1 space-y-8">
                             {/* Basic Details */}
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 <div className="space-y-2 col-span-1 md:col-span-1">
@@ -531,17 +531,17 @@ const Exams = () => {
                             </div>
                         </form>
 
-                        <div className="p-8 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
+                        <div className="p-4 md:p-8 border-t border-slate-100 flex justify-end gap-3 bg-slate-50/50">
                             <button
                                 type="button"
                                 onClick={() => setShowCreateModal(false)}
-                                className="px-6 py-3 rounded-full text-slate-600 font-bold hover:bg-white transition-all"
+                                className="px-3 md:px-6 py-2 md:py-3 rounded-full text-slate-600 font-bold hover:bg-white transition-all"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={handleCreateExam}
-                                className="px-10 py-3 rounded-full bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-600/20 hover:bg-cyan-700 hover:scale-105 transition-all"
+                                className="px-4 md:px-10 py-2 md:py-3 rounded-full bg-cyan-600 text-white font-bold shadow-lg shadow-cyan-600/20 hover:bg-cyan-700 hover:scale-105 transition-all"
                             >
                                 Create & Publish
                             </button>

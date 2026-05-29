@@ -1034,7 +1034,7 @@ const ExamsManagement = () => {
               className="flex flex-col max-h-[90vh]"
             >
               {/* Sticky Header */}
-              <div className="flex justify-between items-center p-8 bg-white border-b border-slate-50 shrink-0">
+              <div className="flex justify-between items-center p-4 md:p-8 bg-white border-b border-slate-50 shrink-0">
                 <div>
                   <h2 className="text-2xl font-bold text-slate-800">
                     {isEditing
@@ -1065,7 +1065,7 @@ const ExamsManagement = () => {
 
               {currentStep === 1 ? (
                 <>
-                  <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
                     <div className="grid grid-cols-2 gap-6">
                       <div className="col-span-2 grid grid-cols-2 gap-4 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-2">
                         <div>
@@ -1307,7 +1307,7 @@ const ExamsManagement = () => {
                         />
                       </div>
 
-                      <div className="col-span-2 bg-slate-50 p-6 rounded-2xl border border-slate-200 space-y-4">
+                      <div className="col-span-2 bg-slate-50 p-4 md:p-6 rounded-2xl border border-slate-200 space-y-4">
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             <div
@@ -1414,12 +1414,12 @@ const ExamsManagement = () => {
                   </div>
 
                   {/* Sticky Footer for Step 1 */}
-                  <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex gap-4 justify-end shrink-0 mt-4 rounded-b-[2rem]">
+                  <div className="p-4 md:p-8 border-t border-slate-50 bg-slate-50/50 flex gap-4 justify-end shrink-0 mt-4 rounded-b-[2rem]">
                     <button
                       type="button"
                       onClick={handleSaveExamDraft}
                       disabled={isSavingDraft}
-                      className="px-6 py-4 text-amber-600 font-bold border border-amber-200 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2"
+                      className="px-4 md:px-6 py-2.5 md:py-4 text-amber-600 font-bold border border-amber-200 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2"
                     >
                       {isSavingDraft ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -1428,7 +1428,7 @@ const ExamsManagement = () => {
                       )}
                       Save Draft
                     </button>
-                    <div className="w-full max-w-xs">
+                      <div className="w-full max-w-xs">
                       <button
                         type="button"
                         onClick={() => {
@@ -1453,7 +1453,7 @@ const ExamsManagement = () => {
                           }
                           setCurrentStep(2);
                         }}
-                        className="w-full py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
+                        className="w-full py-2.5 md:py-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
                       >
                         Next: Add Questions <ChevronRight className="w-5 h-5" />
                       </button>
@@ -1462,7 +1462,7 @@ const ExamsManagement = () => {
                 </>
               ) : (
                 <>
-                  <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                  <div className="flex-1 overflow-y-auto p-4 md:p-8 custom-scrollbar">
                     <div className="space-y-6">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-semibold text-slate-700">
@@ -1776,11 +1776,11 @@ const ExamsManagement = () => {
                   </div>
 
                   {/* Sticky Footer for Step 2 */}
-                  <div className="p-8 border-t border-slate-50 bg-slate-50/50 flex gap-4 shrink-0 rounded-b-[2rem]">
+                  <div className="p-4 md:p-8 border-t border-slate-50 bg-slate-50/50 flex gap-4 shrink-0 rounded-b-[2rem]">
                     <button
                       type="button"
                       onClick={() => setCurrentStep(1)}
-                      className="flex-1 py-3.5 text-slate-600 font-bold border border-slate-200 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 md:py-3.5 text-slate-600 font-bold border border-slate-200 rounded-xl hover:bg-slate-50 transition-all flex items-center justify-center gap-2"
                     >
                       <ChevronLeft className="w-5 h-5" /> Back
                     </button>
@@ -1788,7 +1788,7 @@ const ExamsManagement = () => {
                       type="button"
                       onClick={handleSaveExamDraft}
                       disabled={isSavingDraft}
-                      className="flex-1 py-3.5 text-amber-600 font-bold border border-amber-200 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2"
+                      className="flex-1 py-2.5 md:py-3.5 text-amber-600 font-bold border border-amber-200 rounded-xl hover:bg-amber-50 transition-all flex items-center justify-center gap-2"
                     >
                       {isSavingDraft ? (
                         <Loader2 className="w-5 h-5 animate-spin" />
@@ -1799,7 +1799,7 @@ const ExamsManagement = () => {
                     </button>
                     <button
                       type="submit"
-                      className="flex-[2] py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
+                      className="flex-[2] py-2.5 md:py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
                     >
                       {isEditing ? "Update & Publish" : "Create & Publish"}
                     </button>
