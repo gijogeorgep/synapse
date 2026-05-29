@@ -33,6 +33,7 @@ const Exams = () => {
         title: "",
         description: "",
         duration: 30,
+        isTimed: true,
         date: "",
         examType: "subject-wise",
         totalMarks: 20,
@@ -494,13 +495,24 @@ const Exams = () => {
                                         </div>
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            {q.options.map((option, oIndex) => (
-                                                <div key={oIndex} className="flex items-center gap-3">
-                                                    <button
-                                                        type="button"
-                                                        onClick={() => handleQuestionUpdate(qIndex, "correctAnswer", oIndex)}
-                                                        className={`w-6 h-6 rounded-full flex items-center justify-center border-2 transition-all ${q.correctAnswer === oIndex ? 'bg-emerald-500 border-emerald-500 shadow-sm' : 'border-slate-200 hover:border-emerald-300'}`}
-                                                    >
+                                                        <div className="grid grid-cols-1 gap-4">
+                                                            <div className="flex items-center justify-between">
+                                                                <div>
+                                                                    <label className="block text-sm font-semibold text-slate-700 mb-1">Enable Timer</label>
+                                                                    <p className="text-xs text-slate-500">Require students to finish within a set duration</p>
+                                                                </div>
+                                                                <button type="button" onClick={() => setFormData(prev => ({ ...prev, isTimed: !prev.isTimed }))} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.isTimed ? 'bg-cyan-600' : 'bg-slate-300'}`}>
+                                                                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isTimed ? 'translate-x-6' : 'translate-x-1'}`} />
+                                                                </button>
+                                                            </div>
+
+                                                            <div>
+                                                                <label className="block text-sm font-semibold text-slate-700 mb-1">Duration (mins) <span className="text-rose-500">*</span></label>
+                                                                <input type="number" min={5} value={formData.duration} onChange={e => setFormData({ ...formData, duration: Number(e.target.value) })}
+                                                                    disabled={!formData.isTimed}
+                                                                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none" />
+                                                            </div>
+                                                        </div>
                                                         {q.correctAnswer === oIndex && <CheckCircle2 className="w-4 h-4 text-white" />}
                                                     </button>
                                                     <input

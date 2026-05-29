@@ -9,13 +9,14 @@ import Notification from "../models/Notification.js";
 // @route   POST /api/exams
 // @access  Private (Teacher/Admin)
 export const createExam = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examCategory, examType, classroom, status } = req.body;
+    const { title, description, duration, isTimed, subject, classLevel, date, examCategory, examType, classroom, status } = req.body;
 
     try {
         const exam = await Exam.create({
             title,
             description,
             duration,
+            isTimed: isTimed !== undefined ? isTimed : true,
             subject,
             classLevel,
             date: examCategory === "practice" ? Date.now() : date,
@@ -113,7 +114,7 @@ export const getExams = async (req, res) => {
 // @route   POST /api/exams/bulk
 // @access  Private (Teacher/Admin)
 export const createExamWithQuestions = async (req, res) => {
-    const { title, description, duration, subject, classLevel, date, examCategory, examType, programType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks, totalQuestions, status, sections } = req.body;
+    const { title, description, duration, isTimed, subject, classLevel, date, examCategory, examType, programType, classroom, questions, totalMarks, marksPerQuestion, negativeMarks, totalQuestions, status, sections } = req.body;
 
     const isDraft = status === 'draft';
 
@@ -121,8 +122,8 @@ export const createExamWithQuestions = async (req, res) => {
         return res.status(400).json({ message: "Exam title is required even for drafts." });
     }
 
-    if (!isDraft && (!duration || !subject || !classroom)) {
-        return res.status(400).json({ message: "Please provide all required fields: duration, subject, and classroom." });
+    if (!isDraft && (!subject || !classroom || (isTimed !== false && !duration))) {
+        return res.status(400).json({ message: "Please provide all required fields: subject, classroom, and duration (when timer enabled)." });
     }
 
     // Skip strict validation for drafts
@@ -196,6 +197,7 @@ export const createExamWithQuestions = async (req, res) => {
             title,
             description,
             duration,
+            isTimed: isTimed !== undefined ? isTimed : true,
             subject,
             classLevel: classLevel || "10",
             date: examCategory === "practice" ? Date.now() : date,
@@ -530,7 +532,7 @@ export const deleteExam = async (req, res) => {
 // @access  Private (Teacher/Admin)
 export const updateExam = async (req, res) => {
     try {
-        const { title, subject, duration, totalMarks, questions, date, classroom, examCategory, examType, programType, totalQuestions, marksPerQuestion, negativeMarks, status, sections } = req.body;
+        const { title, subject, duration, isTimed, totalMarks, questions, date, classroom, examCategory, examType, programType, totalQuestions, marksPerQuestion, negativeMarks, status, sections } = req.body;
         const exam = await Exam.findById(req.params.id);
 
         if (!exam) {
@@ -565,10 +567,16 @@ export const updateExam = async (req, res) => {
                     message: `Score mismatch: ${qCountForScoring} questions to attend × ${mPerQ} marks/question = ${qCountForScoring * mPerQ}, but Total Marks is ${tMarks}.` 
                 });
             }
+            // If timer is enabled for this update, ensure duration is present
+            if ((isTimed !== undefined ? isTimed : exam.isTimed) && !duration) {
+                return res.status(400).json({ message: "Duration is required when timer is enabled." });
+            }
         }
 
         exam.title = title || exam.title;
-        exam.subject = subject || exam.subject;        exam.duration = duration !== undefined ? (parseInt(duration) || 0) : exam.duration;
+        exam.subject = subject || exam.subject;
+        exam.duration = duration !== undefined ? (parseInt(duration) || 0) : exam.duration;
+        exam.isTimed = isTimed !== undefined ? isTimed : exam.isTimed;
         exam.totalMarks = totalMarks !== undefined ? (parseFloat(totalMarks) || 0) : exam.totalMarks;
         exam.date = date || exam.date;
         exam.classroom = classroom || exam.classroom;

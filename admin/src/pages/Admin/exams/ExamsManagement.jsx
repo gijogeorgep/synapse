@@ -27,6 +27,7 @@ const ExamsManagement = () => {
         classLevel: '10',
         date: '',
         duration: 90,
+        isTimed: true,
         totalMarks: 100,
         totalQuestions: 25,
         marksPerQuestion: 4,
@@ -281,6 +282,7 @@ const ExamsManagement = () => {
             classLevel: '10',
             date: '',
             duration: 90,
+            isTimed: true,
             totalMarks: 100,
             totalQuestions: 25,
             marksPerQuestion: 4,
@@ -310,6 +312,7 @@ const ExamsManagement = () => {
                 classLevel: exam.classLevel,
                 date: exam.date ? new Date(exam.date).toISOString().slice(0, 16) : '',
                 duration: exam.duration,
+                isTimed: exam.isTimed !== undefined ? exam.isTimed : true,
                 totalMarks: exam.totalMarks,
                 totalQuestions: exam.totalQuestions || (Array.isArray(questions) ? questions.length : 0),
                 marksPerQuestion: exam.marksPerQuestion || 1,
@@ -747,7 +750,7 @@ const ExamsManagement = () => {
 
             {isModalOpen && (
                 <div className="fixed inset-0 z-[100] flex justify-center bg-slate-900/40 backdrop-blur-sm p-4 overflow-y-auto">
-                    <div className="bg-white rounded-[2.5rem] w-full max-w-7xl shadow-2xl animate-in zoom-in-95 duration-200 my-auto h-fit max-h-[90vh] overflow-hidden">
+                    <div className="bg-white rounded-2xl w-full max-w-3xl shadow-2xl animate-in zoom-in-95 duration-200 my-auto h-fit max-h-[90vh] overflow-hidden">
                         <form onSubmit={handleCreateExam} className="flex flex-col max-h-[90vh]">
                             {/* Sticky Header */}
                             <div className="flex justify-between items-center p-8 bg-white border-b border-slate-50 shrink-0">
@@ -768,7 +771,7 @@ const ExamsManagement = () => {
                             {currentStep === 1 ? (
                                 <>
                                 <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-                                <div className="grid grid-cols-2 gap-6">
+                                    <div className="grid grid-cols-2 gap-6">
                                     <div className="col-span-2 grid grid-cols-2 gap-4 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 mb-2">
                                         <div>
                                             <label className="block text-[10px] font-bold text-indigo-400 mb-1 uppercase tracking-widest">Educational Program</label>
@@ -821,6 +824,20 @@ const ExamsManagement = () => {
                                             <option value="scheduled">Scheduled Exam</option>
                                             <option value="practice">Practice Exam</option>
                                         </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Enable Timer</label>
+                                        <div className="flex items-center justify-between">
+                                            <div className="text-sm text-slate-500">Require students to finish within a set duration</div>
+                                            <button type="button" onClick={() => setFormData(prev => ({ ...prev, isTimed: !prev.isTimed }))} className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${formData.isTimed ? 'bg-indigo-600' : 'bg-slate-300'}`}>
+                                                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isTimed ? 'translate-x-6' : 'translate-x-1'}`} />
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-bold text-slate-700 mb-1.5 uppercase tracking-wider">Duration (mins)</label>
+                                        <input type="number" name="duration" min={1} value={formData.duration} onChange={(e)=>setFormData({...formData, duration: parseInt(e.target.value) || 0})} disabled={!formData.isTimed} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" />
                                     </div>
                                     {formData.examCategory === 'practice' && (
                                         <div>

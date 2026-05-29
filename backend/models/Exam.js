@@ -16,6 +16,10 @@ const examSchema = new mongoose.Schema(
         duration: {
             type: Number, // in minutes
         },
+        isTimed: {
+            type: Boolean,
+            default: true,
+        },
         totalMarks: {
             type: Number,
             required: true,
