@@ -375,8 +375,8 @@ const UserManagement = () => {
                       }
                       className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-cyan-500"
                     >
-                      {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((c) => (
-                        <option key={c} value={c.toString()}>
+                      {["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "+1", "+2"].map((c) => (
+                        <option key={c} value={c}>
                           Class {c}
                         </option>
                       ))}
@@ -653,8 +653,8 @@ const UserManagement = () => {
                 className="w-full pl-10 pr-8 py-2.5 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 transition-all outline-none text-slate-700 appearance-none disabled:opacity-50 disabled:bg-slate-50 shadow-sm font-medium"
               >
                 <option value="all">All Classes</option>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((c) => (
-                  <option key={c} value={c.toString()}>
+                {["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "+1", "+2"].map((c) => (
+                  <option key={c} value={c}>
                     Class {c}
                   </option>
                 ))}

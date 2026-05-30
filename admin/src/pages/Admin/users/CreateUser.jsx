@@ -89,7 +89,7 @@ const CreateUser = () => {
   });
 
   // Available classes for non-E-Zone programs
-  const CLASS_OPTIONS = ["4", "5", "6", "7", "8", "9", "10"];
+  const CLASS_OPTIONS = ["4", "5", "6", "7", "8", "9", "10", "+1", "+2"];
 
   const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
