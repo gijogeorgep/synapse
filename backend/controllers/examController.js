@@ -248,7 +248,8 @@ export const createExamWithQuestions = async (req, res) => {
     }
   }
 
-  const normalizedQuestions = questions.map((question) => ({
+  const rawQuestions = Array.isArray(questions) ? questions : [];
+  const normalizedQuestions = rawQuestions.map((question) => ({
     ...question,
     questionText: question?.questionText?.trim(),
     options: Array.isArray(question?.options)
@@ -258,7 +259,7 @@ export const createExamWithQuestions = async (req, res) => {
     imageUrl: question?.imageUrl || undefined,
   }));
 
-  if (!isDraft && questions && questions.length > 0) {
+  if (!isDraft && rawQuestions.length > 0) {
     const invalidQuestionIndex = normalizedQuestions.findIndex((question) => {
       const hasValidQuestionText = Boolean(question.questionText);
       const hasFourOptions =
@@ -299,7 +300,7 @@ export const createExamWithQuestions = async (req, res) => {
       programType: programType || "PrimeOne",
       totalQuestions:
         parseInt(totalQuestions) ||
-        (Array.isArray(questions) ? questions.length : 0),
+        rawQuestions.length,
       marksPerQuestion: parseFloat(marksPerQuestion) || 0,
       negativeMarks: parseFloat(negativeMarks) || 0,
       teacher: req.user._id,
@@ -310,13 +311,16 @@ export const createExamWithQuestions = async (req, res) => {
     const questionsWithExamId = normalizedQuestions.map((question) => ({
       ...question,
       exam: exam._id,
-      status: "published",
+      classroom: classroom || question.classroom || null,
+      status: isDraft ? "draft" : "published",
       createdBy: req.user._id,
       sectionName: question.sectionName,
     }));
-    await Question.insertMany(questionsWithExamId);
+    if (questionsWithExamId.length > 0) {
+      await Question.insertMany(questionsWithExamId);
+    }
 
-    if (classroom) {
+    if (!isDraft && classroom) {
       const classroomData = await Classroom.findById(classroom).populate(
         "students",
         "email name",
@@ -737,13 +741,23 @@ export const updateExam = async (req, res) => {
     }
 
     const isDraft = (status || exam.status) === "draft";
+    const rawQuestions = Array.isArray(questions) ? questions : [];
+    const normalizedQuestions = rawQuestions.map((question) => ({
+      ...question,
+      questionText: question?.questionText?.trim?.() || "",
+      options: Array.isArray(question?.options)
+        ? question.options.map((option) => option?.trim?.() ?? option)
+        : [],
+      explanation: question?.explanation?.trim?.() || "",
+      imageUrl: question?.imageUrl || "",
+    }));
 
     // Score consistency validation for updates (skip for drafts)
     if (!isDraft) {
       let qCountForScoring = parseInt(
         totalQuestions ||
           exam.totalQuestions ||
-          (questions ? questions.length : 0),
+          rawQuestions.length,
       );
 
       // If sections exist in update or existing exam, use the sum of attendQuestions
@@ -780,6 +794,30 @@ export const updateExam = async (req, res) => {
           .status(400)
           .json({ message: "Duration is required when timer is enabled." });
       }
+
+      if (rawQuestions.length > 0) {
+        const invalidQuestionIndex = normalizedQuestions.findIndex((question) => {
+          const hasValidQuestionText = Boolean(question.questionText);
+          const hasFourOptions =
+            Array.isArray(question.options) && question.options.length === 4;
+          const hasAllOptionsFilled =
+            hasFourOptions && question.options.every((option) => Boolean(option));
+          const hasValidCorrectAnswer =
+            Number.isInteger(question.correctAnswer) &&
+            question.correctAnswer >= 0 &&
+            question.correctAnswer < question.options.length;
+
+          return (
+            !hasValidQuestionText || !hasAllOptionsFilled || !hasValidCorrectAnswer
+          );
+        });
+
+        if (invalidQuestionIndex !== -1) {
+          return res.status(400).json({
+            message: `Question ${invalidQuestionIndex + 1} is incomplete. Please fill the question text, all 4 options, and choose the correct answer.`,
+          });
+        }
+      }
     }
 
     exam.title = title || exam.title;
@@ -812,11 +850,15 @@ export const updateExam = async (req, res) => {
     const updatedExam = await exam.save();
 
     // If questions are provided, replace existing questions
-    if (questions && questions.length > 0) {
+    if (rawQuestions.length > 0) {
       await Question.deleteMany({ exam: req.params.id });
-      const questionsWithExam = questions.map((q) => ({
+      const questionsWithExam = normalizedQuestions.map((q) => ({
         ...q,
+        _id: undefined,
         exam: updatedExam._id,
+        classroom: classroom || q.classroom || updatedExam.classroom || null,
+        status: isDraft ? "draft" : "published",
+        createdBy: q.createdBy || req.user._id,
         sectionName: q.sectionName,
       }));
       await Question.insertMany(questionsWithExam);

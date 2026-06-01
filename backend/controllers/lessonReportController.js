@@ -63,8 +63,9 @@ export const getLessonReports = async (req, res) => {
         query.class = { $in: enrolledClassNames };
       }
     } else if (req.query.class) {
-      // For Teachers/Admins: filter by class if requested
-      query.class = req.query.class;
+      // For Teachers/Admins: filter by class if requested (case-insensitive, trimmed)
+      const className = req.query.class.trim();
+      query.class = { $regex: new RegExp(`^${className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') };
     }
 
     const reports = await LessonReport.find(query)

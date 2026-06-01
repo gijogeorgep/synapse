@@ -44,8 +44,10 @@ const CustomDatePicker = ({ value, onChange, label }) => {
   };
 
   const selectDate = (day) => {
-    const selected = new Date(viewDate.getFullYear(), viewDate.getMonth(), day);
-    onChange(selected.toISOString().split('T')[0]);
+    const year = viewDate.getFullYear();
+    const month = String(viewDate.getMonth() + 1).padStart(2, '0');
+    const d = String(day).padStart(2, '0');
+    onChange(`${year}-${month}-${d}`);
     setIsOpen(false);
   };
 
@@ -174,7 +176,7 @@ const LessonTracker = () => {
   };
 
   useEffect(() => {
-    fetchReports();
+    fetchReports(activeClassroom);
   }, [activeClassroom]);
 
   const fetchClassrooms = async () => {
@@ -221,16 +223,18 @@ const LessonTracker = () => {
     }
   }, [formData.startTime, formData.endTime]);
 
-  const fetchReports = async () => {
+  const fetchReports = async (classroom) => {
+    const cls = (classroom !== undefined ? classroom : activeClassroom).trim();
     try {
       setLoading(true);
-      const url = activeClassroom === 'All' 
+      const url = cls === 'All' 
         ? '/lesson-reports' 
-        : `/lesson-reports?class=${encodeURIComponent(activeClassroom)}`;
+        : `/lesson-reports?class=${encodeURIComponent(cls)}`;
       const data = await apiClient(url);
-      setReports(data);
+      setReports(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error('Failed to fetch reports');
+      setReports([]);
     } finally {
       setLoading(false);
     }
@@ -273,7 +277,7 @@ const LessonTracker = () => {
         remark: '',
         class: ''
       });
-      fetchReports();
+      fetchReports(activeClassroom);
     } catch (error) {
       toast.error(isEditing ? 'Failed to update report' : 'Failed to add report');
     }
@@ -313,7 +317,7 @@ const LessonTracker = () => {
     try {
       await apiClient(`/lesson-reports/${id}`, { method: 'DELETE' });
       toast.success('Report deleted');
-      fetchReports();
+      fetchReports(activeClassroom);
     } catch (error) {
       toast.error(error || 'Failed to delete report');
     }
@@ -760,9 +764,9 @@ const LessonTracker = () => {
           {/* Bottom Bar: Date Range & Quick Filters */}
           <div className="flex flex-col xl:flex-row xl:items-center gap-6 pt-4 border-t border-slate-50">
             <p className="text-[11px] text-cyan-700 font-bold italic md:hidden w-full bg-cyan-50/50 p-2 rounded-lg text-center border border-cyan-100">
-              Swipe right or left to select the dates 👉
+              Select the dates below
             </p>
-            <div className="flex overflow-x-auto items-center gap-4 pb-2 scrollbar-hide w-full xl:w-auto">
+            <div className="flex flex-wrap items-center gap-4 pb-2 w-full xl:w-auto">
               <div className="flex items-center gap-2 mr-2 shrink-0">
                 <div className="w-8 h-8 rounded-full bg-cyan-50 flex items-center justify-center">
                   <Calendar className="w-4 h-4 text-cyan-600" />
@@ -802,8 +806,11 @@ const LessonTracker = () => {
               <button
                 onClick={() => {
                   const now = new Date();
-                  const firstDay = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-                  const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+                  const y = now.getFullYear();
+                  const m = String(now.getMonth() + 1).padStart(2, '0');
+                  const lastD = new Date(y, now.getMonth() + 1, 0).getDate();
+                  const firstDay = `${y}-${m}-01`;
+                  const lastDay = `${y}-${m}-${String(lastD).padStart(2, '0')}`;
                   setDateRange({ from: firstDay, to: lastDay });
                 }}
                 className="px-5 py-2 text-[10px] font-bold uppercase tracking-wider text-blue-600 hover:bg-white hover:shadow-sm rounded-xl transition-all"

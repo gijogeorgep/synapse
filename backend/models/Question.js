@@ -21,17 +21,23 @@ const questionSchema = new mongoose.Schema(
         },
         questionText: {
             type: String,
-            required: true,
+            required: function () {
+                return this.status === "published";
+            },
+            default: "",
         },
         options: [
             {
                 type: String,
-                required: true,
+                default: "",
             },
         ],
         correctAnswer: {
             type: Number, // index of options array (0-3)
-            required: true,
+            required: function () {
+                return this.status === "published";
+            },
+            default: 0,
         },
         explanation: {
             type: String,
