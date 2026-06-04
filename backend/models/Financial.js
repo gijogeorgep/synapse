@@ -39,6 +39,10 @@ const paymentSchema = new mongoose.Schema(
             ref: "User",
             required: false,
         },
+        classroom: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Classroom",
+        },
         studentName: String,
         classLevel: String,
         amount: {

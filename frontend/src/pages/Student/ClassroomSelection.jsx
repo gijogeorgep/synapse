@@ -4,6 +4,7 @@ import { GraduationCap, CheckCircle2, ArrowRight, Loader2, CreditCard } from "lu
 import { toast } from "react-hot-toast";
 import { useAuth } from "../../context/AuthContext";
 import { getPublicClassrooms, enrollInClassroom, createRazorpayOrder, verifyRazorpayPayment } from "../../api/services";
+import { getApiUrl } from "../../api/apiClient";
 
 const ClassroomSelection = () => {
     const { user, logout } = useAuth();
@@ -64,6 +65,8 @@ const ClassroomSelection = () => {
                 description: `Enrollment for ${classroom.name}`,
                 image: window.location.origin + "/synapse_logo.png",
                 order_id: order.id,
+                callback_url: `${getApiUrl()}/payments/callback`,
+                redirect: true,
                 handler: async function (response) {
                     try {
                         setEnrolling(classroomId);
@@ -98,10 +101,21 @@ const ClassroomSelection = () => {
                     ondismiss: function () {
                         setEnrolling(null);
                     }
+                },
+                retry: {
+                    enabled: true
                 }
             };
 
+            if (!window.Razorpay) {
+                throw new Error("Payment checkout could not load. Please refresh and try again.");
+            }
+
             const rzp = new window.Razorpay(options);
+            rzp.on("payment.failed", function (response) {
+                setError(response.error?.description || "Payment failed. Please try again.");
+                setEnrolling(null);
+            });
             rzp.open();
 
         } catch (err) {

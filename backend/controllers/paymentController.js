@@ -19,6 +19,57 @@ const getRazorpayInstance = () => {
     return new Razorpay({ key_id, key_secret });
 };
 
+const getFrontendUrl = () =>
+    (process.env.FRONTEND_URL || process.env.VITE_SITE_URL || "https://synapseeduhub.com").replace(/\/$/, "");
+
+const verifySignature = ({ razorpay_order_id, razorpay_payment_id, razorpay_signature }) => {
+    const body = `${razorpay_order_id}|${razorpay_payment_id}`;
+
+    const expectedSignature = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(body)
+        .digest("hex");
+
+    return expectedSignature === razorpay_signature;
+};
+
+const completeEnrollmentForOrder = async ({ razorpay_order_id, razorpay_payment_id, classroomId }) => {
+    const payment = await Payment.findOne({ orderId: razorpay_order_id });
+    if (!payment) {
+        throw new Error("Payment record not found for this order.");
+    }
+
+    const finalClassroomId = payment.classroom || classroomId;
+    if (!finalClassroomId) {
+        throw new Error("Classroom not found for this payment.");
+    }
+
+    payment.status = "completed";
+    payment.paymentId = razorpay_payment_id;
+    await payment.save();
+
+    const user = await User.findById(payment.student);
+    const classroom = await Classroom.findById(finalClassroomId);
+
+    if (!user || !classroom) {
+        throw new Error("User or Classroom not found during verification.");
+    }
+
+    const alreadyInUser = user.enrolledClassrooms.some((id) => id.toString() === finalClassroomId.toString());
+    if (!alreadyInUser) {
+        user.enrolledClassrooms.push(finalClassroomId);
+        await user.save();
+    }
+
+    const alreadyInClassroom = classroom.students.some((id) => id.toString() === user._id.toString());
+    if (!alreadyInClassroom) {
+        classroom.students.push(user._id);
+        await classroom.save();
+    }
+
+    return { user, classroom };
+};
+
 // @desc    Create Razorpay Order
 // @route   POST /api/payments/create-order
 // @access  Private
@@ -35,8 +86,10 @@ export const createOrder = async (req, res) => {
             return res.status(400).json({ message: "This classroom is not for sale or has no price set." });
         }
 
+        const amount = Math.round(Number(classroom.price) * 100);
+
         const options = {
-            amount: classroom.price * 100, // Razorpay expects amount in paise
+            amount, // Razorpay expects amount in paise
             currency: "INR",
             receipt: `receipt_order_${Date.now()}`,
         };
@@ -51,6 +104,7 @@ export const createOrder = async (req, res) => {
         // Save pending payment to DB
         await Payment.create({
             student: req.user._id,
+            classroom: classroom._id,
             amount: classroom.price,
             status: "pending",
             orderId: order.id,
@@ -75,48 +129,15 @@ export const verifyPayment = async (req, res) => {
             classroomId
         } = req.body;
 
-        const body = razorpay_order_id + "|" + razorpay_payment_id;
-
-        const expectedSignature = crypto
-            .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-            .update(body.toString())
-            .digest("hex");
-
-        const isAuthentic = expectedSignature === razorpay_signature;
+        const isAuthentic = verifySignature({ razorpay_order_id, razorpay_payment_id, razorpay_signature });
 
         if (isAuthentic) {
-            // Payment success
-            const payment = await Payment.findOne({ orderId: razorpay_order_id });
-            if (payment) {
-                payment.status = "completed";
-                payment.paymentId = razorpay_payment_id;
-                await payment.save();
-            }
+            await completeEnrollmentForOrder({ razorpay_order_id, razorpay_payment_id, classroomId });
 
-            // Enroll student in classroom
-            const user = await User.findById(req.user._id);
-            const classroom = await Classroom.findById(classroomId);
-
-            if (user && classroom) {
-                // Add classroom to user's enrolled list if not already there
-                if (!user.enrolledClassrooms.includes(classroomId)) {
-                    user.enrolledClassrooms.push(classroomId);
-                    await user.save();
-                }
-
-                // Add user to classroom's students list if not already there
-                if (!classroom.students.includes(req.user._id)) {
-                    classroom.students.push(req.user._id);
-                    await classroom.save();
-                }
-
-                res.status(200).json({
-                    success: true,
-                    message: "Payment verified and enrollment successful"
-                });
-            } else {
-                res.status(404).json({ message: "User or Classroom not found during verification" });
-            }
+            res.status(200).json({
+                success: true,
+                message: "Payment verified and enrollment successful"
+            });
         } else {
             // Signature mismatch
             const payment = await Payment.findOne({ orderId: razorpay_order_id });
@@ -129,6 +150,43 @@ export const verifyPayment = async (req, res) => {
     } catch (error) {
         console.error("Error verifying Razorpay payment:", error);
         res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Verify Razorpay Payment from Checkout callback URL
+// @route   POST /api/payments/callback
+// @access  Public (Razorpay callback)
+export const handlePaymentCallback = async (req, res) => {
+    const frontendUrl = getFrontendUrl();
+
+    try {
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+        } = req.body;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.redirect(`${frontendUrl}/student/select-classroom?payment=failed`);
+        }
+
+        const isAuthentic = verifySignature({ razorpay_order_id, razorpay_payment_id, razorpay_signature });
+
+        if (!isAuthentic) {
+            const payment = await Payment.findOne({ orderId: razorpay_order_id });
+            if (payment) {
+                payment.status = "failed";
+                await payment.save();
+            }
+            return res.redirect(`${frontendUrl}/student/select-classroom?payment=failed`);
+        }
+
+        await completeEnrollmentForOrder({ razorpay_order_id, razorpay_payment_id });
+
+        return res.redirect(`${frontendUrl}/student/dashboard?payment=success`);
+    } catch (error) {
+        console.error("Error handling Razorpay callback:", error);
+        return res.redirect(`${frontendUrl}/student/select-classroom?payment=failed`);
     }
 };
 
