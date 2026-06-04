@@ -36,6 +36,7 @@ const allowedOrigins = [
     "https://synapseeduhub.com",
     "https://www.synapseeduhub.com",
     "https://admin.synapseeduhub.com",
+    "https://api.razorpay.com",
     "http://localhost:5173",  // frontend dev
     "http://localhost:5174",  // admin dev
     "http://localhost:5175",  // extra Vite dev port
