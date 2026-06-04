@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Award, PlusCircle, User, BookOpen, Clock, CheckCircle2, AlertCircle, X, Search, Filter, Plus, Trash2, ChevronRight, ChevronLeft, Image as ImageIcon, Loader2, Users, BarChart2, TrendingUp, MoreVertical, Edit2, Save } from 'lucide-react';
-import { createBulkExam, deleteExam, updateBulkExam, getQuestions, getAdminExams, getAdminClassrooms, getExamDetails, submitAdminResult, uploadImage, saveDraftQuestion, getDraftQuestions, updateQuestion, publishQuestion, deleteQuestion } from '../../../api/services';
+import { Award, PlusCircle, User, BookOpen, Clock, CheckCircle2, AlertCircle, X, Search, Filter, Plus, Trash2, ChevronRight, ChevronLeft, Image as ImageIcon, Loader2, Users, BarChart2, TrendingUp, MoreVertical, Edit2, Save, Copy } from 'lucide-react';
+import { createBulkExam, deleteExam, updateBulkExam, transferExam, getQuestions, getAdminExams, getAdminClassrooms, getExamDetails, submitAdminResult, uploadImage, saveDraftQuestion, getDraftQuestions, updateQuestion, publishQuestion, deleteQuestion } from '../../../api/services';
 
 const ExamsManagement = () => {
     const [exams, setExams] = useState([]);
@@ -10,6 +10,7 @@ const ExamsManagement = () => {
     const [currentStep, setCurrentStep] = useState(1);
     const [isResultModalOpen, setIsResultModalOpen] = useState(false);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
     const [selectedExam, setSelectedExam] = useState(null);
     const [selectedClassroom, setSelectedClassroom] = useState(null);
     const [examDetails, setExamDetails] = useState(null);
@@ -50,6 +51,13 @@ const ExamsManagement = () => {
     const [draftQuestions, setDraftQuestions] = useState([]);
     const [isLoadingDrafts, setIsLoadingDrafts] = useState(false);
     const [isSavingDraft, setIsSavingDraft] = useState(false);
+    const [isTransferring, setIsTransferring] = useState(false);
+    const [transferFormData, setTransferFormData] = useState({
+        classroomId: '',
+        title: '',
+        date: '',
+        setDate: false,
+    });
 
     const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
 
@@ -330,6 +338,47 @@ const ExamsManagement = () => {
         }
     };
 
+    const openTransferModal = (exam) => {
+        const sourceClassroomId = exam.classroom?._id || exam.classroom;
+        const firstTarget = classrooms.find((classroom) => classroom._id !== sourceClassroomId);
+
+        setSelectedExam(exam);
+        setTransferFormData({
+            classroomId: firstTarget?._id || '',
+            title: exam.title,
+            date: exam.date ? new Date(exam.date).toISOString().slice(0, 16) : '',
+            setDate: false,
+        });
+        setIsTransferModalOpen(true);
+        setActiveMenu(null);
+    };
+
+    const handleTransferExam = async (e) => {
+        e.preventDefault();
+        if (!selectedExam || !transferFormData.classroomId) {
+            setStatus({ type: 'error', message: 'Please select a target classroom.' });
+            return;
+        }
+
+        setIsTransferring(true);
+        try {
+            const payload = {
+                classroomId: transferFormData.classroomId,
+                title: transferFormData.title,
+            };
+            if (transferFormData.setDate && transferFormData.date) payload.date = transferFormData.date;
+            const response = await transferExam(selectedExam._id, payload);
+            setStatus({ type: 'success', message: response.message || 'Exam transferred successfully.' });
+            setIsTransferModalOpen(false);
+            setSelectedExam(null);
+            fetchData();
+        } catch (error) {
+            setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Failed to transfer exam.' });
+        } finally {
+            setIsTransferring(false);
+        }
+    };
+
     const removeQuestion = (index) => {
         const newQuestions = formData.questions.filter((_, i) => i !== index);
         setFormData({ ...formData, questions: newQuestions });
@@ -449,7 +498,7 @@ const ExamsManagement = () => {
                                  <div className="flex gap-1">
                                     <div className="text-right mr-2">
                                         <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{exam.subject}</span>
-                                        <p className="text-sm font-bold text-indigo-600">Class {exam.classLevel}</p>
+                                        <p className="text-sm font-bold text-indigo-600">{exam.classroom?.className || exam.classLevel ? `Class ${exam.classroom?.className || exam.classLevel}` : exam.programType || 'N/A'}</p>
                                     </div>
                                     <div className="relative">
                                         <button 
@@ -470,6 +519,13 @@ const ExamsManagement = () => {
                                                 >
                                                     <Edit2 className="w-4 h-4 text-indigo-500" />
                                                     Edit Exam
+                                                </button>
+                                                <button 
+                                                    onClick={() => openTransferModal(exam)}
+                                                    className="w-full px-4 py-2.5 text-left text-sm font-bold text-slate-600 hover:bg-slate-50 flex items-center gap-3"
+                                                >
+                                                    <Copy className="w-4 h-4 text-cyan-500" />
+                                                    Transfer to Class
                                                 </button>
                                                 <button 
                                                     onClick={() => handleDeleteExam(exam._id)}
@@ -543,6 +599,81 @@ const ExamsManagement = () => {
                              </div>
                         </div>
                     ))}
+                </div>
+            )}
+
+            {isTransferModalOpen && selectedExam && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md animate-in fade-in duration-300">
+                    <form onSubmit={handleTransferExam} className="bg-white w-full max-w-lg rounded-[2rem] shadow-2xl p-6 space-y-5">
+                        <div className="flex items-start justify-between gap-4">
+                            <div>
+                                <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest">Transfer Exam</p>
+                                <h2 className="text-xl font-black text-slate-900 mt-1">{selectedExam.title}</h2>
+                                <p className="text-sm text-slate-500 mt-1">Creates a new copy with the same questions in another classroom.</p>
+                            </div>
+                            <button type="button" onClick={() => setIsTransferModalOpen(false)} className="p-2 rounded-xl hover:bg-slate-100 text-slate-400">
+                                <X className="w-5 h-5" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Target Classroom</label>
+                                <select
+                                    value={transferFormData.classroomId}
+                                    onChange={(e) => setTransferFormData({ ...transferFormData, classroomId: e.target.value })}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none font-bold text-slate-700"
+                                    required
+                                >
+                                    <option value="">Select classroom</option>
+                                    {classrooms
+                                        .filter((classroom) => classroom._id !== (selectedExam.classroom?._id || selectedExam.classroom))
+                                        .map((classroom) => (
+                                            <option key={classroom._id} value={classroom._id}>
+                                                {classroom.name} - Class {classroom.className}
+                                            </option>
+                                        ))}
+                                </select>
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">New Exam Title</label>
+                                <input
+                                    value={transferFormData.title}
+                                    onChange={(e) => setTransferFormData({ ...transferFormData, title: e.target.value })}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none font-bold text-slate-700"
+                                    placeholder="Exam title"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center justify-between">
+                                    <span>Exam Date</span>
+                                    <label className="inline-flex items-center space-x-3">
+                                        <span className="text-xs font-medium text-slate-500">Set Date</span>
+                                        <input type="checkbox" checked={!!transferFormData.setDate} onChange={(e) => setTransferFormData({ ...transferFormData, setDate: e.target.checked, date: e.target.checked ? transferFormData.date : '' })} className="w-4 h-4" />
+                                    </label>
+                                </label>
+                                <input
+                                    type="datetime-local"
+                                    value={transferFormData.date}
+                                    onChange={(e) => setTransferFormData({ ...transferFormData, date: e.target.value })}
+                                    disabled={!transferFormData.setDate}
+                                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-cyan-500 outline-none font-bold text-slate-700 disabled:opacity-50"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 pt-2">
+                            <button type="button" onClick={() => setIsTransferModalOpen(false)} className="flex-1 py-3 rounded-xl bg-slate-100 text-slate-500 font-black hover:bg-slate-200 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit" disabled={isTransferring || !transferFormData.classroomId} className="flex-[2] py-3 rounded-xl bg-cyan-600 text-white font-black hover:bg-cyan-700 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+                                {isTransferring && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Transfer Exam
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
 

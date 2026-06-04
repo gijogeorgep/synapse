@@ -592,6 +592,9 @@ export const getExamQuestions = async (req, res) => {
           exam: q.exam,
           questionText: q.questionText,
           options: q.options,
+          imageUrl: q.imageUrl,
+          sectionName: q.sectionName,
+          subject: q.subject,
         }));
         return res.json(strippedQuestions);
       }
@@ -698,6 +701,88 @@ export const deleteExam = async (req, res) => {
     res.json({ message: "Exam and associated questions deleted" });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Duplicate an exam and its questions to another classroom
+// @route   POST /api/exams/:id/transfer
+// @access  Private (Teacher/Admin)
+export const transferExam = async (req, res) => {
+  try {
+    const { classroomId, title, date } = req.body;
+
+    if (!classroomId) {
+      return res.status(400).json({ message: "Target classroom is required." });
+    }
+
+    const sourceExam = await Exam.findById(req.params.id);
+    if (!sourceExam) {
+      return res.status(404).json({ message: "Exam not found" });
+    }
+
+    if (
+      sourceExam.teacher.toString() !== req.user._id.toString() &&
+      !["admin", "superadmin"].includes(req.user.role)
+    ) {
+      return res
+        .status(403)
+        .json({ message: "Not authorized to transfer this exam." });
+    }
+
+    const targetClassroom = await Classroom.findById(classroomId);
+    if (!targetClassroom) {
+      return res.status(404).json({ message: "Target classroom not found." });
+    }
+
+    if (sourceExam.classroom?.toString() === classroomId.toString()) {
+      return res
+        .status(400)
+        .json({ message: "Please choose a different classroom." });
+    }
+
+    const examData = sourceExam.toObject();
+    delete examData._id;
+    delete examData.createdAt;
+    delete examData.updatedAt;
+    delete examData.__v;
+
+    const newExam = await Exam.create({
+      ...examData,
+      title: title?.trim() || sourceExam.title,
+      date: date || sourceExam.date,
+      classroom: targetClassroom._id,
+      classLevel: targetClassroom.className || sourceExam.classLevel,
+      programType: targetClassroom.programType || sourceExam.programType,
+      teacher: req.user._id,
+    });
+
+    const sourceQuestions = await Question.find({ exam: sourceExam._id }).lean();
+    const clonedQuestions = sourceQuestions.map((question) => {
+      const { _id, createdAt, updatedAt, __v, ...questionData } = question;
+      return {
+        ...questionData,
+        exam: newExam._id,
+        classroom: targetClassroom._id,
+        createdBy: req.user._id,
+      };
+    });
+
+    if (clonedQuestions.length > 0) {
+      await Question.insertMany(clonedQuestions);
+    }
+
+    const populatedExam = await Exam.findById(newExam._id)
+      .populate("classroom", "name className programType")
+      .populate("teacher", "name role");
+
+    res.status(201).json({
+      message: `Exam transferred to ${targetClassroom.name}.`,
+      exam: populatedExam,
+      questionCount: clonedQuestions.length,
+    });
+  } catch (error) {
+    console.error("Transfer exam error:", error);
+    res.status(500).json({ message: error.message || "Server error" });
   }
 };
 

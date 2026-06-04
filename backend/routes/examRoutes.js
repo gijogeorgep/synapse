@@ -15,6 +15,7 @@ import {
     getExamDetails,
     getMyResults,
     updateExam,
+    transferExam,
 } from "../controllers/examController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
@@ -23,6 +24,7 @@ const router = express.Router();
 router.route("/").get(protect, getExams).post(protect, authorize("teacher", "admin", "superadmin"), createExam);
 
 router.post("/bulk", protect, authorize("teacher", "admin", "superadmin"), createExamWithQuestions);
+router.post("/:id/transfer", protect, authorize("teacher", "admin", "superadmin"), transferExam);
 
 router.post("/questions/draft", protect, authorize("teacher", "admin", "superadmin"), saveDraftQuestion);
 router.get("/questions/drafts", protect, authorize("teacher", "admin", "superadmin"), getDraftQuestions);

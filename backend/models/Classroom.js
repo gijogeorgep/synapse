@@ -42,22 +42,10 @@ const classroomSchema = mongoose.Schema(
             type: String,
             default: "",
         },
-        classLinks: [
-            {
-                title: String,
-                url: String,
-                teacher: {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "User",
-                },
-                subject: String,
-            },
-        ],
         lectureNotes: [
             {
                 title: String,
                 url: String,
-                subject: String,
                 createdAt: {
                     type: Date,
                     default: Date.now,
@@ -88,10 +76,6 @@ const classroomSchema = mongoose.Schema(
         imageUrl: {
             type: String,
             default: "",
-        },
-        themeColor: {
-            type: String,
-            default: "#0891b2", // default cyan-600
         },
         createdBy: {
             type: mongoose.Schema.Types.ObjectId,

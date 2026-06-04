@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -20,6 +20,7 @@ const StudentExams = () => {
     const [questions, setQuestions] = useState([]);
     const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
     const [selectedAnswers, setSelectedAnswers] = useState({});
+    const [questionStatuses, setQuestionStatuses] = useState({});
     const [timeLeft, setTimeLeft] = useState(0);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [examResult, setExamResult] = useState(null);
@@ -111,9 +112,24 @@ const StudentExams = () => {
             const qs = await getQuestions(exam._id);
             setQuestions(qs);
             setActiveExam(exam);
+
+            // If this exam was created without a sections array but questions have sectionName,
+            // infer sections so the patterned UI (counts / section palette) works for existing exams.
+            if ((!exam.sections || exam.sections.length === 0) && qs.some(q => q.sectionName)) {
+                const names = [...new Set(qs.map(q => q.sectionName).filter(Boolean))];
+                const generatedSections = names.map((name) => ({
+                    name,
+                    totalQuestions: qs.filter(q => q.sectionName === name).length,
+                    attendQuestions: qs.filter(q => q.sectionName === name).length,
+                }));
+                setActiveExam((prev) => ({ ...prev, sections: generatedSections }));
+                setActiveSectionName(names[0] || "");
+                console.debug("Inferred sections for existing exam:", generatedSections);
+            }
             setTimeLeft(exam.duration * 60);
             setCurrentQuestionIndex(0);
             setSelectedAnswers({});
+            setQuestionStatuses({});
             setExamResult(null);
             setViolationCount(0);
 
@@ -144,7 +160,20 @@ const StudentExams = () => {
             const qs = await getQuestions(result.exam._id);
             setQuestions(qs);
             setActiveExam(result.exam);
+            // Infer sections for older exams without sections
+            if ((!result.exam.sections || result.exam.sections.length === 0) && qs.some(q => q.sectionName)) {
+                const names = [...new Set(qs.map(q => q.sectionName).filter(Boolean))];
+                const generatedSections = names.map((name) => ({
+                    name,
+                    totalQuestions: qs.filter(q => q.sectionName === name).length,
+                    attendQuestions: qs.filter(q => q.sectionName === name).length,
+                }));
+                setActiveExam((prev) => ({ ...prev, sections: generatedSections }));
+                setActiveSectionName(names[0] || "");
+                console.debug("Inferred sections for existing exam review:", generatedSections);
+            }
             setExamResult(result);
+            setQuestionStatuses({});
         } catch (error) {
             toast.error("Error loading review: " + (error.message || error));
         } finally {
@@ -259,6 +288,151 @@ const StudentExams = () => {
             ...selectedAnswers,
             [questionId]: optionIndex,
         });
+        setQuestionStatuses((prev) => ({
+            ...prev,
+            [questionId]: prev[questionId] === "markedForReview" || prev[questionId] === "answeredMarkedForReview"
+                ? "answeredMarkedForReview"
+                : "answered",
+        }));
+        console.debug("handleAnswerSelect:", { questionId, optionIndex, selectedAnswersBefore: selectedAnswers });
+    };
+
+    useEffect(() => {
+        const questionId = questions[currentQuestionIndex]?._id;
+        if (!activeExam || examResult || !questionId) return;
+
+        setQuestionStatuses((prev) => {
+            if (prev[questionId]) return prev;
+            return { ...prev, [questionId]: "notAnswered" };
+        });
+    }, [activeExam, examResult, questions, currentQuestionIndex]);
+
+    // Ensure every question has an initial status entry to make counts reliable
+    useEffect(() => {
+        if (!questions || questions.length === 0) return;
+        setQuestionStatuses((prev) => {
+            const next = { ...prev };
+            let changed = false;
+            questions.forEach((q) => {
+                if (!q || !q._id) return;
+                if (next[q._id] === undefined) {
+                    next[q._id] = "notVisited";
+                    changed = true;
+                }
+            });
+            return changed ? next : prev;
+        });
+    }, [questions]);
+
+    const getQuestionStatus = (questionId) => {
+        const hasAnswer = selectedAnswers[questionId] !== undefined;
+        const status = questionStatuses[questionId] || "notVisited";
+
+        if (status === "markedForReview" || status === "answeredMarkedForReview") {
+            return hasAnswer ? "answeredMarkedForReview" : "markedForReview";
+        }
+        if (hasAnswer) return "answered";
+        return status;
+    };
+
+    // Derived counts for the currently visible questions (current section).
+    // If the active section isn't set yet (or questions don't have sectionName),
+    // fall back to counting across all questions so existing exams show counts immediately.
+    const statusCounts = useMemo(() => {
+        let visible = Array.isArray(questions) ? questions : [];
+        if (activeExam?.sections?.length > 0 && activeSectionName) {
+            visible = visible.filter((q) => q.sectionName === activeSectionName);
+        }
+        return visible.reduce((acc, q) => {
+            const s = getQuestionStatus(q._id);
+            acc[s] = (acc[s] || 0) + 1;
+            return acc;
+        }, {});
+    }, [questions, selectedAnswers, questionStatuses, activeSectionName, activeExam]);
+    console.debug("statusCounts:", statusCounts, { selectedAnswers, questionStatuses });
+
+    const statusConfig = {
+        notVisited: {
+            label: "Not Visited",
+            buttonClass: "bg-slate-50 text-slate-400 border-slate-200 hover:border-slate-300",
+            dotClass: "bg-slate-300",
+        },
+        notAnswered: {
+            label: "Skipped / Not Answered",
+            buttonClass: "bg-rose-50 text-rose-600 border-rose-200 hover:border-rose-300",
+            dotClass: "bg-rose-500",
+        },
+        answered: {
+            label: "Answered",
+            buttonClass: "bg-emerald-50 text-emerald-700 border-emerald-200 hover:border-emerald-300",
+            dotClass: "bg-emerald-500",
+        },
+        markedForReview: {
+            label: "Marked for Review",
+            buttonClass: "bg-violet-50 text-violet-700 border-violet-200 hover:border-violet-300",
+            dotClass: "bg-violet-500",
+        },
+        answeredMarkedForReview: {
+            label: "Answered & Review",
+            buttonClass: "bg-violet-600 text-white border-violet-600 hover:border-violet-700",
+            dotClass: "bg-emerald-400",
+        },
+    };
+
+    const clearCurrentAnswer = () => {
+        const questionId = questions[currentQuestionIndex]?._id;
+        if (!questionId) return;
+
+        const newAnswers = { ...selectedAnswers };
+        delete newAnswers[questionId];
+        setSelectedAnswers(newAnswers);
+        setQuestionStatuses((prev) => ({
+            ...prev,
+            [questionId]: prev[questionId] === "answeredMarkedForReview" ? "markedForReview" : "notAnswered",
+        }));
+    };
+
+    const goToNextQuestion = () => {
+        // Move to the immediate next question (by index). If that question belongs to a different
+        // section, update the active section so the palette displays the correct group.
+        const next = Math.min(currentQuestionIndex + 1, questions.length - 1);
+        setCurrentQuestionIndex(next);
+        const nextQ = questions[next];
+        if (nextQ && activeExam?.sections?.length > 0 && nextQ.sectionName && nextQ.sectionName !== activeSectionName) {
+            setActiveSectionName(nextQ.sectionName);
+        }
+    };
+
+    const skipAndNext = () => {
+        const questionId = questions[currentQuestionIndex]?._id;
+        if (questionId && selectedAnswers[questionId] === undefined) {
+            setQuestionStatuses((prev) => ({
+                ...prev,
+                [questionId]: prev[questionId] === "markedForReview" ? "markedForReview" : "notAnswered",
+            }));
+        }
+        goToNextQuestion();
+    };
+
+    const markForReviewAndNext = () => {
+        const questionId = questions[currentQuestionIndex]?._id;
+        if (!questionId) return;
+
+        setQuestionStatuses((prev) => ({
+            ...prev,
+            [questionId]: selectedAnswers[questionId] !== undefined ? "answeredMarkedForReview" : "markedForReview",
+        }));
+        goToNextQuestion();
+    };
+
+    const markCurrentForReview = () => {
+        const questionId = questions[currentQuestionIndex]?._id;
+        if (!questionId) return;
+
+        setQuestionStatuses((prev) => ({
+            ...prev,
+            [questionId]: selectedAnswers[questionId] !== undefined ? "answeredMarkedForReview" : "markedForReview",
+        }));
     };
 
     const handleSubmitExam = async (statusReason = "Normal") => {
@@ -302,11 +476,6 @@ const StudentExams = () => {
         const secs = seconds % 60;
         return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
-
-    // Filter questions based on current section
-    const displayQuestions = (activeExam?.sections && activeExam.sections.length > 0)
-        ? questions.filter(q => q.sectionName === activeSectionName)
-        : questions;
 
     return (
         <div className="space-y-10 animate-in fade-in slide-in-from-bottom-6 duration-700">
@@ -600,30 +769,7 @@ const StudentExams = () => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="space-y-8">
-                                    {/* Question navigation dots - Filtered by activeSectionName */}
-                                    <div className="flex flex-wrap gap-2">
-                                        {questions.map((q, idx) => {
-                                            // Only show dots for questions in the active section (if sections exist)
-                                            if (activeExam.sections?.length > 0 && q.sectionName !== activeSectionName) return null;
-                                            
-                                            return (
-                                                <button
-                                                    key={idx}
-                                                    onClick={() => setCurrentQuestionIndex(idx)}
-                                                    className={`w-10 h-10 rounded-xl font-black text-sm transition-all ${currentQuestionIndex === idx
-                                                        ? 'bg-cyan-600 text-white shadow-lg shadow-cyan-600/30'
-                                                        : selectedAnswers[questions[idx]._id] !== undefined
-                                                            ? 'bg-emerald-50 text-emerald-600 border-2 border-emerald-100'
-                                                            : 'bg-slate-50 text-slate-400 border-2 border-transparent hover:border-slate-200'
-                                                        }`}
-                                                >
-                                                    {idx + 1}
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
+                                <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_280px] gap-8">
                                     {/* Current Question */}
                                     {questions[currentQuestionIndex] && (
                                         <div className="space-y-6 animate-in slide-in-from-right-4 duration-300">
@@ -677,11 +823,7 @@ const StudentExams = () => {
                                             {/* Deselect button if needed */}
                                             {selectedAnswers[questions[currentQuestionIndex]._id] !== undefined && (
                                                 <button 
-                                                    onClick={() => {
-                                                        const newAnswers = {...selectedAnswers};
-                                                        delete newAnswers[questions[currentQuestionIndex]._id];
-                                                        setSelectedAnswers(newAnswers);
-                                                    }}
+                                                    onClick={clearCurrentAnswer}
                                                     className="text-[10px] font-black text-rose-500 uppercase tracking-widest hover:underline"
                                                 >
                                                     Clear selection
@@ -689,6 +831,44 @@ const StudentExams = () => {
                                             )}
                                         </div>
                                     )}
+
+                                    <aside className="bg-slate-50 border border-slate-200 rounded-3xl p-5 space-y-5 h-fit lg:sticky lg:top-0">
+                                        <div>
+                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Question Palette</p>
+                                            <h4 className="text-sm font-black text-slate-900 mt-1">Answer status</h4>
+                                        </div>
+                                        <div className="grid grid-cols-5 gap-2">
+                                            {questions.map((q, idx) => {
+                                                if (activeExam.sections?.length > 0 && q.sectionName !== activeSectionName) return null;
+
+                                                const status = getQuestionStatus(q._id);
+                                                const isCurrent = currentQuestionIndex === idx;
+
+                                                return (
+                                                    <button
+                                                        key={q._id || idx}
+                                                        onClick={() => setCurrentQuestionIndex(idx)}
+                                                        title={statusConfig[status].label}
+                                                        className={`relative w-10 h-10 rounded-xl border-2 font-black text-sm transition-all ${statusConfig[status].buttonClass} ${isCurrent ? 'ring-2 ring-cyan-500 ring-offset-2 scale-105' : ''}`}
+                                                    >
+                                                        {idx + 1}
+                                                        {status === "answeredMarkedForReview" && (
+                                                            <span className="absolute -right-1 -top-1 w-3 h-3 rounded-full bg-emerald-400 border-2 border-white" />
+                                                        )}
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="space-y-2 border-t border-slate-200 pt-4">
+                                            {Object.entries(statusConfig).map(([key, item]) => (
+                                                <div key={key} className="flex items-center gap-2 text-[11px] font-bold text-slate-600">
+                                                    <span className={`w-3 h-3 rounded-full ${item.dotClass}`} />
+                                                    <span>{item.label}</span>
+                                                    <span className="ml-auto font-black text-sm">{statusCounts[key] || 0}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </aside>
                                 </div>
                             )}
                         </div>
@@ -708,9 +888,7 @@ const StudentExams = () => {
                                     
                                     <button
                                         onClick={() => {
-                                            const newAnswers = {...selectedAnswers};
-                                            delete newAnswers[questions[currentQuestionIndex]._id];
-                                            setSelectedAnswers(newAnswers);
+                                            clearCurrentAnswer();
                                         }}
                                         disabled={selectedAnswers[questions[currentQuestionIndex]._id] === undefined}
                                         className="px-6 py-3 rounded-full font-black text-xs text-rose-500 hover:bg-rose-50 disabled:opacity-0 transition-all"
@@ -722,7 +900,7 @@ const StudentExams = () => {
                                 <div className="flex gap-4">
                                     {currentQuestionIndex < questions.length - 1 && (
                                         <button
-                                            onClick={() => setCurrentQuestionIndex(prev => prev + 1)}
+                                            onClick={skipAndNext}
                                             className="px-8 py-3 rounded-full border-2 border-slate-200 text-slate-500 font-black hover:bg-slate-100 transition-all text-xs"
                                         >
                                             Skip & Next
@@ -730,40 +908,39 @@ const StudentExams = () => {
                                     )}
 
                                     {currentQuestionIndex === questions.length - 1 ? (
-                                        <button
-                                            onClick={() => handleSubmitExam("Normal")}
-                                            disabled={isSubmitting}
-                                            className="px-10 py-3 rounded-full bg-emerald-600 text-white font-black shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 hover:scale-105 transition-all disabled:opacity-50"
-                                        >
-                                            {isSubmitting ? 'Submitting...' : 'Finish & Submit Exam'}
-                                        </button>
+                                        <>
+                                            <button
+                                                onClick={markCurrentForReview}
+                                                className="flex items-center gap-2 px-8 py-3 rounded-full bg-violet-600 text-white font-black hover:bg-violet-700 transition-all shadow-xl shadow-violet-600/20"
+                                            >
+                                                Mark for Review
+                                            </button>
+                                            <button
+                                                onClick={() => handleSubmitExam("Normal")}
+                                                disabled={isSubmitting}
+                                                className="px-10 py-3 rounded-full bg-emerald-600 text-white font-black shadow-xl shadow-emerald-600/20 hover:bg-emerald-700 hover:scale-105 transition-all disabled:opacity-50"
+                                            >
+                                                {isSubmitting ? 'Submitting...' : 'Finish & Submit Exam'}
+                                            </button>
+                                        </>
                                     ) : (
+                                        <>
                                         <button
-                                            onClick={() => {
-                                                // Find next question in current section or prompt to move to next section
-                                                const nextIdx = questions.findIndex((q, i) => i > currentQuestionIndex && (activeExam.sections?.length === 0 || q.sectionName === activeSectionName));
-                                                if (nextIdx !== -1) {
-                                                    setCurrentQuestionIndex(nextIdx);
-                                                } else if (activeExam.sections?.length > 0) {
-                                                    // Move to next section
-                                                    const currentSecIdx = activeExam.sections.findIndex(s => s.name === activeSectionName);
-                                                    if (currentSecIdx < activeExam.sections.length - 1) {
-                                                        const nextSec = activeExam.sections[currentSecIdx + 1];
-                                                        setActiveSectionName(nextSec.name);
-                                                        const firstQOfNextSec = questions.findIndex(q => q.sectionName === nextSec.name);
-                                                        if (firstQOfNextSec !== -1) setCurrentQuestionIndex(firstQOfNextSec);
-                                                    } else {
-                                                        setCurrentQuestionIndex(questions.length - 1); // Go to last item (or show submit)
-                                                    }
-                                                } else {
-                                                    setCurrentQuestionIndex(prev => prev + 1);
-                                                }
-                                            }}
+                                            onClick={markForReviewAndNext}
+                                            className="flex items-center gap-2 px-8 py-3 rounded-full bg-violet-600 text-white font-black hover:bg-violet-700 transition-all shadow-xl shadow-violet-600/20"
+                                        >
+                                            Mark for Review
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+
+                                        <button
+                                            onClick={goToNextQuestion}
                                             className="flex items-center gap-2 px-8 py-3 rounded-full bg-slate-900 text-white font-black hover:bg-cyan-600 transition-all shadow-xl"
                                         >
                                             Next Question
                                             <ChevronRight className="w-5 h-5" />
                                         </button>
+                                        </>
                                     )}
                                 </div>
                             </div>

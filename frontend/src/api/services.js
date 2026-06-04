@@ -15,6 +15,8 @@ export const createBulkExam = (examData) =>
   apiClient("/exams/bulk", { body: examData });
 export const updateBulkExam = (examId, examData) =>
   apiClient(`/exams/${examId}`, { method: "PUT", body: examData });
+export const transferExam = (examId, transferData) =>
+  apiClient(`/exams/${examId}/transfer`, { method: "POST", body: transferData });
 export const getExamDetails = (examId) => apiClient(`/exams/${examId}`);
 export const getMyResults = () => apiClient("/exams/my-results");
 export const deleteExam = (examId) =>
@@ -271,4 +273,3 @@ export const submitCareerApplication = (formData) =>
     body: formData,
     headers: null,
   });
-
