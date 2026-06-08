@@ -85,6 +85,7 @@ function AppContent() {
               <Route path="/admin/events" element={<EventManagement />} />
               <Route path="/admin/enquiry" element={<EnquiryFormList />} />
               <Route path="/admin/enquiry/create" element={<EnquiryFormBuilder />} />
+              <Route path="/admin/enquiry/edit/:id" element={<EnquiryFormBuilder />} />
               <Route path="/admin/enquiry/responses/:id" element={<EnquiryResponses />} />
               <Route path="/admin/audit-logs" element={<ProtectedRoute allowedRoles={["superadmin"]} />}>
                 <Route index element={<AdminAuditLogs />} />

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { createEnquiryForm } from "../../../api/services";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { createEnquiryForm, getEnquiryFormById, updateEnquiryForm } from "../../../api/services";
 import { motion, Reorder, AnimatePresence } from "framer-motion";
 import { 
     Plus, 
@@ -21,7 +21,8 @@ import {
     Copy,
     Share2,
     ExternalLink,
-    X
+    X,
+    Loader2
 } from "lucide-react";
 import toast from "react-hot-toast";
 import { getFormLink } from "../../../utils/urlHelper";
@@ -39,14 +40,43 @@ const fieldTypes = [
 
 const EnquiryFormBuilder = () => {
     const navigate = useNavigate();
+    const { id } = useParams();
+    const isEditing = Boolean(id);
+
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [fields, setFields] = useState([
         { label: "Full Name", type: "text", required: true, options: [], placeholder: "Enter student name" }
     ]);
+    const [loading, setLoading] = useState(isEditing);
     const [submitting, setSubmitting] = useState(false);
     const [createdForm, setCreatedForm] = useState(null);
     const [showSuccessModal, setShowSuccessModal] = useState(false);
+
+    useEffect(() => {
+        if (!id) return;
+
+        const fetchForm = async () => {
+            try {
+                const form = await getEnquiryFormById(id);
+                setTitle(form.title);
+                setDescription(form.description || "");
+                setFields(
+                    form.fields.map((field) => ({
+                        ...field,
+                        options: field.options?.length ? field.options : ["Option 1"],
+                    }))
+                );
+            } catch (error) {
+                toast.error("Failed to load form");
+                navigate("/admin/enquiry");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchForm();
+    }, [id, navigate]);
 
     const addField = (type) => {
         const newField = {
@@ -94,16 +124,27 @@ const EnquiryFormBuilder = () => {
 
         setSubmitting(true);
         try {
-            const data = await createEnquiryForm({ title, description, fields });
+            const data = isEditing
+                ? await updateEnquiryForm(id, { title, description, fields })
+                : await createEnquiryForm({ title, description, fields });
             setCreatedForm(data);
             setShowSuccessModal(true);
-            toast.success("Form created successfully!");
+            toast.success(isEditing ? "Form updated successfully!" : "Form created successfully!");
         } catch (error) {
-            toast.error(error.message || "Failed to create form");
+            toast.error(error.message || `Failed to ${isEditing ? "update" : "create"} form`);
         } finally {
             setSubmitting(false);
         }
     };
+
+    if (loading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+                <Loader2 className="w-10 h-10 text-slate-400 animate-spin" />
+                <p className="text-slate-500 font-medium">Loading form...</p>
+            </div>
+        );
+    }
 
     const copyLink = () => {
         if (!createdForm) return;
@@ -129,8 +170,14 @@ const EnquiryFormBuilder = () => {
                     <ArrowLeft className="w-5 h-5 text-slate-600" />
                 </button>
                 <div>
-                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">Create Form</h1>
-                    <p className="text-slate-500">Design your custom enquiry or registration form.</p>
+                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
+                        {isEditing ? "Edit Form" : "Create Form"}
+                    </h1>
+                    <p className="text-slate-500">
+                        {isEditing
+                            ? "Update questions, options, and settings for this form."
+                            : "Design your custom enquiry or registration form."}
+                    </p>
                 </div>
             </div>
 
@@ -291,7 +338,7 @@ const EnquiryFormBuilder = () => {
                             ) : (
                                 <Save className="w-6 h-6" />
                             )}
-                            Save Form Template
+                            {isEditing ? "Update Form" : "Save Form Template"}
                         </button>
                     </div>
                 </div>
@@ -327,8 +374,14 @@ const EnquiryFormBuilder = () => {
                                     </button>
                                 </div>
 
-                                <h2 className="text-3xl font-black text-slate-900 mb-2">Form Created!</h2>
-                                <p className="text-slate-500 mb-8 font-medium">Your form is live and ready to collect responses.</p>
+                                <h2 className="text-3xl font-black text-slate-900 mb-2">
+                                    {isEditing ? "Form Updated!" : "Form Created!"}
+                                </h2>
+                                <p className="text-slate-500 mb-8 font-medium">
+                                    {isEditing
+                                        ? "Your changes have been saved. Existing responses are preserved."
+                                        : "Your form is live and ready to collect responses."}
+                                </p>
 
                                 <div className="space-y-6">
                                     <div className="p-5 bg-slate-50 rounded-2xl border border-slate-100">

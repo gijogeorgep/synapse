@@ -178,6 +178,13 @@ const EnquiryFormList = () => {
 
                                 <div className="p-4 bg-slate-50 border-t border-slate-100 grid grid-cols-2 gap-2">
                                     <Link
+                                        to={`/admin/enquiry/edit/${form._id}`}
+                                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all"
+                                    >
+                                        <Edit className="w-4 h-4" />
+                                        Edit Form
+                                    </Link>
+                                    <Link
                                         to={`/admin/enquiry/responses/${form._id}`}
                                         className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all"
                                     >
@@ -195,10 +202,10 @@ const EnquiryFormList = () => {
                                         href={getFormLink(form.slug)}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all col-span-2"
+                                        className="flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-bold bg-white text-slate-700 border border-slate-200 hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all"
                                     >
                                         <ExternalLink className="w-4 h-4" />
-                                        Open Live Form
+                                        Live Form
                                     </a>
                                 </div>
                             </motion.div>
