@@ -16,6 +16,7 @@ import {
     getMyResults,
     updateExam,
     transferExam,
+    getExamResults,
 } from "../controllers/examController.js";
 import { protect, authorize } from "../middleware/authMiddleware.js";
 
@@ -47,5 +48,7 @@ router
 router.delete("/questions/:id", protect, authorize("teacher", "admin", "superadmin"), deleteQuestion);
 
 router.post("/:id/submit", protect, submitExam);
+router.get("/:id/results", protect, getExamResults);
+
 
 export default router;

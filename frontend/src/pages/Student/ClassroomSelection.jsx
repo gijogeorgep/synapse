@@ -153,7 +153,7 @@ const ClassroomSelection = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                 {classrooms.map((cls) => (
-                    <div 
+                    <div
                         key={cls._id}
                         className="group relative bg-white rounded-[2.5rem] border border-slate-100 shadow-xl shadow-slate-200/50 p-8 hover:border-cyan-200 transition-all duration-500 hover:-translate-y-2 overflow-hidden"
                     >
@@ -161,12 +161,11 @@ const ClassroomSelection = () => {
                         <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-bl from-cyan-50 to-transparent -mr-16 -mt-16 rounded-full group-hover:scale-150 transition-transform duration-700"></div>
 
                         <div className="relative z-10">
-                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm border ${
-                                cls.programType === 'E-Zone' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
+                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 shadow-sm border ${cls.programType === 'E-Zone' ? 'bg-indigo-50 border-indigo-100 text-indigo-600' :
                                 cls.programType === 'PrimeOne' ? 'bg-cyan-50 border-cyan-100 text-cyan-600' :
-                                cls.programType === 'Cluster' ? 'bg-rose-50 border-rose-100 text-rose-600' :
-                                'bg-emerald-50 border-emerald-100 text-emerald-600'
-                            }`}>
+                                    cls.programType === 'Cluster' ? 'bg-rose-50 border-rose-100 text-rose-600' :
+                                        'bg-emerald-50 border-emerald-100 text-emerald-600'
+                                }`}>
                                 <GraduationCap className="w-7 h-7" />
                             </div>
 
@@ -188,15 +187,15 @@ const ClassroomSelection = () => {
                             <div className="space-y-4 mb-8">
                                 <div className="flex items-center gap-3 text-slate-600">
                                     <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                                    <span className="text-sm">Complete MCQ Test Series</span>
+                                    <span className="text-sm">Real neet exam pattern</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-slate-600">
                                     <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                                    <span className="text-sm">Premium Study Materials</span>
+                                    <span className="text-sm">instant perfomance analysis</span>
                                 </div>
                                 <div className="flex items-center gap-3 text-slate-600">
                                     <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                                    <span className="text-sm">Performance Tracking</span>
+                                    <span className="text-sm">All india Ranking </span>
                                 </div>
                             </div>
 
@@ -210,11 +209,10 @@ const ClassroomSelection = () => {
                             <button
                                 onClick={() => handleEnroll(cls)}
                                 disabled={enrolling !== null}
-                                className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 ${
-                                    enrolling === cls._id 
+                                className={`w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 ${enrolling === cls._id
                                     ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
                                     : 'bg-slate-900 text-white hover:bg-slate-800 shadow-lg shadow-slate-900/20'
-                                }`}
+                                    }`}
                             >
                                 {enrolling === cls._id ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -232,7 +230,7 @@ const ClassroomSelection = () => {
             </div>
 
             <div className="mt-12 text-center">
-                <button 
+                <button
                     onClick={logout}
                     className="text-slate-400 hover:text-slate-600 font-medium transition-colors"
                 >

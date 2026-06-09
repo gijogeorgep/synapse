@@ -1002,13 +1002,59 @@ export const getExamDetails = async (req, res) => {
 export const getMyResults = async (req, res) => {
   try {
     const results = await Result.find({ student: req.user._id })
-      .populate("exam", "title subject duration date")
+      .populate("exam", "title subject duration date totalMarks totalQuestions marksPerQuestion")
       .sort("-createdAt");
     res.json(results);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
+// @desc    Get rank list for a specific exam (student-safe, no answer keys)
+// @route   GET /api/exams/:id/results
+// @access  Private (All authenticated users)
+export const getExamResults = async (req, res) => {
+  try {
+    const exam = await Exam.findById(req.params.id);
+    if (!exam) {
+      return res.status(404).json({ message: "Exam not found" });
+    }
+
+    // Students can only view ranklist if they have submitted this exam
+    if (req.user.role === "student") {
+      const hasSubmitted = await Result.findOne({
+        exam: req.params.id,
+        student: req.user._id,
+      });
+      if (!hasSubmitted) {
+        return res.status(403).json({ message: "You must complete the exam before viewing the ranklist." });
+      }
+    }
+
+    const results = await Result.find({ exam: req.params.id })
+      .populate("student", "name")
+      .sort({ score: -1, timeTaken: 1 }); // sort by score desc, then time asc (faster = better)
+
+    const ranklist = results.map((r, idx) => ({
+      rank: idx + 1,
+      studentId: r.student?._id,
+      studentName: r.student?.name || "Unknown",
+      score: r.score,
+      timeTaken: r.timeTaken,
+      submittedAt: r.createdAt,
+    }));
+
+    res.json({
+      examTitle: exam.title,
+      totalMarks: exam.totalMarks,
+      totalParticipants: ranklist.length,
+      ranklist,
+    });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 
 // @desc    Submit Results (Manual/Admin)
 // @route   POST /api/admin/results
