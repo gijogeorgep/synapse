@@ -65,8 +65,6 @@ const ClassroomSelection = () => {
                 description: `Enrollment for ${classroom.name}`,
                 image: window.location.origin + "/synapse_logo.png",
                 order_id: order.id,
-                callback_url: `${getApiUrl()}/payments/callback`,
-                redirect: true,
                 handler: async function (response) {
                     try {
                         setEnrolling(classroomId);
