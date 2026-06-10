@@ -183,7 +183,6 @@ export const sendRegistrationEmail = async (userEmail, userName) => {
                 </div>
                 `
             ),
-            attachments: commonAttachments
         };
         await transporter.sendMail(mailOptions);
         console.log(`Registration email sent to ${userEmail}`);
@@ -210,7 +209,6 @@ export const sendOTPEmail = async (email, otp) => {
                 <p>This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
                 `
             ),
-            attachments: commonAttachments
         };
         await transporter.sendMail(mailOptions);
         console.log(`OTP email sent to ${email}`);
