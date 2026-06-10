@@ -8,8 +8,8 @@ const __dirname = path.dirname(__filename);
 
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.zoho.com',
-    port: process.env.EMAIL_PORT || 587,
-    secure: false,
+    port: process.env.EMAIL_PORT || 465,
+    secure: true,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
