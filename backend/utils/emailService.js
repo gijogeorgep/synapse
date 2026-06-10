@@ -6,14 +6,17 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+const smtpPort = Number(process.env.EMAIL_PORT || 587);
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.zoho.com',
-    port: process.env.EMAIL_PORT || 465,
-    secure: true,
+    port: smtpPort,
+    secure: smtpPort !== 587, // false for STARTTLS (587), true for SSL (465)
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
-    }
+    },
+    logger: true,
+    debug: true
 });
 
 // Modern, Premium Email Template Layout
