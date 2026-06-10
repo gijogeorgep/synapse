@@ -7,16 +7,26 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const smtpPort = Number(process.env.EMAIL_PORT || 587);
+// Use SSL only for port 465; otherwise use STARTTLS (secure=false)
+const isSecure = smtpPort === 465;
 const transporter = nodemailer.createTransport({
     host: process.env.EMAIL_HOST || 'smtp.zoho.com',
     port: smtpPort,
-    secure: smtpPort !== 587, // false for STARTTLS (587), true for SSL (465)
+    secure: isSecure,
     auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS
     },
     logger: true,
     debug: true
+});
+// Verify connection at startup (logs any errors)
+transporter.verify(function (error, success) {
+    if (error) {
+        console.error('✖ SMTP connection verification failed:', error);
+    } else {
+        console.log('✔ SMTP connection verified');
+    }
 });
 
 // Modern, Premium Email Template Layout
