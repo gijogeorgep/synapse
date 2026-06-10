@@ -8,6 +8,8 @@ import {
   Loader2,
   Phone,
   CheckCircle,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { sendOtpAPI } from "../../api/authService";
@@ -20,6 +22,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
   const [mode, setMode] = useState(initialMode); // 'login', 'register', 'verify'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -33,6 +37,8 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
     if (!isOpen) return;
     setMode(initialMode);
     setError("");
+    setShowPassword(false);
+    setShowConfirmPassword(false);
   }, [isOpen, initialMode]);
 
   if (!isOpen) return null;
@@ -152,17 +158,17 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xl transition-all duration-300">
-      <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
+      <div className="relative w-full max-w-md max-h-[90vh] flex flex-col bg-white rounded-3xl shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300">
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+          className="absolute top-4 right-4 z-10 p-2 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
         >
           <X className="w-5 h-5" />
         </button>
 
-        <div className="p-8">
-          <div className="text-center mb-8">
+        <div className="p-6 overflow-y-auto">
+          <div className="text-center mb-5">
             <h2 className="text-3xl font-bold bg-gradient-to-r from-cyan-600 to-indigo-600 bg-clip-text text-transparent">
               {mode === "login" ? "Welcome Back" : "Join Synapse"}
             </h2>
@@ -195,7 +201,7 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
           )}
 
           {/* Mode Switcher */}
-          <div className="flex p-1 mb-8 bg-slate-100 rounded-xl">
+          <div className="flex p-1 mb-5 bg-slate-100 rounded-xl">
             <button
               disabled={loading || mode === "verify"}
               onClick={() => setMode("login")}
@@ -301,18 +307,27 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
             )}
 
             {mode !== "verify" && (
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="Password"
-                  required
-                  disabled={loading}
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
-                />
+              <div className="space-y-2">
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    name="password"
+                    placeholder="Password"
+                    required
+                    disabled={loading}
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="w-full pl-11 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
                 {mode === "register" && formData.password && (
                   <div className="mt-2 px-1">
                     <div className="flex justify-between items-center mb-1">
@@ -342,15 +357,22 @@ const AuthModal = ({ isOpen, onClose, initialMode = "login" }) => {
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
                 <input
-                  type="password"
+                  type={showConfirmPassword ? "text" : "password"}
                   name="confirmPassword"
                   placeholder="Confirm Password"
                   required
                   disabled={loading}
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
+                  className="w-full pl-11 pr-10 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all disabled:opacity-50"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                >
+                  {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
             )}
 

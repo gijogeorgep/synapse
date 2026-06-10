@@ -1,4 +1,7 @@
 import User from "../models/User.js";
+import Exam from "../models/Exam.js";
+import Question from "../models/Question.js";
+import Result from "../models/Result.js";
 import Notification from "../models/Notification.js";
 import StudentProfile from "../models/StudentProfile.js";
 import TeacherProfile from "../models/TeacherProfile.js";
@@ -8,7 +11,7 @@ import Announcement from "../models/Announcement.js";
 import AuditLog from "../models/AuditLog.js";
 import { generateUniqueId } from "../utils/idGenerator.js";
 import { generateInitialPassword } from "../utils/authUtils.js";
-import { sendStudyMaterialEmail } from "../utils/emailService.js";
+import { sendStudyMaterialEmail, sendClassroomCreatedEmail, sendExamScheduledEmail, sendExamSubmissionReminderEmail } from "../utils/emailService.js";
 
 // @desc    Create a new user (Student or Teacher)
 // @route   POST /api/admin/users
@@ -210,6 +213,7 @@ export const createClassroom = async (req, res) => {
       description,
       imageUrl,
       themeColor,
+      teacherIds, // optional array of teacher user IDs to assign on creation
     } = req.body;
 
     if (!name || !programType) {
@@ -235,9 +239,18 @@ export const createClassroom = async (req, res) => {
       themeColor: themeColor || "#0891b2",
       subjects: subjects || [],
       students: [],
-      teachers: [],
+      teachers: teacherIds ? teacherIds.map(id => id) : [],
       createdBy: req.user._id,
     });
+
+    // If teachers were assigned during creation, send them notification emails
+    if (teacherIds && Array.isArray(teacherIds) && teacherIds.length > 0) {
+      const teachers = await User.find({ _id: { $in: teacherIds } });
+      const teacherEmails = teachers.map(t => t.email).filter(Boolean);
+      if (teacherEmails.length > 0) {
+        await sendClassroomCreatedEmail(teacherEmails, classroom.name);
+      }
+    }
 
     res.status(201).json(classroom);
   } catch (error) {
@@ -373,7 +386,7 @@ export const deleteClassroom = async (req, res) => {
 export const assignUsersToClassroom = async (req, res) => {
   try {
     const { id } = req.params;
-    const { userIds, role } = req.body; // role specifies if we are adding logic for "student" or "teacher" arrays
+    const { userIds, role } = req.body; // role: "student" or "teacher"
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
       return res
@@ -381,41 +394,41 @@ export const assignUsersToClassroom = async (req, res) => {
         .json({ message: "Please provide an array of userIds" });
     }
 
-    const classroom = await Classroom.findById(id);
+    if (!['student', 'teacher'].includes(role)) {
+      return res
+        .status(400)
+        .json({ message: "Invalid role specified (must be 'student' or 'teacher')" });
+    }
 
+    const classroom = await Classroom.findById(id);
     if (!classroom) {
       return res.status(404).json({ message: "Classroom not found" });
     }
 
-    if (role === "student") {
-      // Add unique student IDs
-      const currentStudents = classroom.students.map((s) => s.toString());
-      userIds.forEach((uid) => {
-        if (!currentStudents.includes(uid)) {
-          classroom.students.push(uid);
-        }
-      });
-    } else if (role === "teacher") {
-      // Add unique teacher IDs
-      const currentTeachers = classroom.teachers.map((t) => t.toString());
-      userIds.forEach((uid) => {
-        if (!currentTeachers.includes(uid)) {
-          classroom.teachers.push(uid);
-        }
-      });
+    // Ensure uniqueness when adding
+    const userIdStrings = userIds.map(u => u.toString());
+    if (role === 'student') {
+      const current = (classroom.students || []).map(s => s.toString());
+      const toAdd = userIdStrings.filter(uid => !current.includes(uid));
+      classroom.students = [...current, ...toAdd];
     } else {
-      return res
-        .status(400)
-        .json({
-          message:
-            "Invalid role specified for assignment (must be 'student' or 'teacher')",
-        });
+      const current = (classroom.teachers || []).map(t => t.toString());
+      const toAdd = userIdStrings.filter(uid => !current.includes(uid));
+      classroom.teachers = [...current, ...toAdd];
     }
 
     await classroom.save();
 
-    // Send notifications to the newly assigned users
-    const notificationPayloads = userIds.map((uid) => ({
+    // Keep student enrolledClassrooms in sync
+    if (role === 'student') {
+      await User.updateMany(
+        { _id: { $in: userIds } },
+        { $addToSet: { enrolledClassrooms: classroom._id } },
+      );
+    }
+
+    // Send notifications to newly assigned users
+    const notificationPayloads = userIds.map(uid => ({
       recipient: uid,
       title: "Classroom Assigned",
       message: `You have been added to classroom: ${classroom.name}`,
@@ -425,9 +438,18 @@ export const assignUsersToClassroom = async (req, res) => {
       await Notification.insertMany(notificationPayloads);
     }
 
+    // If teachers were assigned, also send email notification
+    if (role === 'teacher') {
+      const teachers = await User.find({ _id: { $in: userIds } });
+      const teacherEmails = teachers.map(t => t.email).filter(Boolean);
+      if (teacherEmails.length > 0) {
+        await sendClassroomCreatedEmail(teacherEmails, classroom.name);
+      }
+    }
+
     const updatedClassroom = await Classroom.findById(id)
-      .populate("students", "name email role uniqueId phoneNumber")
-      .populate("teachers", "name email role uniqueId phoneNumber");
+      .populate('students', 'name email role uniqueId phoneNumber')
+      .populate('teachers', 'name email role uniqueId phoneNumber');
 
     res.status(200).json(updatedClassroom);
   } catch (error) {

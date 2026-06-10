@@ -23,7 +23,6 @@ import enquiryRoutes from "./routes/enquiryRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import careerRoutes from "./routes/careerRoutes.js";
 
-
 dotenv.config();
 
 const app = express();
@@ -40,6 +39,8 @@ const allowedOrigins = [
     "http://localhost:5173",  // frontend dev
     "http://localhost:5174",  // admin dev
     "http://localhost:5175",  // extra Vite dev port
+    "http://localhost:4173",  // frontend preview
+    "http://localhost:4174",  // admin preview
     "http://localhost:3000",
 ];
 

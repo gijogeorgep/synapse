@@ -34,10 +34,10 @@ export const sendOTP = async (req, res) => {
       otp,
     });
 
-    await sendOTPEmail(email, otp);
+    // Send OTP email asynchronously in the background so it doesn't block the response and cause lag
+    sendOTPEmail(email, otp).catch((err) => console.error("Error sending OTP email:", err));
 
     res.status(200).json({ message: "OTP sent successfully" });
-    sendOTPEmail(email, otp).catch((err) => console.error(err));
   } catch (error) {
     console.error("OTP generation error:", error);
     res.status(500).json({ message: "Failed to send OTP" });
@@ -85,6 +85,13 @@ export const registerUser = async (req, res) => {
       return res
         .status(400)
         .json({ message: "An account with this email already exists" });
+    }
+
+    const phoneExists = await User.findOne({ phoneNumber });
+    if (phoneExists) {
+      return res
+        .status(400)
+        .json({ message: "An account with this phone number already exists" });
     }
 
     // Validate OTP (Allow 123456 for testing)
