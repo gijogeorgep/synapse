@@ -17,14 +17,11 @@ const __dirname = path.dirname(__filename);
 console.log("EMAIL_HOST:", process.env.EMAIL_HOST);
 console.log("EMAIL_PORT:", process.env.EMAIL_PORT);
 console.log("EMAIL_USER:", process.env.EMAIL_USER);
-let logoBase64 = "";
-try {
-  // Adjust path: assets folder is at project root, so go two levels up from utils directory
-  const logoPath = path.join(__dirname, '../../assets/logo.png');
-  logoBase64 = fs.readFileSync(logoPath).toString('base64');
-} catch (e) {
-  console.warn('⚠️ Could not load logo.png for email templates', e);
-}
+const logoUrl =
+  "https://res.cloudinary.com/dztx4i2re/image/upload/v1781177252/logo_email_templates.png";
+// Remove previous logoBase64 loading logic
+// const logoPath = path.join(__dirname, '../../assets/logo.png');
+// logoBase64 = fs.readFileSync(logoPath).toString('base64');
 // Simple wrapper around Resend – handles errors and logs
 async function sendViaResend({ to, subject, html }) {
   try {
@@ -155,13 +152,21 @@ const emailLayout = (header, content) => `
   }
 
   .otp-card {
-  background: linear-gradient(135deg, #f0f7ff, #e1efff);
-  border: 2px solid #1a7fd4;
-  border-radius: 14px;
-  padding: 24px;
-  text-align: center;
-  margin: 28px 0;
-}
+    background: linear-gradient(135deg, #f0f7ff, #e1efff);
+    border: 2px solid #1a7fd4;
+    border-radius: 14px;
+    padding: 24px;
+    text-align: center;
+    margin: 28px 0;
+  }
+  .invoice-card {
+    background: linear-gradient(135deg, #fff7e6, #ffe7c2);
+    border: 2px solid #ffb74d;
+    border-radius: 14px;
+    padding: 24px;
+    text-align: left;
+    margin: 28px 0;
+  }
 
 .otp-code {
   display: block;
@@ -184,7 +189,7 @@ const emailLayout = (header, content) => `
   <div class="wrapper">
     <div class="container">
       <div class="header">
-        <img src="data:image/png;base64,${logoBase64}" alt="Synapse EduHub Logo" class="logo">
+        <img src="${logoUrl}" alt="Synapse EduHub Logo" class="logo">
       </div>
       <div class="content">
         <h2>${header}</h2>
@@ -463,5 +468,53 @@ export const sendExamSubmissionReminderEmail = async (studentEmail, studentName,
     console.log(`Exam submission reminder sent to student: ${studentEmail}`);
   } catch (error) {
     console.error('Error sending exam submission reminder email:', error);
+  }
+};
+
+// 8. Invoice Email (Payment Receipt)
+export const sendInvoiceEmail = async (studentEmail, studentName, amount, orderId, paymentId, classroomName, date = new Date()) => {
+  try {
+    if (!studentEmail) return;
+    await sendViaResend({
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
+      to: studentEmail,
+      subject: `Payment Receipt – ${classroomName}`,
+      html: emailLayout(
+        'Payment Receipt',
+        `
+          <p>Hello ${escapeHtml(studentName)},</p>
+          <div class="invoice-card">
+            <img src="${logoUrl}" alt="Synapse EduHub Logo" style="max-width:140px; display:block; margin:0 auto 20px;">
+            <h2 style="margin-top:0; margin-bottom:16px; color:#0d2640;">Payment Receipt</h2>
+            <table style="width:100%; border-collapse:collapse;">
+              <tr>
+                <td style="padding:8px; border:1px solid #ddd;"><strong>Classroom</strong></td>
+                <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(classroomName)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px; border:1px solid #ddd;"><strong>Order ID</strong></td>
+                <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(orderId)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px; border:1px solid #ddd;"><strong>Payment ID</strong></td>
+                <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(paymentId)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px; border:1px solid #ddd;"><strong>Amount Paid</strong></td>
+                <td style="padding:8px; border:1px solid #ddd;">₹${Number(amount).toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style="padding:8px; border:1px solid #ddd;"><strong>Date</strong></td>
+                <td style="padding:8px; border:1px solid #ddd;">${escapeHtml(new Date(date).toLocaleString())}</td>
+              </tr>
+            </table>
+            <p style="margin-top:24px;">Thank you for your payment! If you have any questions, feel free to reply to this email.</p>
+          </div>
+        `
+      ),
+    });
+    console.log(`Invoice email sent to ${studentEmail}`);
+  } catch (error) {
+    console.error('Error sending invoice email:', error);
   }
 };

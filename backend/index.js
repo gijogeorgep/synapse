@@ -1,7 +1,13 @@
-import express from "express"; // Reload backend
+import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import connectDB from "./config/db.js";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 import authRoutes from "./routes/authRoutes.js";
 import materialRoutes from "./routes/materialRoutes.js";
 import examRoutes from "./routes/examRoutes.js";
@@ -26,6 +32,8 @@ import careerRoutes from "./routes/careerRoutes.js";
 dotenv.config();
 
 const app = express();
+// Serve static files from the "public" folder
+app.use(express.static(path.join(__dirname, "public")));
 
 // Connect to Database
 connectDB();
