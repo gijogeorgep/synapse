@@ -29,7 +29,7 @@ try {
 async function sendViaResend({ to, subject, html }) {
   try {
     await resend.emails.send({
-      from: process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com',
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to,
       subject,
       html,
@@ -153,6 +153,31 @@ const emailLayout = (header, content) => `
     border-top: 1px solid #d0e4f5;
     line-height: 1.6;
   }
+
+  .otp-card {
+  background: linear-gradient(135deg, #f0f7ff, #e1efff);
+  border: 2px solid #1a7fd4;
+  border-radius: 14px;
+  padding: 24px;
+  text-align: center;
+  margin: 28px 0;
+}
+
+.otp-code {
+  display: block;
+  font-size: 42px;
+  font-weight: 800;
+  color: #0d2640;
+  letter-spacing: 10px;
+  margin-top: 12px;
+  font-family: Arial, sans-serif;
+}
+
+.copy-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: #64748b;
+}
 </style>
 </head>
 <body>
@@ -188,20 +213,27 @@ const escapeHtml = (value = '') =>
 export const sendRegistrationEmail = async (userEmail, userName) => {
   try {
     await sendViaResend({
-      from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to: userEmail,
       subject: 'Welcome to Synapse EduHub - Registration Successful',
       html: emailLayout(
-        'Welcome to the Portal',
+        'Verification Code',
         `
-                <p>Hello ${escapeHtml(userName)},</p>
-                <p>Your registration with Synapse EduHub was successful. We are delighted to have you join our learning community!</p>
-                <p>Explore your classrooms, access premium study materials, and take the next step in your educational journey with us.</p>
-                <div class="btn-container">
-                    <a href="https://synapseeduhub.com/login" class="btn">Access Your Dashboard</a>
-                </div>
-                `
-      ),
+  <p>Hello,</p>
+  <p>Thank you for choosing Synapse EduHub. Please use the following security code to complete your verification process:</p>
+
+  <div class="otp-card">
+      <span class="label">YOUR VERIFICATION CODE</span>
+      <span class="otp-code">${otp}</span>
+      <div class="copy-note">
+          📋 Tap and hold the code above to copy
+      </div>
+  </div>
+
+  <p>This code will expire in 10 minutes.</p>
+  <p>If you did not request this verification, please ignore this email.</p>
+  `
+      )
 
     });
     console.log(`Registration email sent to ${userEmail}`);
@@ -214,7 +246,7 @@ export const sendRegistrationEmail = async (userEmail, userName) => {
 export const sendOTPEmail = async (email, otp) => {
   try {
     await sendViaResend({
-      from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to: email,
       subject: 'Synapse EduHub - Your Email Verification Code',
       html: emailLayout(
@@ -246,7 +278,7 @@ export const sendStudyMaterialEmail = async (studentEmail, studentName, material
     const typeDisplay = isQuestionPaper ? 'New Question Paper' : 'New Study Material';
 
     await sendViaResend({
-      from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
       to: studentEmail,
       subject: `Synapse Hub - ${typeDisplay} Available`,
       html: emailLayout(
@@ -293,7 +325,7 @@ export const sendExamScheduledEmail = async (studentEmail, studentName, examTitl
     });
 
     await sendViaResend({
-      from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
       to: studentEmail,
       subject: 'Synapse Hub - New Exam Scheduled',
       html: emailLayout(
@@ -342,7 +374,7 @@ export const sendContactInquiryEmail = async ({ recipientEmails, name, email, pr
     const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
     await sendViaResend({
-      from: `"Synapse EduHub" <${process.env.EMAIL_SUPPORT || 'support@synapseeduhub.com'}>`,
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_SUPPORT || 'support@synapseeduhub.com'}>`,
       to: recipientEmails,
       replyTo: email,
       subject: `New Contact Form Message from ${name}`,
@@ -385,7 +417,7 @@ export const sendClassroomCreatedEmail = async (teacherEmail, teacherName, class
   try {
     if (!teacherEmail) return;
     await sendViaResend({
-      from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to: teacherEmail,
       subject: 'New Classroom Created - Action Required',
       html: emailLayout(
@@ -413,7 +445,7 @@ export const sendExamSubmissionReminderEmail = async (studentEmail, studentName,
   try {
     if (!studentEmail) return;
     await sendViaResend({
-      from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
+      from: `"Synapse Edu Hub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to: studentEmail,
       subject: 'Reminder: Upcoming Exam Submission',
       html: emailLayout(
