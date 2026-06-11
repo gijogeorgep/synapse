@@ -1,38 +1,40 @@
 import 'dotenv/config';
-import nodemailer from 'nodemailer';
+
+import { Resend } from "resend";
+const resend = new Resend(process.env.RESEND_API_KEY);
+console.log('🔧 Resend client initialized');
 import path from 'path';
 import { fileURLToPath } from 'url';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const smtpPort = Number(process.env.EMAIL_PORT || 587);
-// Use SSL only for port 465; otherwise use STARTTLS (secure=false)
-const isSecure = smtpPort === 465;
 console.log("EMAIL_HOST:", process.env.EMAIL_HOST);
 console.log("EMAIL_PORT:", process.env.EMAIL_PORT);
 console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
-console.log("EMAIL_PASS length:", process.env.EMAIL_PASS?.length);
-const transporter = nodemailer.createTransport({
-  host: process.env.EMAIL_HOST,
-  port: smtpPort,
-  secure: isSecure,
-
-  auth: {
-    user: process.env.EMAIL_USER,
-    // Trim any stray whitespace or newline characters from the password
-    pass: (process.env.EMAIL_PASS || '').trim()
+let logoBase64 = "";
+try {
+  // Adjust path: assets folder is at project root, so go two levels up from utils directory
+  const logoPath = path.join(__dirname, '../../assets/logo.png');
+  logoBase64 = fs.readFileSync(logoPath).toString('base64');
+} catch (e) {
+  console.warn('⚠️ Could not load logo.png for email templates', e);
+}
+// Simple wrapper around Resend – handles errors and logs
+async function sendViaResend({ to, subject, html }) {
+  try {
+    await resend.emails.send({
+      from: process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com',
+      to,
+      subject,
+      html,
+    });
+    console.log(`✉️ Email sent to ${to}`);
+  } catch (err) {
+    console.error('Error sending email via Resend:', err);
   }
-});
-// Verify connection at startup (logs any errors)
-transporter.verify(function (error, success) {
-  if (error) {
-    console.error('✖ SMTP connection verification failed:', error);
-  } else {
-    console.log('✔ SMTP connection verified');
-  }
-});
+}
 
 // Modern, Premium Email Template Layout
 const emailLayout = (header, content) => `
@@ -153,7 +155,7 @@ const emailLayout = (header, content) => `
   <div class="wrapper">
     <div class="container">
       <div class="header">
-        <img src="cid:synapse-logo" alt="Synapse EduHub Logo" class="logo">
+        <img src="data:image/png;base64,${logoBase64}" alt="Synapse EduHub Logo" class="logo">
       </div>
       <div class="content">
         <h2>${header}</h2>
@@ -168,13 +170,7 @@ const emailLayout = (header, content) => `
 </body>
 </html>
 `;
-const commonAttachments = [
-  {
-    filename: 'logo.png',
-    path: path.join(__dirname, '../assets/logo.png'),
-    cid: 'synapse-logo'
-  }
-];
+
 
 const escapeHtml = (value = '') =>
   String(value)
@@ -187,7 +183,7 @@ const escapeHtml = (value = '') =>
 // 1. Registration Email (Uses Name)
 export const sendRegistrationEmail = async (userEmail, userName) => {
   try {
-    const mailOptions = {
+    await sendViaResend({
       from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to: userEmail,
       subject: 'Welcome to Synapse EduHub - Registration Successful',
@@ -202,9 +198,8 @@ export const sendRegistrationEmail = async (userEmail, userName) => {
                 </div>
                 `
       ),
-      attachments: commonAttachments
-    };
-    await transporter.sendMail(mailOptions);
+
+    });
     console.log(`Registration email sent to ${userEmail}`);
   } catch (error) {
     console.error('Error sending registration email:', error);
@@ -214,7 +209,7 @@ export const sendRegistrationEmail = async (userEmail, userName) => {
 // 2. OTP Verification Email (Intentionally Keeps generic "Hello," for fast/secure flows)
 export const sendOTPEmail = async (email, otp) => {
   try {
-    const mailOptions = {
+    await sendViaResend({
       from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to: email,
       subject: 'Synapse EduHub - Your Email Verification Code',
@@ -230,9 +225,8 @@ export const sendOTPEmail = async (email, otp) => {
                 <p>This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
                 `
       ),
-      attachments: commonAttachments
-    };
-    await transporter.sendMail(mailOptions);
+
+    });
     console.log(`OTP email sent to ${email}`);
   } catch (error) {
     console.error('Error sending OTP email:', error);
@@ -247,7 +241,7 @@ export const sendStudyMaterialEmail = async (studentEmail, studentName, material
     const isQuestionPaper = type === 'question_paper';
     const typeDisplay = isQuestionPaper ? 'New Question Paper' : 'New Study Material';
 
-    const mailOptions = {
+    await sendViaResend({
       from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
       to: studentEmail,
       subject: `Synapse Hub - ${typeDisplay} Available`,
@@ -272,9 +266,8 @@ export const sendStudyMaterialEmail = async (studentEmail, studentName, material
                 </div>
                 `
       ),
-      attachments: commonAttachments
-    };
-    await transporter.sendMail(mailOptions);
+
+    });
     console.log(`${typeDisplay} email sent to ${studentEmail}`);
   } catch (error) {
     console.error('Error sending study material email:', error);
@@ -295,7 +288,7 @@ export const sendExamScheduledEmail = async (studentEmail, studentName, examTitl
       minute: '2-digit'
     });
 
-    const mailOptions = {
+    await sendViaResend({
       from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
       to: studentEmail,
       subject: 'Synapse Hub - New Exam Scheduled',
@@ -324,9 +317,8 @@ export const sendExamScheduledEmail = async (studentEmail, studentName, examTitl
                 </div>
                 `
       ),
-      attachments: commonAttachments
-    };
-    await transporter.sendMail(mailOptions);
+
+    });
     console.log(`Exam Scheduled email sent to ${studentEmail}`);
   } catch (error) {
     console.error('Error sending exam scheduled email:', error);
@@ -345,7 +337,7 @@ export const sendContactInquiryEmail = async ({ recipientEmails, name, email, pr
     const safeProgram = escapeHtml(program || 'Not specified');
     const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
-    const mailOptions = {
+    await sendViaResend({
       from: `"Synapse EduHub" <${process.env.EMAIL_SUPPORT || 'support@synapseeduhub.com'}>`,
       to: recipientEmails,
       replyTo: email,
@@ -375,10 +367,8 @@ export const sendContactInquiryEmail = async ({ recipientEmails, name, email, pr
                 <p>You can reply directly to this email to respond to the user.</p>
                 `
       ),
-      attachments: commonAttachments
-    };
 
-    await transporter.sendMail(mailOptions);
+    });
     console.log(`Contact inquiry email sent to ${recipientEmails.join(', ')}`);
   } catch (error) {
     console.error('Error sending contact inquiry email:', error);
@@ -390,7 +380,7 @@ export const sendContactInquiryEmail = async ({ recipientEmails, name, email, pr
 export const sendClassroomCreatedEmail = async (teacherEmail, teacherName, classroomName) => {
   try {
     if (!teacherEmail) return;
-    const mailOptions = {
+    await sendViaResend({
       from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to: teacherEmail,
       subject: 'New Classroom Created - Action Required',
@@ -405,9 +395,9 @@ export const sendClassroomCreatedEmail = async (teacherEmail, teacherName, class
           </div>
         `
       ),
-      attachments: commonAttachments,
-    };
-    await transporter.sendMail(mailOptions);
+
+    });
+
     console.log(`Classroom creation email sent to teacher: ${teacherEmail}`);
   } catch (error) {
     console.error('Error sending classroom creation email:', error);
@@ -418,7 +408,7 @@ export const sendClassroomCreatedEmail = async (teacherEmail, teacherName, class
 export const sendExamSubmissionReminderEmail = async (studentEmail, studentName, examTitle, classroomName) => {
   try {
     if (!studentEmail) return;
-    const mailOptions = {
+    await sendViaResend({
       from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
       to: studentEmail,
       subject: 'Reminder: Upcoming Exam Submission',
@@ -433,9 +423,7 @@ export const sendExamSubmissionReminderEmail = async (studentEmail, studentName,
           </div>
         `
       ),
-      attachments: commonAttachments,
-    };
-    await transporter.sendMail(mailOptions);
+    });
     console.log(`Exam submission reminder sent to student: ${studentEmail}`);
   } catch (error) {
     console.error('Error sending exam submission reminder email:', error);
