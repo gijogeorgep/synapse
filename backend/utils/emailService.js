@@ -10,23 +10,23 @@ const smtpPort = Number(process.env.EMAIL_PORT || 587);
 // Use SSL only for port 465; otherwise use STARTTLS (secure=false)
 const isSecure = smtpPort === 465;
 const transporter = nodemailer.createTransport({
-    host: process.env.EMAIL_HOST || 'smtp.zoho.com',
-    port: smtpPort,
-    secure: isSecure,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS
-    },
-    logger: true,
-    debug: true
+  host: process.env.EMAIL_HOST,
+  port: smtpPort,
+  secure: isSecure,
+
+  auth: {
+    user: process.env.EMAIL_USER,
+    // Trim any stray whitespace or newline characters from the password
+    pass: (process.env.EMAIL_PASS || '').trim()
+  }
 });
 // Verify connection at startup (logs any errors)
 transporter.verify(function (error, success) {
-    if (error) {
-        console.error('✖ SMTP connection verification failed:', error);
-    } else {
-        console.log('✔ SMTP connection verified');
-    }
+  if (error) {
+    console.error('✖ SMTP connection verification failed:', error);
+  } else {
+    console.log('✔ SMTP connection verified');
+  }
 });
 
 // Modern, Premium Email Template Layout
@@ -164,31 +164,31 @@ const emailLayout = (header, content) => `
 </html>
 `;
 const commonAttachments = [
-    {
-        filename: 'logo.png',
-        path: path.join(__dirname, '../assets/logo.png'),
-        cid: 'synapse-logo'
-    }
+  {
+    filename: 'logo.png',
+    path: path.join(__dirname, '../assets/logo.png'),
+    cid: 'synapse-logo'
+  }
 ];
 
 const escapeHtml = (value = '') =>
-    String(value)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
+  String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 
 // 1. Registration Email (Uses Name)
 export const sendRegistrationEmail = async (userEmail, userName) => {
-    try {
-        const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
-            to: userEmail,
-            subject: 'Welcome to Synapse EduHub - Registration Successful',
-            html: emailLayout(
-                'Welcome to the Portal',
-                `
+  try {
+    const mailOptions = {
+      from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
+      to: userEmail,
+      subject: 'Welcome to Synapse EduHub - Registration Successful',
+      html: emailLayout(
+        'Welcome to the Portal',
+        `
                 <p>Hello ${escapeHtml(userName)},</p>
                 <p>Your registration with Synapse EduHub was successful. We are delighted to have you join our learning community!</p>
                 <p>Explore your classrooms, access premium study materials, and take the next step in your educational journey with us.</p>
@@ -196,26 +196,26 @@ export const sendRegistrationEmail = async (userEmail, userName) => {
                     <a href="https://synapseeduhub.com/login" class="btn">Access Your Dashboard</a>
                 </div>
                 `
-            ),
-            attachments: commonAttachments
-        };
-        await transporter.sendMail(mailOptions);
-        console.log(`Registration email sent to ${userEmail}`);
-    } catch (error) {
-        console.error('Error sending registration email:', error);
-    }
+      ),
+      attachments: commonAttachments
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`Registration email sent to ${userEmail}`);
+  } catch (error) {
+    console.error('Error sending registration email:', error);
+  }
 };
 
 // 2. OTP Verification Email (Intentionally Keeps generic "Hello," for fast/secure flows)
 export const sendOTPEmail = async (email, otp) => {
-    try {
-        const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
-            to: email,
-            subject: 'Synapse EduHub - Your Email Verification Code',
-            html: emailLayout(
-                'Verification Code',
-                `
+  try {
+    const mailOptions = {
+      from: `"Synapse EduHub" <${process.env.EMAIL_NOREPLY || 'noreply@synapseeduhub.com'}>`,
+      to: email,
+      subject: 'Synapse EduHub - Your Email Verification Code',
+      html: emailLayout(
+        'Verification Code',
+        `
                 <p>Hello,</p>
                 <p>Thank you for choosing Synapse EduHub. Please use the following security code to complete your verification process:</p>
                 <div class="otp-card">
@@ -224,31 +224,31 @@ export const sendOTPEmail = async (email, otp) => {
                 </div>
                 <p>This code will expire in 10 minutes. If you did not request this, please ignore this email.</p>
                 `
-            ),
-            attachments: commonAttachments
-        };
-        await transporter.sendMail(mailOptions);
-        console.log(`OTP email sent to ${email}`);
-    } catch (error) {
-        console.error('Error sending OTP email:', error);
-    }
+      ),
+      attachments: commonAttachments
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`OTP email sent to ${email}`);
+  } catch (error) {
+    console.error('Error sending OTP email:', error);
+  }
 };
 
 // 3. Study Material Email (Uses Name - Send individually or customize loop)
 export const sendStudyMaterialEmail = async (studentEmail, studentName, materialTitle, classroomName, type) => {
-    try {
-        if (!studentEmail) return;
+  try {
+    if (!studentEmail) return;
 
-        const isQuestionPaper = type === 'question_paper';
-        const typeDisplay = isQuestionPaper ? 'New Question Paper' : 'New Study Material';
-        
-        const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
-            to: studentEmail,
-            subject: `Synapse Hub - ${typeDisplay} Available`,
-            html: emailLayout(
-                typeDisplay,
-                `
+    const isQuestionPaper = type === 'question_paper';
+    const typeDisplay = isQuestionPaper ? 'New Question Paper' : 'New Study Material';
+
+    const mailOptions = {
+      from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
+      to: studentEmail,
+      subject: `Synapse Hub - ${typeDisplay} Available`,
+      html: emailLayout(
+        typeDisplay,
+        `
                 <p>Hello ${escapeHtml(studentName)},</p>
                 <p>A new learning resource has been uploaded for your classroom. You can now access it through your student portal.</p>
                 <div class="highlight-card">
@@ -266,37 +266,37 @@ export const sendStudyMaterialEmail = async (studentEmail, studentName, material
                     <a href="https://synapseeduhub.com/login" class="btn">View Materials</a>
                 </div>
                 `
-            ),
-            attachments: commonAttachments
-        };
-        await transporter.sendMail(mailOptions);
-        console.log(`${typeDisplay} email sent to ${studentEmail}`);
-    } catch (error) {
-        console.error('Error sending study material email:', error);
-    }
+      ),
+      attachments: commonAttachments
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`${typeDisplay} email sent to ${studentEmail}`);
+  } catch (error) {
+    console.error('Error sending study material email:', error);
+  }
 };
 
 // 4. Exam Scheduled Email (Uses Name)
 export const sendExamScheduledEmail = async (studentEmail, studentName, examTitle, date, classroomName) => {
-    try {
-        if (!studentEmail) return;
+  try {
+    if (!studentEmail) return;
 
-        const formattedDate = new Date(date).toLocaleString('en-US', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+    const formattedDate = new Date(date).toLocaleString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
 
-        const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
-            to: studentEmail,
-            subject: 'Synapse Hub - New Exam Scheduled',
-            html: emailLayout(
-                'New Exam Scheduled',
-                `
+    const mailOptions = {
+      from: `"Synapse EduHub" <${process.env.EMAIL_NOTIFICATIONS || 'notifications@synapseeduhub.com'}>`,
+      to: studentEmail,
+      subject: 'Synapse Hub - New Exam Scheduled',
+      html: emailLayout(
+        'New Exam Scheduled',
+        `
                 <p>Hello ${escapeHtml(studentName)},</p>
                 <p>A new examination has been scheduled for your learning track. Please make sure to mark your calendar.</p>
                 <div class="highlight-card">
@@ -318,36 +318,36 @@ export const sendExamScheduledEmail = async (studentEmail, studentName, examTitl
                     <a href="https://synapseeduhub.com/login" class="btn">View Exam Details</a>
                 </div>
                 `
-            ),
-            attachments: commonAttachments
-        };
-        await transporter.sendMail(mailOptions);
-        console.log(`Exam Scheduled email sent to ${studentEmail}`);
-    } catch (error) {
-        console.error('Error sending exam scheduled email:', error);
-    }
+      ),
+      attachments: commonAttachments
+    };
+    await transporter.sendMail(mailOptions);
+    console.log(`Exam Scheduled email sent to ${studentEmail}`);
+  } catch (error) {
+    console.error('Error sending exam scheduled email:', error);
+  }
 };
 
 // 5. Contact Inquiry Email
 export const sendContactInquiryEmail = async ({ recipientEmails, name, email, program, message }) => {
-    try {
-        if (!recipientEmails || recipientEmails.length === 0) {
-            throw new Error('No recipient email configured for contact inquiries');
-        }
+  try {
+    if (!recipientEmails || recipientEmails.length === 0) {
+      throw new Error('No recipient email configured for contact inquiries');
+    }
 
-        const safeName = escapeHtml(name);
-        const safeEmail = escapeHtml(email);
-        const safeProgram = escapeHtml(program || 'Not specified');
-        const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
+    const safeName = escapeHtml(name);
+    const safeEmail = escapeHtml(email);
+    const safeProgram = escapeHtml(program || 'Not specified');
+    const safeMessage = escapeHtml(message).replace(/\n/g, '<br>');
 
-        const mailOptions = {
-            from: `"Synapse EduHub" <${process.env.EMAIL_SUPPORT || 'support@synapseeduhub.com'}>`,
-            to: recipientEmails,
-            replyTo: email,
-            subject: `New Contact Form Message from ${name}`,
-            html: emailLayout(
-                'New Contact Inquiry',
-                `
+    const mailOptions = {
+      from: `"Synapse EduHub" <${process.env.EMAIL_SUPPORT || 'support@synapseeduhub.com'}>`,
+      to: recipientEmails,
+      replyTo: email,
+      subject: `New Contact Form Message from ${name}`,
+      html: emailLayout(
+        'New Contact Inquiry',
+        `
                 <p>A new message has been submitted through the Synapse EduHub contact form.</p>
                 <div class="highlight-card">
                     <div class="meta-group">
@@ -369,16 +369,16 @@ export const sendContactInquiryEmail = async ({ recipientEmails, name, email, pr
                 </div>
                 <p>You can reply directly to this email to respond to the user.</p>
                 `
-            ),
-            attachments: commonAttachments
-        };
+      ),
+      attachments: commonAttachments
+    };
 
-        await transporter.sendMail(mailOptions);
-        console.log(`Contact inquiry email sent to ${recipientEmails.join(', ')}`);
-    } catch (error) {
-        console.error('Error sending contact inquiry email:', error);
-        throw error;
-    }
+    await transporter.sendMail(mailOptions);
+    console.log(`Contact inquiry email sent to ${recipientEmails.join(', ')}`);
+  } catch (error) {
+    console.error('Error sending contact inquiry email:', error);
+    throw error;
+  }
 };
 
 // 6. Classroom Created Email (Uses Name)
