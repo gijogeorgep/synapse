@@ -9,6 +9,11 @@ const __dirname = path.dirname(__filename);
 const smtpPort = Number(process.env.EMAIL_PORT || 587);
 // Use SSL only for port 465; otherwise use STARTTLS (secure=false)
 const isSecure = smtpPort === 465;
+console.log("EMAIL_HOST:", process.env.EMAIL_HOST);
+console.log("EMAIL_PORT:", process.env.EMAIL_PORT);
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+console.log("EMAIL_PASS length:", process.env.EMAIL_PASS?.length);
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: smtpPort,
