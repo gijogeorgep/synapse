@@ -1,8 +1,12 @@
 import 'dotenv/config';
 
 import { Resend } from "resend";
-const resend = new Resend(process.env.RESEND_API_KEY);
-console.log('🔧 Resend client initialized');
+const resendKey = (process.env.RESEND_API_KEY || '').trim();
+if (!resendKey) {
+  console.error('❌ RESEND_API_KEY is missing. Ensure it is set in .env');
+}
+const resend = new Resend(resendKey);
+console.log('🔧 Resend client initialized with key length', resendKey.length);
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
