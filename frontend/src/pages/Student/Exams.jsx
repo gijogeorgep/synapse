@@ -652,12 +652,7 @@ const StudentExams = () => {
                                                 <Trophy className="w-3.5 h-3.5" />
                                                 Ranklist
                                             </button>
-                                            <button
-                                                onClick={() => handleReviewExam(result)}
-                                                className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-all"
-                                            >
-                                                Review
-                                            </button>
+
                                             <span className={`w-8 h-8 rounded-full text-[10px] font-black flex items-center justify-center ${percentage >= 50 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                                                 {grade}
                                             </span>

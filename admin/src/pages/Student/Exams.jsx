@@ -621,12 +621,7 @@ const StudentExams = () => {
                                                     {result.score}/{result.exam?.totalMarks || result.answers?.length || 0}
                                                 </p>
                                             </div>
-                                            <button 
-                                                onClick={() => handleReviewExam(result)}
-                                                className="px-4 py-2 bg-slate-900 text-white text-xs font-bold rounded-xl hover:bg-slate-800 transition-all"
-                                            >
-                                                Review
-                                            </button>
+
                                             <span className={`w-8 h-8 rounded-full text-[10px] font-black flex items-center justify-center ${percentage >= 50 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'}`}>
                                                 {grade}
                                             </span>
@@ -698,68 +693,13 @@ const StudentExams = () => {
                                         <Award className="w-12 h-12 text-emerald-600" />
                                     </div>
                                     <h3 className="text-3xl font-black text-slate-900">Exam Submitted!</h3>
-                                    <p className="text-slate-500 font-medium">Review your performance below. You can see correct answers and explanations.</p>
+                                    <p className="text-slate-500 font-medium">Your exam has been successfully recorded. You can view your final score below.</p>
                                     <div className="p-8 rounded-[2rem] bg-slate-50 border-2 border-slate-100 flex flex-col items-center gap-2">
                                         <span className="text-xs font-black text-slate-400 underline decoration-cyan-500 underline-offset-4 decoration-2">YOUR SCORE</span>
                                         <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-cyan-600 to-indigo-600">{examResult.score} / {activeExam.totalMarks || examResult.answers?.length || questions.length}</span>
                                     </div>
 
-                                    <div className="text-left space-y-6 pt-10 border-t border-slate-100">
-                                        <h4 className="text-lg font-black text-slate-800">Detailed Review</h4>
-                                        {questions.map((q, idx) => {
-                                            const studentAns = examResult.answers?.find(a => a.questionId === q._id);
-                                            const isCorrect = studentAns?.isCorrect;
-                                            return (
-                                                <div key={idx} className="space-y-3 p-5 rounded-3xl bg-slate-50 border border-slate-200">
-                                                    <div className="flex items-start gap-4">
-                                                        <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black ${isCorrect ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'}`}>
-                                                            {idx + 1}
-                                                        </span>
-                                                        <div className="flex-1 space-y-2">
-                                                            <div>
-                                                                {activeExam.isNeetPattern && (
-                                                                    <span className="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-1 block">
-                                                                        {q.subject}
-                                                                    </span>
-                                                                )}
-                                                                <p className="font-bold text-slate-900 underline decoration-slate-200 decoration-2 underline-offset-4">{q.questionText}</p>
-                                                            </div>
-                                                            {q.imageUrl && (
-                                                                <div className="mb-4 rounded-xl overflow-hidden border border-slate-200 bg-white">
-                                                                    <img src={q.imageUrl} alt="Context" className="max-h-[200px] w-auto object-contain p-2" />
-                                                                </div>
-                                                            )}
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                                                                {q.options.map((opt, oIdx) => (
-                                                                    <div 
-                                                                        key={oIdx} 
-                                                                        className={`p-3 rounded-2xl text-xs font-bold border-2 flex items-center gap-2 ${
-                                                                            oIdx === q.correctAnswer 
-                                                                                ? 'bg-emerald-50 border-emerald-500 text-emerald-700' 
-                                                                                : oIdx === studentAns?.selectedOption 
-                                                                                    ? 'bg-rose-50 border-rose-500 text-rose-700' 
-                                                                                    : 'bg-white border-transparent text-slate-500'
-                                                                        }`}
-                                                                    >
-                                                                        <span className="w-6 h-6 rounded-full bg-white/50 flex items-center justify-center">{String.fromCharCode(65 + oIdx)}</span>
-                                                                        {opt}
-                                                                        {oIdx === q.correctAnswer && <CheckCircle2 className="w-3 h-3 ml-auto" />}
-                                                                        {oIdx === studentAns?.selectedOption && !isCorrect && <X className="w-3 h-3 ml-auto" />}
-                                                                    </div>
-                                                                ))}
-                                                            </div>
-                                                            {q.explanation && (
-                                                                <div className="mt-4 p-4 bg-cyan-50 rounded-2xl border-l-4 border-cyan-400">
-                                                                    <p className="text-[10px] font-black text-cyan-600 uppercase tracking-widest mb-1">Explanation</p>
-                                                                    <p className="text-xs text-cyan-900 leading-relaxed italic">{q.explanation}</p>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+
 
                                     <button
                                         onClick={() => { setActiveExam(null); setExamResult(null); }}

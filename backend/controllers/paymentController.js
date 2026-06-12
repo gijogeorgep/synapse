@@ -222,49 +222,154 @@ export const getAdminPayments = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
-
 // @desc    Get payment and subscription dashboard stats (Admin)
 // @route   GET /api/admin/payments/stats
 // @access  Private/Admin
 export const getAdminPaymentStats = async (req, res) => {
     try {
-        const payments = await Payment.find({});
-        const activeSubsCount = await Subscription.countDocuments({
-            status: "active",
-            expiryDate: { $gt: new Date() }
-        });
+        // Total revenue from completed payments (all time)
+        const completedPayments = await Payment.find({ status: "completed" });
+        const totalRevenue = completedPayments.reduce((sum, p) => sum + p.amount, 0);
 
-        let totalRevenue = 0;
-        let successCount = 0;
-        let pendingCount = 0;
-        let failedCount = 0;
-
-        payments.forEach(p => {
-            if (p.status === "completed") {
-                totalRevenue += p.amount;
-                successCount++;
-            } else if (p.status === "pending") {
-                pendingCount++;
-            } else if (p.status === "failed") {
-                failedCount++;
-            }
-        });
-
-        // Calculate total expenses
+        // Total expense (all time)
         const expenseAgg = await Expense.aggregate([
             { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
         const totalExpense = expenseAgg.length > 0 ? expenseAgg[0].total : 0;
         const profit = totalRevenue - totalExpense;
 
+        // Yearly breakdown (calendar year)
+        const paymentYearAgg = await Payment.aggregate([
+            { $match: { status: "completed" } },
+            {
+                $group: {
+                    _id: { $year: "$paymentDate" },
+                    revenue: { $sum: "$amount" }
+                }
+            },
+            { $project: { year: "$_id", revenue: 1, _id: 0 } },
+            { $sort: { year: -1 } }
+        ]);
+        const expenseYearAgg = await Expense.aggregate([
+            {
+                $group: {
+                    _id: { $year: "$expenseDate" },
+                    expense: { $sum: "$amount" }
+                }
+            },
+            { $project: { year: "$_id", expense: 1, _id: 0 } },
+            { $sort: { year: -1 } }
+        ]);
+        const yearlyMap = {};
+        paymentYearAgg.forEach(p => {
+            yearlyMap[p.year] = yearlyMap[p.year] || { year: p.year, revenue: 0, expense: 0 };
+            yearlyMap[p.year].revenue = p.revenue;
+        });
+        expenseYearAgg.forEach(e => {
+            yearlyMap[e.year] = yearlyMap[e.year] || { year: e.year, revenue: 0, expense: 0 };
+            yearlyMap[e.year].expense = e.expense;
+        });
+        const yearlyStats = Object.values(yearlyMap).sort((a, b) => b.year - a.year);
+
+        // Academic year grouping (July 1 – June 30)
+        const paymentAcadAgg = await Payment.aggregate([
+            { $match: { status: "completed" } },
+            {
+                $addFields: {
+                    academicYear: {
+                        $cond: [
+                            { $gte: [{ $month: "$paymentDate" }, 7] },
+                            {
+                                $concat: [
+                                    { $toString: { $year: "$paymentDate" } },
+                                    "-",
+                                    { $toString: { $add: [{ $year: "$paymentDate" }, 1] } }
+                                ]
+                            },
+                            {
+                                $concat: [
+                                    { $toString: { $add: [{ $year: "$paymentDate" }, -1] } },
+                                    "-",
+                                    { $toString: { $year: "$paymentDate" } }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$academicYear",
+                    revenue: { $sum: "$amount" }
+                }
+            },
+            { $project: { academicYear: "$_id", revenue: 1, _id: 0 } },
+            { $sort: { academicYear: -1 } }
+        ]);
+        const expenseAcadAgg = await Expense.aggregate([
+            {
+                $addFields: {
+                    academicYear: {
+                        $cond: [
+                            { $gte: [{ $month: "$expenseDate" }, 7] },
+                            {
+                                $concat: [
+                                    { $toString: { $year: "$expenseDate" } },
+                                    "-",
+                                    { $toString: { $add: [{ $year: "$expenseDate" }, 1] } }
+                                ]
+                            },
+                            {
+                                $concat: [
+                                    { $toString: { $add: [{ $year: "$expenseDate" }, -1] } },
+                                    "-",
+                                    { $toString: { $year: "$expenseDate" } }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                $group: {
+                    _id: "$academicYear",
+                    expense: { $sum: "$amount" }
+                }
+            },
+            { $project: { academicYear: "$_id", expense: 1, _id: 0 } },
+            { $sort: { academicYear: -1 } }
+        ]);
+        const academicMap = {};
+        paymentAcadAgg.forEach(p => {
+            academicMap[p.academicYear] = academicMap[p.academicYear] || { academicYear: p.academicYear, revenue: 0, expense: 0 };
+            academicMap[p.academicYear].revenue = p.revenue;
+        });
+        expenseAcadAgg.forEach(e => {
+            academicMap[e.academicYear] = academicMap[e.academicYear] || { academicYear: e.academicYear, revenue: 0, expense: 0 };
+            academicMap[e.academicYear].expense = e.expense;
+        });
+        const academicStats = Object.values(academicMap).sort((a, b) => b.academicYear.localeCompare(a.academicYear));
+
+        // Determine current and previous academic year
+        const now = new Date();
+        const currentAcadYear = now.getMonth() + 1 >= 7
+            ? `${now.getFullYear()}-${now.getFullYear() + 1}`
+            : `${now.getFullYear() - 1}-${now.getFullYear()}`;
+        const prevYearStart = now.getMonth() + 1 >= 7 ? now.getFullYear() - 1 : now.getFullYear() - 2;
+        const previousAcadYear = now.getMonth() + 1 >= 7
+            ? `${prevYearStart}-${prevYearStart + 1}`
+            : `${prevYearStart - 1}-${prevYearStart}`;
+        const currentAcadStats = academicMap[currentAcadYear] || { academicYear: currentAcadYear, revenue: 0, expense: 0 };
+        const previousAcadStats = academicMap[previousAcadYear] || { academicYear: previousAcadYear, revenue: 0, expense: 0 };
+
         res.status(200).json({
             totalRevenue,
             totalExpense,
             profit,
-            successCount,
-            pendingCount,
-            failedCount,
-            activeSubscriptionsCount: activeSubsCount
+            yearlyStats,
+            academicStats,
+            currentAcademicYear: currentAcadStats,
+            previousAcademicYear: previousAcadStats
         });
     } catch (error) {
         console.error("Error fetching payment stats:", error);
@@ -272,9 +377,6 @@ export const getAdminPaymentStats = async (req, res) => {
     }
 };
 
-// @desc    Get all subscriptions (Admin)
-// @route   GET /api/admin/subscriptions
-// @access  Private/Admin
 export const getAdminSubscriptions = async (req, res) => {
     try {
         const { search } = req.query;
